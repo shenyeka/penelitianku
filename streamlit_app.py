@@ -107,7 +107,7 @@ elif st.session_state.step == 4:
 elif st.session_state.step == 5:
     st.header("Pemodelan ARIMA")
     df = st.session_state.data
-    model = ARIMA(df['Jumlah permintaan'], order=(1, 1, 1))
+    model = ARIMA(df['Jumlah permintaan'], order=(1, 1, 0))
     fitted_model = model.fit()
     st.session_state.arima_model = fitted_model
 
