@@ -1,6 +1,9 @@
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Konfigurasi halaman
+# Konfigurasi halaman harus diletakkan di bagian paling atas
 st.set_page_config(
     page_title="Prediksi Permintaan Darah",
     layout="wide"
@@ -99,19 +102,6 @@ st.markdown("""
         .btn:hover {
             background-color: #a83232;
         }
-
-        /* Footer (Optional) */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            background-color: #800000;
-            color: white;
-            border-radius: 10px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-
     </style>
 """, unsafe_allow_html=True)
 
@@ -135,139 +125,6 @@ if menu == "HOME":
     Dengan menggabungkan ketiga metode ini, prediksi permintaan darah menjadi lebih akurat dan adaptif terhadap dinamika data, sehingga sangat membantu dalam pengambilan keputusan yang tepat di <b>Unit Transfusi Darah (UTD)</b>.
     </div>
     """, unsafe_allow_html=True)
-
-elif menu == "DATA PREPROCESSING":
-    st.markdown("## Data Preprocessing")
-    # Implementasikan bagian ini sesuai kebutuhan
-
-elif menu == "STASIONERITAS DATA":
-    st.markdown("## Stasioneritas Data")
-    # Implementasikan bagian ini sesuai kebutuhan
-
-elif menu == "PREDIKSI":
-    st.markdown("## Prediksi Permintaan Darah")
-    # Implementasikan bagian ini sesuai kebutuhan
-
-# MENU DATA PREPROCESSING
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Konfigurasi halaman
-st.set_page_config(
-    page_title="Aplikasi Preprocessing Data",
-    layout="wide"
-)
-
-# Inject CSS agar styling muncul
-st.markdown("""
-    <style>
-        /* Background halaman dengan warna soft pink */
-        body {
-            background-color: #FADADD;  /* soft pink */
-            font-family: 'Arial', sans-serif;
-            font-size: 18px;
-        }
-
-        /* Header utama */
-        .header-container {
-            background: #800000;
-            color: white;
-            padding: 40px;
-            text-align: center;
-            font-size: 40px;  /* Memperbesar ukuran font header */
-            font-weight: bold;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transform: scale(1.05);
-            transition: transform 0.3s ease;
-        }
-
-        .header-container:hover {
-            transform: scale(1.1);
-        }
-
-        /* Navigasi menu */
-        .nav-bar {
-            display: flex;
-            justify-content: center;
-            background-color: #fff;
-            padding: 20px 0;
-            border-top: 3px solid #800000;
-            border-bottom: 3px solid #800000;
-            margin-bottom: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-bar a {
-            margin: 0 20px;
-            font-weight: bold;
-            color: #800000;
-            text-decoration: none;
-            font-size: 22px;  /* Memperbesar ukuran font pada link */
-            padding: 12px;
-            border-radius: 8px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .nav-bar a:hover {
-            background-color: #800000;
-            color: #fff;
-            text-decoration: none;
-        }
-
-        /* Konten */
-        .content {
-            text-align: justify;
-            font-size: 20px;  /* Memperbesar ukuran font konten */
-            line-height: 1.8;
-            margin: 20px 10%;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .content:hover {
-            background-color: #F5F5F5;
-            border-radius: 10px;
-            padding: 15px;
-            transition: background-color 0.3s ease;
-        }
-
-        /* Styling tombol */
-        .btn {
-            background-color: #800000;
-            color: white;
-            padding: 15px 30px;
-            font-size: 20px;  /* Memperbesar ukuran font tombol */
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #a83232;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Tampilan menu navigasi dengan sidebar
-menu = st.sidebar.radio("Menu", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "PREDIKSI"])
-
-# Tampilan konten berdasarkan menu yang dipilih
-if menu == "HOME":
-    # Header utama
-    st.markdown("<div class='header-container'>Aplikasi Preprocessing Data</div>", unsafe_allow_html=True)
-
-    # Konten HOME
-    st.markdown("## Selamat Datang 👋")
-    st.markdown("Ini adalah aplikasi untuk preprocessing data secara fleksibel untuk berbagai jenis dataset. Silakan pilih menu di atas untuk mulai.")
-    st.markdown("---")
 
 elif menu == "DATA PREPROCESSING":
     st.markdown("<h1 style='text-align: center;'>DATA PREPROCESSING</h1>", unsafe_allow_html=True)
@@ -313,7 +170,6 @@ elif menu == "DATA PREPROCESSING":
 
             # Menampilkan plot data setelah preprocessing
             st.write("Plot Data Setelah Preprocessing:")
-            st.pyplot()
             sns.lineplot(data=data)
             plt.title("Data Setelah Preprocessing")
             st.pyplot()
