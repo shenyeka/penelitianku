@@ -168,12 +168,12 @@ elif menu == "DATA PREPROCESSING":
                 st.write("Data setelah menghapus missing values:")
                 st.write(data.head())
 
-# Menampilkan plot data setelah preprocessing
-st.write("Plot Data Setelah Preprocessing:")
-fig, ax = plt.subplots()  # Membuat figure dan axis
-sns.lineplot(data=data, ax=ax)  # Menambahkan plot ke axis
-ax.set_title("Data Setelah Preprocessing")  # Menambahkan judul pada plot
-st.pyplot(fig)  # Menampilkan plot
+            # Menampilkan plot data setelah preprocessing
+            st.write("Plot Data Setelah Preprocessing:")
+            fig, ax = plt.subplots()
+            sns.lineplot(data=data, ax=ax)
+            ax.set_title("Data Setelah Preprocessing")
+            st.pyplot(fig)
     
 elif menu == "STASIONERITAS DATA":
     st.markdown("## Stasioneritas Data")
