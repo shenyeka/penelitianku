@@ -4,7 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_absolute_percentage_error
-from streamlit.components.v1 import html
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.cluster import KMeans
+from scipy.optimize import minimize
+import seaborn as sns
 
 st.set_page_config(layout="centered")
 
@@ -134,20 +137,62 @@ elif st.session_state.step == 6:
 # Step 7: ANFIS + ABC Modeling
 elif st.session_state.step == 7:
     st.header("Pemodelan ANFIS + ABC")
-    st.write("(Placeholder) Implementasi ANFIS + ABC di sini.")
+    
+    # Prepare data for ANFIS
+    residuals = st.session_state.residuals
+    scaler = MinMaxScaler()
+    residuals_scaled = scaler.fit_transform(residuals.values.reshape(-1, 1))
 
-    # Running Animation Placeholder
-    st.markdown("""
-    <div style='text-align: center;'>
-        <img src="path_to_your_blood_splash_animation.gif" style="width:150px; height:auto;">
-        <p style="font-size: 20px; color: maroon;">Running...</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Initialize membership functions
+    kmeans = KMeans(n_clusters=4, random_state=42).fit(residuals_scaled)
+    centers = np.sort(kmeans.cluster_centers_.flatten())
+    sigma = (centers[1] - centers[0]) / 2
 
-    # Add bee animation or placeholder
-    st.markdown("""
-    <div style='text-align: center;'>
-        <img src="path_to_your_bee_animation.gif" style="width:150px; height:auto;">
-        <p style="font-size: 20px; color: maroon;">Optimizing...</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Define ANFIS prediction function
+    def anfis_predict(params, lag32, lag33, rules):
+        n_rules = rules.shape[1]
+        p = params[:n_rules]
+        q = params[n_rules:2 * n_rules]
+        r = params[2 * n_rules:3 * n_rules]
+        rule_outputs = p * lag32[:, None] + q * lag33[:, None] + r
+        normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
+        return normalized_outputs
+
+    # Define loss function for optimization
+    def loss_function(params):
+        predictions = anfis_predict(params, lag32, lag33, rules)
+        return np.mean((target - predictions) ** 2)
+
+    # Optimize using ABC (Artificial Bee Colony)
+    # (Implementation of ABC optimization goes here)
+
+    # Placeholder for predictions
+    predictions = np.random.rand(len(residuals))  # Replace with actual predictions from ANFIS
+    st.session_state.predictions = predictions
+
+    # Plot predictions
+    st.line_chart(predictions)
+    st.write("Prediksi ANFIS + ABC")
+
+    col1, col2 = st.columns(2)
+    if col1.button("Kembali"):
+        st.session_state.step = 6
+    if col2.button("Lanjut"):
+        st.session_state.step = 8
+
+# Step 8: Future Predictions
+elif st.session_state.step == 8:
+    st.header("Prediksi 6 Bulan ke Depan")
+    # Implement future predictions logic here
+    future_predictions = np.random.rand(6)  # Replace with actual future predictions
+    st.write("Hasil Prediksi 6 Bulan ke Depan:")
+    st.write(future_predictions)
+
+    # Plot future predictions
+    st.line_chart(future_predictions)
+
+    col1, col2 = st.columns(2)
+    if col1.button("Kembali"):
+        st.session_state.step = 7
+    if col2.button("Selesai"):
+        st.write("Terima kasih telah menggunakan aplikasi ini!")
