@@ -127,18 +127,23 @@ if menu == "HOME":
     """, unsafe_allow_html=True)
 
 elif menu == "DATA PREPROCESSING":
-    st.markdown("<h1 style='text-align: center;'>DATA PREPROCESSING</h1>", unsafe_allow_html=True)
+    # Tampilan bagian data preprocessing dengan CSS yang lebih menarik
+    st.markdown("<div class='preprocessing-content'>", unsafe_allow_html=True)
+    
+    st.markdown("<h1>DATA PREPROCESSING</h1>", unsafe_allow_html=True)
     st.markdown("### Langkah-langkah Preprocessing Data")
     st.markdown("""
-    1. Unggah dataset Anda menggunakan form di bawah ini. <br>
-    2. Tentukan kolom waktu yang akan menjadi indeks data. <br>
-    3. Cek dan tangani missing values. <br>
-    4. Tampilkan plot data setelah preprocessing.
+        <ul>
+            <li>Unggah dataset Anda menggunakan form di bawah ini.</li>
+            <li>Tentukan kolom waktu yang akan menjadi indeks data.</li>
+            <li>Cek dan tangani missing values.</li>
+            <li>Tampilkan plot data setelah preprocessing.</li>
+        </ul>
     """, unsafe_allow_html=True)
-    
+
     # Upload file dataset
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
-    
+
     if uploaded_file is not None:
         # Membaca file dataset
         data = pd.read_csv(uploaded_file)
@@ -146,16 +151,16 @@ elif menu == "DATA PREPROCESSING":
         # Menampilkan preview data
         st.write("Preview Data:")
         st.write(data.head())
-        
+
         # Pilih kolom waktu yang akan dijadikan indeks
         time_column = st.selectbox("Pilih Kolom Waktu", options=data.columns)
-        
+
         if time_column:
             # Mengatur kolom waktu sebagai indeks
             data.set_index(time_column, inplace=True)
             st.write(f"Data setelah menetapkan {time_column} sebagai indeks:")
             st.write(data.head())
-        
+
             # Mengecek missing values
             st.write("Mengecek Missing Values:")
             missing_values = data.isnull().sum()
@@ -173,7 +178,27 @@ elif menu == "DATA PREPROCESSING":
             fig, ax = plt.subplots()  # Membuat figure dan axis
             sns.lineplot(data=data, ax=ax)  # Menambahkan plot ke axis
             ax.set_title("Data Setelah Preprocessing")  # Menambahkan judul pada plot
-            st.pyplot(fig) 
+            st.pyplot(fig)  # Menampilkan plot
+            
+            # Opsi untuk menyimpan dataset yang telah diproses
+            st.markdown("<h3>Simpan Dataset Setelah Preprocessing</h3>", unsafe_allow_html=True)
+            
+            # Tombol untuk menyimpan dataset sebagai CSV
+            csv_data = data.to_csv(index=True)
+            st.download_button(
+                label="Download Dataset (CSV)",
+                data=csv_data,
+                file_name="data_preprocessed.csv",
+                mime="text/csv"
+            )
+
+            # Opsi lanjut ke menu berikutnya
+            if st.button("Lanjut ke Menu Selanjutnya"):
+                st.write("Anda dapat melanjutkan ke menu berikutnya untuk analisis lebih lanjut.")
+                
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Bagian lainnya tetap seperti sebelumnya 
     
 elif menu == "STASIONERITAS DATA":
     st.markdown("## Stasioneritas Data")
