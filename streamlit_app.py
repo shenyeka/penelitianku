@@ -1,6 +1,10 @@
 # HALAMAN UTAMA
 
 import streamlit as st
+from PIL import Image
+
+# Harus baris pertama setelah import!
+st.set_page_config(page_title="Prediksi Permintaan Darah", layout="wide")
 
 # Konfigurasi halaman
 st.set_page_config(
@@ -83,11 +87,6 @@ st.markdown("## Selamat Datang 👋")
 st.markdown("Ini adalah aplikasi prediksi permintaan darah menggunakan metode ARIMA-ANFIS dengan optimasi Artificial Bee Colony. Silakan pilih menu di atas untuk mulai.")
 
 # MENU HOME
-import streamlit as st
-from PIL import Image
-
-# Harus baris pertama setelah import!
-st.set_page_config(page_title="Prediksi Permintaan Darah", layout="wide")
 
 # Inject CSS
 st.markdown("""
