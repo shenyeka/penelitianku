@@ -196,13 +196,62 @@ elif menu == "DATA PREPROCESSING":
             if st.button("Lanjut ke Menu Selanjutnya"):
                 st.write("Anda dapat melanjutkan ke menu berikutnya untuk analisis lebih lanjut.")
                 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Bagian lainnya tetap seperti sebelumnya 
+    st.markdown("</div>", unsafe_allow_html=True) 
     
 elif menu == "STASIONERITAS DATA":
-    st.markdown("## Stasioneritas Data")
-    # Implementasikan bagian ini sesuai kebutuhan
+    st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
+    
+    st.markdown("""<div class="content">
+    ### Uji Stasioneritas Data Menggunakan Uji ADF
+    <br>
+    Pada langkah ini, kita akan melakukan Uji Augmented Dickey-Fuller (ADF) untuk menguji apakah data stasioner. Jika data tidak stasioner, kita akan melakukan differencing.
+    </div>""", unsafe_allow_html=True)
+    
+    if data_global is not None:
+        # Lakukan Uji Augmented Dickey-Fuller (ADF)
+        adf_test = adfuller(data_global.iloc[:, 0])  # Menggunakan kolom pertama sebagai contoh
+        
+        st.write("Hasil Uji Augmented Dickey-Fuller (ADF):")
+        st.write(f"ADF Statistic: {adf_test[0]}")
+        st.write(f"P-Value: {adf_test[1]}")
+        st.write("Kritikal Nilai:")
+        for key, value in adf_test[4].items():
+            st.write(f"{key}: {value}")
+        
+        # Interpretasi hasil
+        alpha = 0.05
+        if adf_test[1] < alpha:
+            st.write("Data stasioner berdasarkan uji ADF.")
+        else:
+            st.write("Data tidak stasioner berdasarkan uji ADF.")
+            
+            # Lakukan differencing jika data tidak stasioner
+            st.write("Melakukan Differencing untuk membuat data stasioner...")
+            data_diff = data_global.diff().dropna()
+            
+            st.write("Data Setelah Differencing:")
+            st.write(data_diff.head())
+            
+            # Menampilkan plot data setelah differencing
+            st.write("Plot Data Setelah Differencing:")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            sns.lineplot(data=data_diff, ax=ax)
+            ax.set_title("Data Setelah Differencing")
+            st.pyplot(fig)
+            
+        # Plot ACF dan PACF
+        st.write("Plot ACF dan PACF:")
+        fig_acf, ax_acf = plt.subplots(figsize=(10, 6))
+        plot_acf(data_global, lags=40, ax=ax_acf)
+        st.pyplot(fig_acf)
+        
+        fig_pacf, ax_pacf = plt.subplots(figsize=(10, 6))
+        plot_pacf(data_global, lags=40, ax=ax_pacf)
+        st.pyplot(fig_pacf)
+        
+    else:
+        st.write("Data belum diproses, silakan kembali ke menu 'DATA PREPROCESSING'.")
+
 
 elif menu == "PREDIKSI":
     st.markdown("## Prediksi Permintaan Darah")
