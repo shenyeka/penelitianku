@@ -2,12 +2,17 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 # Konfigurasi halaman harus diletakkan di bagian paling atas
 st.set_page_config(
     page_title="Prediksi Permintaan Darah",
     layout="wide"
 )
+
+# Inisialisasi variabel global untuk data
+data_global = None
 
 # Inject CSS agar styling muncul
 st.markdown("""
@@ -127,11 +132,8 @@ if menu == "HOME":
     """, unsafe_allow_html=True)
 
 elif menu == "DATA PREPROCESSING":
-    # Tampilan bagian data preprocessing dengan CSS yang lebih menarik
-    st.markdown("<div class='preprocessing-content'>", unsafe_allow_html=True)
+    st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
     
-    st.markdown("<h1>DATA PREPROCESSING</h1>", unsafe_allow_html=True)
-    st.markdown("### Langkah-langkah Preprocessing Data")
     st.markdown("""
         <ul>
             <li>Unggah dataset Anda menggunakan form di bawah ini.</li>
@@ -180,6 +182,9 @@ elif menu == "DATA PREPROCESSING":
             ax.set_title("Data Setelah Preprocessing")  # Menambahkan judul pada plot
             st.pyplot(fig)  # Menampilkan plot
             
+            # Simpan data yang sudah diproses ke dalam data_global
+            data_global = data  # Simpan data untuk digunakan di menu lain
+            
             # Opsi untuk menyimpan dataset yang telah diproses
             st.markdown("<h3>Simpan Dataset Setelah Preprocessing</h3>", unsafe_allow_html=True)
             
@@ -192,20 +197,16 @@ elif menu == "DATA PREPROCESSING":
                 mime="text/csv"
             )
 
-            # Opsi lanjut ke menu berikutnya
-            if st.button("Lanjut ke Menu Selanjutnya"):
-                st.write("Anda dapat melanjutkan ke menu berikutnya untuk analisis lebih lanjut.")
-                
-    st.markdown("</div>", unsafe_allow_html=True) 
-    
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
     
-    st.markdown("""<div class="content">
+    st.markdown("""
+    <div class="content">
     ### Uji Stasioneritas Data Menggunakan Uji ADF
     <br>
     Pada langkah ini, kita akan melakukan Uji Augmented Dickey-Fuller (ADF) untuk menguji apakah data stasioner. Jika data tidak stasioner, kita akan melakukan differencing.
-    </div>""", unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
     
     if data_global is not None and not data_global.empty:
         # Lakukan Uji Augmented Dickey-Fuller (ADF)
@@ -248,10 +249,10 @@ elif menu == "STASIONERITAS DATA":
         fig_pacf, ax_pacf = plt.subplots(figsize=(10, 6))
         plot_pacf(data_global, lags=40, ax=ax_pacf)
         st.pyplot(fig_pacf)
-        
+
     else:
         st.write("Data belum diproses, silakan kembali ke menu 'DATA PREPROCESSING'.")
 
 elif menu == "PREDIKSI":
-    st.markdown("## Prediksi Permintaan Darah")
-    # Implementasikan bagian ini sesuai kebutuhan
+    st.markdown("<div class='header-container'>PREDIKSI</div>", unsafe_allow_html=True)
+    st.write("Menu prediksi akan muncul di sini.")
