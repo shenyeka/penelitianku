@@ -73,12 +73,12 @@ elif st.session_state.step == 4:
 elif st.session_state.step == 5:
     st.header("Pemodelan ARIMA")
     df = st.session_state.data
-    model = ARIMA(df['Jumlah Permintaan'], order=(1,1,1))
+    model = ARIMA(df['Jumlah permintaan'], order=(1,1,1))
     fitted_model = model.fit()
     st.session_state.arima_model = fitted_model
 
     pred = fitted_model.predict(start=1, end=len(df)-1, typ='levels')
-    actual = df['Jumlah Permintaan'].iloc[1:]
+    actual = df['Jumlah permintaan'].iloc[1:]
     mape = mean_absolute_percentage_error(actual, pred)
     st.session_state.mape = mape
     st.line_chart(pred)
