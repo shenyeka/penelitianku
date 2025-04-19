@@ -4,226 +4,167 @@ import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_absolute_percentage_error
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.cluster import KMeans
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 from scipy.optimize import minimize
-import seaborn as sns
+from sklearn.metrics import mean_squared_error
 
-st.set_page_config(layout="centered")
+# Fungsi untuk menampilkan plot data
+def plot_data(data):
+    plt.figure(figsize=(10, 5))
+    plt.plot(data['Bulan'], data['Jumlah permintaan'], label='Jumlah Permintaan')
+    plt.title('Data Jumlah Permintaan Darah')
+    plt.xlabel('Bulan')
+    plt.ylabel('Jumlah Permintaan')
+    plt.legend()
+    st.pyplot(plt)
 
-# Style Settings
-st.markdown("""
-<style>
-    body {
-        background-color: #ffefef;
-        color: maroon;
-    }
-    .header {
-        color: maroon;
-        font-size: 28px;
-    }
-    .subheader {
-        color: maroon;
-    }
-    button {
-        background-color: #f4c2c2;
-        color: maroon;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-weight: bold;
-    }
-    button:hover {
-        background-color: #ebacac;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Fungsi untuk membagi data menjadi train dan test
+def split_data(data):
+    train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
+    return train_data, test_data
 
-# State to store data
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'data' not in st.session_state:
-    st.session_state.data = None
-if 'arima_model' not in st.session_state:
-    st.session_state.arima_model = None
-if 'residuals' not in st.session_state:
-    st.session_state.residuals = None
-if 'predictions' not in st.session_state:
-    st.session_state.predictions = None
-if 'mape' not in st.session_state:
-    st.session_state.mape = None
-if 'scaler' not in st.session_state:
-    st.session_state.scaler = None
+# Fungsi untuk melatih model ARIMA
+def train_arima(train_data):
+    model_arima = ARIMA(train_data['Jumlah permintaan'], order=(1, 1, 0)).fit()
+    return model_arima
 
-# App Title
-st.title("Prediksi Permintaan Darah")
-st.markdown("Aplikasi ini digunakan untuk memprediksi permintaan darah menggunakan model ARIMA yang dioptimasi ANFIS + ABC.")
+# Fungsi untuk melakukan prediksi pada data testing
+def predict_testing(model_arima, test_data):
+    predictions = model_arima.forecast(steps=len(test_data))
+    mape = mean_absolute_percentage_error(test_data['Jumlah permintaan'], predictions) * 100
+    return predictions, mape
 
-# Step 1: Welcome Screen
-if st.session_state.step == 1:
-    st.header("Selamat Datang")
-    if st.button("Lanjut"):
-        st.session_state.step = 2
-        
-# Step 2: Upload Dataset
-elif st.session_state.step == 2:
-    st.header("Upload Dataset")
-    uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
-    if uploaded_file is not None:
-        st.session_state.data = pd.read_csv(uploaded_file)
-        st.write("Contoh data:")
-        st.write(st.session_state.data.head())
-        
-        # Check the column names
-        st.write("Nama kolom dalam dataset:")
-        st.write(st.session_state.data.columns.tolist())
-        
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 1
-    if col2.button("Lanjut") and st.session_state.data is not None:
-        st.session_state.step = 3
+# Fungsi untuk menampilkan residual dari training ARIMA
+def show_residual(model_arima):
+    residuals = model_arima.resid
+    plt.figure(figsize=(10, 5))
+    plt.plot(residuals, label='Residual ARIMA', color='purple')
+    plt.axhline(0, color='black', linestyle='--')
+    plt.title('Residual dari Model ARIMA')
+    plt.xlabel('Index')
+    plt.ylabel('Residual')
+    plt.legend()
+    st.pyplot(plt)
 
-# Step 3: Preprocessing Data
-elif st.session_state.step == 3:
-    st.header("Preprocessing Data")
-    df = st.session_state.data.copy()
+# Fungsi untuk melatih model ARIMA-ANFIS dengan optimasi ABC
+def train_arima_anfis_abc(train_data):
+    # Implementasi training ARIMA-ANFIS+ABC
+    pass
+
+# Fungsi untuk melakukan prediksi sesuai jumlah data testing
+def predict_testing_arima_anfis_abc(model_arima_anfis_abc, test_data):
+    # Implementasi prediksi ARIMA-ANFIS+ABC
+    pass
+
+# Fungsi untuk melakukan prediksi 6 bulan ke depan
+def predict_6_bulan_ke_depan(model_arima_anfis_abc):
+    # Implementasi prediksi 6 bulan ke depan ARIMA-ANFIS+ABC
+    pass
+
+# Main aplikasi
+def main():
+    st.title("Sistem Prediksi Permintaan Darah")
     
-    # Preprocess 'Jumlah permintaan' column
-    if 'Jumlah permintaan' in df.columns:
-        # Handle missing values (e.g., fill with the mean or drop)
-        df['Jumlah permintaan'].fillna(df['Jumlah permintaan'].mean(), inplace=True)
-        
-        # Optionally, you can scale the 'Jumlah permintaan' column
-        scaler = MinMaxScaler()
-        df['Jumlah permintaan'] = scaler.fit_transform(df[['Jumlah permintaan']])
-        st.session_state.scaler = scaler  # Store the scaler for later use
-
-        st.session_state.data = df
-        st.line_chart(df['Jumlah permintaan'])
-    else:
-        st.error("Kolom 'Jumlah permintaan' tidak ditemukan dalam dataset.")
-        st.stop()  # Stop execution if the column is not found
-
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 2
-    if col2.button("Lanjut"):
-        st.session_state.step = 4
-        
-# Step 4: Plot Data
-elif st.session_state.step == 4:
-    st.header("Plot Data")
-    st.line_chart(st.session_state.data['Jumlah permintaan'])
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 3
-    if col2.button("Lanjut"):
-        st.session_state.step = 5
-
-# Step 5: ARIMA Modeling
-elif st.session_state.step == 5:
-    st.header("Pemodelan ARIMA")
-    df = st.session_state.data
-    model = ARIMA(df['Jumlah permintaan'], order=(1, 1, 0))
-    fitted_model = model.fit()
-    st.session_state.arima_model = fitted_model
-
-    pred = fitted_model.predict(start=1, end=len(df)-1, typ='levels')
-    actual = df['Jumlah permintaan'].iloc[1:]
-    mape = mean_absolute_percentage_error(actual, pred) * 100
-    st.session_state.mape = mape
-    st.line_chart(pred)
-    st.write(f"Nilai MAPE: {mape:.2f}")
-
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 4
-    if col2.button("Lanjut"):
-        st.session_state.step = 6
-
-# Step 6: ARIMA Residuals
-elif st.session_state.step == 6:
-    st.header("Residual ARIMA")
-    residuals = st.session_state.arima_model.resid
-    st.session_state.residuals = residuals
-    st.line_chart(residuals)
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 5
-    if col2.button("Lanjut"):
-        st.session_state.step = 7
-
-# Step 7: ANFIS + ABC Modeling
-elif st.session_state.step == 7:
-    st.header("Pemodelan ANFIS + ABC")
+    # Menu
+    menu = st.sidebar.selectbox("Menu", ["Start", "Upload File", "Tampilkan Plot Data", 
+                                         "Splitting Data Train Test 80:20", "Lakukan Training dg ARIMA 1,1,0", 
+                                         "Prediksi Data Testing dan Tampilkan MAPE beserta Plot", 
+                                         "Tampilkan Residual dari Training ARIMA", "Lakukan Trainng dengan ARIMA-ANFIS+ABC", 
+                                         "Lakukan Prediksi Sesuai Jumlah Data Testing Tampilkan MAPE dan Plot", 
+                                         "Lakukan Prediksi 6 Bulan ke Depan dan Tampilkan Plot"])
     
-    # Prepare data for ANFIS
-    residuals = st.session_state.residuals
-    scaler = MinMaxScaler()
-    residuals_scaled = scaler.fit_transform(residuals.values.reshape(-1, 1))
-    st.session_state.scaler = scaler  # Store the scaler for later use
-
-    # Initialize membership functions
-    kmeans = KMeans(n_clusters=4, random_state=42).fit(residuals_scaled)
-    centers = np.sort(kmeans.cluster_centers_.flatten())
-    sigma = (centers[1] - centers[0]) / 2
-
-    # Define ANFIS prediction function
-    def anfis_predict(params, lag32, lag33, rules):
-        n_rules = rules.shape[1]
-        p = params[:n_rules]
-        q = params[n_rules:2 * n_rules]
-        r = params[2 * n_rules:3 * n_rules]
-        rule_outputs = p * lag32[:, None] + q * lag33[:, None] + r
-        normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
-        return normalized_outputs
-
-    # Define loss function for optimization
-    def loss_function(params):
-        predictions = anfis_predict(params, lag32, lag33, rules)
-        return np.mean((target - predictions) ** 2)
-
-    # Optimize using ABC (Artificial Bee Colony)
-    # (Implementation of ABC optimization goes here)
-
-    # Placeholder for predictions
-    predictions = np.random.rand(len(residuals))  # Replace with actual predictions from ANFIS
-    st.session_state.predictions = predictions
-
-    # Denormalize predictions
-    predictions_denorm = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
-
-    # Plot predictions
-    st.line_chart(predictions_denorm)
-    st.write("Prediksi ANFIS + ABC")
-
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 6
-    if col2.button("Lanjut"):
-        st.session_state.step = 8
-
-# Step 8: Future Predictions
-elif st.session_state.step == 8:
-    st.header("Prediksi 6 Bulan ke Depan")
+    if menu == "Start":
+        st.write("Selamat datang di Sistem Prediksi Permintaan Darah!")
     
-    # Check if the scaler is available
-    if 'scaler' in st.session_state and st.session_state.scaler is not None:
-        # Implement future predictions logic here
-        future_predictions = np.random.rand(6)  # Replace with actual future predictions
-        future_predictions_denorm = st.session_state.scaler.inverse_transform(future_predictions.reshape(-1, 1)).flatten()
+    elif menu == "Upload File":
+        file = st.file_uploader("Pilih file CSV", type=["csv"])
+        if file is not None:
+            data = pd.read_csv(file, sep=";")
+            st.session_state.data = data  # Simpan data ke session state
+            st.write("File berhasil diupload!")
+    
+    elif menu == "Tampilkan Plot Data":
+        if 'data' in st.session_state:
+            plot_data(st.session_state.data)
+        else:
+            st.write("Silakan upload file terlebih dahulu.")
+    
+    elif menu == "Splitting Data Train Test 80:20":
+        if 'data' in st.session_state:
+            train_data, test_data = split_data(st.session_state.data)
+            st.session_state.train_data = train_data
+            st.session_state.test_data = test_data
+            st.write("Data berhasil dibagi menjadi train dan test.")
+        else:
+            st.write("Silakan upload file terlebih dahulu.")
+    
+    elif menu == "Lakukan Training dg ARIMA 1,1,0":
+        if 'train_data' in st.session_state:
+            model_arima = train_arima(st.session_state.train_data)
+            st.session_state.model_arima = model_arima
+            st.write("Model ARIMA berhasil dilatih.")
+        else:
+            st.write("Silakan bagi data terlebih dahulu.")
+    
+    elif menu == "Prediksi Data Testing dan Tampilkan MAPE beserta Plot":
+        if 'model_arima' in st.session_state and 'test_data' in st.session_state:
+            predictions, mape = predict_testing(st.session_state.model_arima, st.session_state.test_data)
+            st.write(f"MAPE: {mape:.2f}%")
+            plt.figure(figsize=(10, 5))
+            plt.plot(st.session_state.test_data['Bulan'], st.session_state.test_data['Jumlah permintaan'], label='Data Aktual')
+            plt.plot(st.session_state.test_data['Bulan'], predictions, label='Prediksi ARIMA', linestyle='--')
+            plt.title('Prediksi Data Testing')
+            plt.xlabel('Bulan')
+            plt.ylabel('Jumlah Permintaan')
+            plt.legend()
+            st.pyplot(plt)
+        else:
+            st.write("Silakan latih model ARIMA terlebih dahulu.")
+    
+    elif menu == "Tampilkan Residual dari Training ARIMA":
+        if 'model_arima' in st.session_state:
+            show_residual(st.session_state.model_arima)
+        else:
+            st.write("Silakan latih model ARIMA terlebih dahulu.")
+    
+    elif menu == "Lakukan Trainng dengan ARIMA-ANFIS+ABC":
+        if 'train_data' in st.session_state:
+            model_arima_anfis_abc = train_arima_anfis_abc(st.session_state.train_data)
+            st.session_state.model_arima_anfis_abc = model_arima_anfis_abc
+            st.write("Model ARIMA-ANFIS+ABC berhasil dilatih.")
+        else:
+            st.write("Silakan bagi data terlebih dahulu.")
+    
+    elif menu == "Lakukan Prediksi Sesuai Jumlah Data Testing Tampilkan MAPE dan Plot":
+        if 'model_arima_anfis_abc' in st.session_state and 'test_data' in st.session_state:
+            predictions, mape = predict_testing_arima_anfis_abc(st.session_state.model_arima_anfis_abc, st.session_state.test_data)
+            st.write(f"MAPE: {mape:.2f}%")
+            plt.figure(figsize=(10, 5))
+            plt.plot(st.session_state.test_data['Bulan'], st.session_state.test_data['Jumlah permintaan'], label='Data Aktual')
+            plt.plot(st.session_state.test_data['Bulan'], predictions, label='Prediksi ARIMA-ANFIS+ABC', linestyle='--')
+            plt.title('Prediksi Data Testing')
+            plt.xlabel('Bulan')
+            plt.ylabel('Jumlah Permintaan')
+            plt.legend()
+            st.pyplot(plt)
+        else:
+            st.write("Silakan latih model ARIMA-ANFIS+ABC terlebih dahulu.")
+    
+    elif menu == "Lakukan Prediksi 6 Bulan ke Depan dan Tampilkan Plot":
+        if 'model_arima_anfis_abc' in st.session_state:
+            predictions = predict_6_bulan_ke_depan(st.session_state.model_arima_anfis_abc)
+            plt.figure(figsize=(10, 5))
+            plt.plot(predictions, label='Prediksi 6 Bulan ke Depan', linestyle='--')
+            plt.title('Prediksi 6 Bulan ke Depan')
+            plt.xlabel('Bulan')
+            plt.ylabel('Jumlah Permintaan')
+            plt.legend()
+            st.pyplot(plt)
+        else:
+            st.write("Silakan latih model ARIMA-ANFIS+ABC terlebih dahulu.")
 
-        st.write("Hasil Prediksi 6 Bulan ke Depan:")
-        st.write(future_predictions_denorm)
-
-        # Plot future predictions
-        st.line_chart(future_predictions_denorm)
-    else:
-        st.error("Scaler tidak tersedia. Pastikan langkah ANFIS + ABC telah dijalankan dengan benar.")
-
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 7
-    if col2.button("Selesai"):
-        st.write("Terima kasih telah menggunakan aplikasi ini!")
+if __name__ == "__main__":
+    main()
