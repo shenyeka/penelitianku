@@ -1,5 +1,3 @@
-# HALAMAN UTAMA
-
 import streamlit as st
 from PIL import Image
 
@@ -55,52 +53,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Tampilkan header utama
-st.markdown(
-    """
-    <div class="header-container">
-        PREDIKSI PERMINTAAN DARAH MENGGUNAKAN METODE<br>
-        ARIMA-ANFIS DENGAN OPTIMASI ARTIFICIAL BEE COLONY
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-# Tampilkan menu navigasi
-st.markdown(
-    """
-    <div class="nav-bar">
-        <a href="#">HOME</a>
-        <a href="#">DATA PREPROCESSING</a>
-        <a href="#">STASIONERITAS DATA</a>
-        <a href="#">PREDIKSI</a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-# Konten halaman HOME
-st.markdown("## Selamat Datang 👋")
-st.markdown("Ini adalah aplikasi prediksi permintaan darah menggunakan metode ARIMA-ANFIS dengan optimasi Artificial Bee Colony. Silakan pilih menu di atas untuk mulai.")
-
-# MENU HOME
-import streamlit as st
-
-# Set konfigurasi halaman (WAJIB baris pertama sebelum apa pun)
-st.set_page_config(
-    page_title="Prediksi Permintaan Darah",
-    layout="wide"
-)
-
-# Sidebar navigasi menu
+# Tampilan menu navigasi dengan sidebar
 menu = st.sidebar.radio("Menu", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "PREDIKSI"])
 
-# Tampilan menu HOME
+# Tampilan konten berdasarkan menu yang dipilih
 if menu == "HOME":
-    st.markdown("<h1 style='text-align: center; color: maroon;'>PREDIKSI PERMINTAAN DARAH</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>MENGGUNAKAN METODE ARIMA-ANFIS DENGAN OPTIMASI ARTIFICIAL BEE COLONY</h3>", unsafe_allow_html=True)
+    # Header utama
+    st.markdown("<div class='header-container'>PREDIKSI PERMINTAAN DARAH MENGGUNAKAN METODE<br> ARIMA-ANFIS DENGAN OPTIMASI ARTIFICIAL BEE COLONY</div>", unsafe_allow_html=True)
+    
+    # Konten HOME
+    st.markdown("## Selamat Datang 👋")
+    st.markdown("Ini adalah aplikasi prediksi permintaan darah menggunakan metode ARIMA-ANFIS dengan optimasi Artificial Bee Colony. Silakan pilih menu di atas untuk mulai.")
     st.markdown("---")
-
     st.markdown("""
     <div style='text-align: justify; font-size:18px'>
     Prediksi permintaan darah menggunakan metode <b>ARIMA-ANFIS</b> dengan optimasi <b>Artificial Bee Colony (ABC)</b> merupakan pendekatan hybrid yang menggabungkan kekuatan model statistik dan kecerdasan buatan untuk meningkatkan akurasi peramalan. <br><br>
@@ -112,3 +76,15 @@ if menu == "HOME":
     Dengan menggabungkan ketiga metode ini, prediksi permintaan darah menjadi lebih akurat dan adaptif terhadap dinamika data, sehingga sangat membantu dalam pengambilan keputusan yang tepat di <b>Unit Transfusi Darah (UTD)</b>.
     </div>
     """, unsafe_allow_html=True)
+
+elif menu == "DATA PREPROCESSING":
+    st.markdown("## Data Preprocessing")
+    # Implementasikan bagian ini sesuai kebutuhan
+
+elif menu == "STASIONERITAS DATA":
+    st.markdown("## Stasioneritas Data")
+    # Implementasikan bagian ini sesuai kebutuhan
+
+elif menu == "PREDIKSI":
+    st.markdown("## Prediksi Permintaan Darah")
+    # Implementasikan bagian ini sesuai kebutuhan
