@@ -56,10 +56,10 @@ menu = st.sidebar.radio("Menu", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DA
 
 # ======================== HOME ========================
 if menu == "HOME":
-    st.markdown("<div class='header-container'>PREDIKSI PERMINTAAN DARAH<br>MENGGUNAKAN ARIMA-ANFIS + ABC</div>", unsafe_allow_html=True)
+    st.markdown("<div class='header-container'>PREDIKSI PERMINTAAN DARAH<br>MENGGUNAKAN MENGGUNAKAN ARIMA-ANFIS DENGAN OPTIMASI ABC</div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="content">
-    Aplikasi ini menggunakan metode hybrid <b>ARIMA-ANFIS</b> dengan optimasi <b>Artificial Bee Colony</b> (ABC)
+    Antarmuka ini menggunakan metode hybrid <b>ARIMA-ANFIS</b> dengan optimasi <b>Artificial Bee Colony</b> (ABC)
     untuk memprediksi permintaan darah pada Unit Transfusi Darah (UTD).<br><br>
     Silakan mulai dengan mengunggah data pada menu <b>DATA PREPROCESSING</b>.
     </div>
