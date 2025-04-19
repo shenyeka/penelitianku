@@ -217,7 +217,10 @@ elif menu == "DATA SPLITTING":
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
     from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.stattools import pacf
     from sklearn.preprocessing import MinMaxScaler
+    import numpy as np
+    import matplotlib.pyplot as plt
 
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
@@ -274,7 +277,40 @@ elif menu == "PREDIKSI":
                     st.info("Silakan lanjut ke menu ANFIS untuk melatih model hybrid.")
                 else:
                     st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
+
+            # Langkah baru: Menentukan Input ANFIS dengan PACF
+            if st.button("Tentukan Input ANFIS dari PACF"):
+                if 'data_anfis' in st.session_state:
+                    data_anfis = st.session_state['data_anfis']
+                    
+                    # Hitung PACF dan cari lag signifikan
+                    jp = data_anfis['residual']
+                    pacf_values = pacf(jp, nlags=33)
+                    n = len(jp)  # jumlah data
+                    ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
+                    significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
+                    st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
+
+                    # Menambahkan lag signifikan ke data
+                    for lag in significant_lags:
+                        data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
+                    data_anfis.dropna(inplace=True)
+
+                    st.session_state['data_anfis_with_lags'] = data_anfis
+                    st.success("Lag signifikan berhasil ditambahkan.")
+                    st.write(data_anfis.head())
+
+                    # Plot PACF
+                    st.subheader("Plot Partial Autocorrelation Function (PACF)")
+                    plt.figure(figsize=(10, 6))
+                    plot_pacf(jp, lags=33, method='ywm', alpha=0.05)
+                    plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
+                    st.pyplot(plt)
+
+                else:
+                    st.warning("Data residual belum dinormalisasi. Klik 'Lanjutkan ke Normalisasi Residual' terlebih dahulu.")
     else:
         st.warning("Silakan lakukan data splitting terlebih dahulu.")
+
 
 
