@@ -90,12 +90,12 @@ elif st.session_state.step == 3:
     df = st.session_state.data.copy()
     
     # Check for the 'Bulan' column
-    if 'Bulan' in df.columns:
+    if 'Tanggal' in df.columns:
         # Convert 'Bulan' to datetime and set as index
-        df['Bulan'] = pd.to_datetime(df['Bulan'])
-        df.set_index('Bulan', inplace=True)
+        df['Tanggal'] = pd.to_datetime(df['Tanggal'])
+        df.set_index('Tanggal', inplace=True)
     else:
-        st.error("Kolom 'Bulan' tidak ditemukan dalam dataset. Pastikan file CSV memiliki kolom ini.")
+        st.error("Kolom 'Tanggal' tidak ditemukan dalam dataset. Pastikan file CSV memiliki kolom ini.")
         st.stop()  # Stop execution if the column is not found
 
     # Preprocess 'Jumlah permintaan' column
