@@ -189,21 +189,18 @@ elif menu == "DATA SPLITTING":
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
-            # Rasio split
-            ratio = st.slider("Pilih Rasio Training:", 0.1, 0.9, 0.8)
-
-            # Splitting manual
-            split_point = int(len(df) * ratio)
-            train_data = df.iloc[:split_point]
-            test_data = df.iloc[split_point:]
+            # FIXED rasio 80:20
+            train_size = int(len(df) * 0.8)
+            train_data = df.iloc[:train_size]
+            test_data = df.iloc[train_size:]
 
             # Simpan ke session state
             st.session_state["train"] = train_data
             st.session_state["test"] = test_data
 
-            st.success(f"Data berhasil di-split dengan rasio {int(ratio*100)}% training dan {int((1-ratio)*100)}% testing.")
+            st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
 
-            # Tampilkan info
+            # Tampilkan hasil split
             st.subheader("Data Training:")
             st.write(train_data.tail())
             st.line_chart(train_data)
@@ -211,12 +208,12 @@ elif menu == "DATA SPLITTING":
             st.subheader("Data Testing:")
             st.write(test_data.head())
             st.line_chart(test_data)
+
         else:
             st.warning("⚠️ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
 
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
-
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
