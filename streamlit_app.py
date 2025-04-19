@@ -6,6 +6,7 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_percentage_error
+from statsmodels.tsa.arima.model import ARIMA
 import io
 
 # Konfigurasi halaman
