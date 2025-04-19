@@ -16,15 +16,24 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# Fungsi ambil data
-@st.cache_data
-def get_blood_demand_data():
-    DATA_FILENAME = Path(__file__).parent / 'data/blood_demand.csv'
-    df = pd.read_csv(DATA_FILENAME)
-    df['Tanggal'] = pd.to_datetime(df['Tanggal'])  # Pastikan kolom waktu dalam datetime
-    return df
+st.title("Prediksi Permintaan Darah")
 
-df = get_blood_demand_data()
+uploaded_file = st.file_uploader("Upload file CSV permintaan darah", type=["csv"])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+
+    # Tampilkan isi data
+    st.subheader("Data Permintaan Darah")
+    st.dataframe(df)
+
+    # Lanjutkan ke analisis/grafik jika diperlukan
+    # Misalnya:
+    st.line_chart(df.set_index(df.columns[0]))  # Asumsikan kolom 0 = tanggal, sisanya numerik
+
+else:
+    st.info("Silakan upload file CSV terlebih dahulu untuk melihat analisis.")
+
 
 # -----------------------------------------------------------------------------
 # Judul halaman
