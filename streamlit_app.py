@@ -9,10 +9,11 @@ st.set_page_config(
 # Inject CSS agar styling muncul
 st.markdown("""
     <style>
-        /* Background halaman dengan gradasi */
+        /* Background halaman dengan warna soft pink */
         body {
-            background: linear-gradient(135deg, #FADADD, #E6A6B9);
+            background-color: #FADADD;  /* soft pink */
             font-family: 'Arial', sans-serif;
+            font-size: 18px;
         }
 
         /* Header utama */
@@ -21,7 +22,7 @@ st.markdown("""
             color: white;
             padding: 40px;
             text-align: center;
-            font-size: 30px;
+            font-size: 40px;  /* Memperbesar ukuran font header */
             font-weight: bold;
             border-radius: 15px;
             margin-bottom: 30px;
@@ -39,7 +40,7 @@ st.markdown("""
             display: flex;
             justify-content: center;
             background-color: #fff;
-            padding: 15px 0;
+            padding: 20px 0;
             border-top: 3px solid #800000;
             border-bottom: 3px solid #800000;
             margin-bottom: 30px;
@@ -52,8 +53,8 @@ st.markdown("""
             font-weight: bold;
             color: #800000;
             text-decoration: none;
-            font-size: 20px;
-            padding: 10px;
+            font-size: 22px;  /* Memperbesar ukuran font pada link */
+            padding: 12px;
             border-radius: 8px;
             transition: background-color 0.3s, color 0.3s;
         }
@@ -62,6 +63,41 @@ st.markdown("""
             background-color: #800000;
             color: #fff;
             text-decoration: none;
+        }
+
+        /* Konten */
+        .content {
+            text-align: justify;
+            font-size: 20px;  /* Memperbesar ukuran font konten */
+            line-height: 1.8;
+            margin: 20px 10%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .content:hover {
+            background-color: #F5F5F5;
+            border-radius: 10px;
+            padding: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Styling tombol */
+        .btn {
+            background-color: #800000;
+            color: white;
+            padding: 15px 30px;
+            font-size: 20px;  /* Memperbesar ukuran font tombol */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #a83232;
         }
 
         /* Footer (Optional) */
@@ -74,38 +110,6 @@ st.markdown("""
             position: fixed;
             bottom: 0;
             width: 100%;
-        }
-
-        /* Konten */
-        .content {
-            text-align: justify;
-            font-size: 18px;
-            line-height: 1.6;
-            margin: 20px 10%;
-        }
-
-        /* Efek hover pada konten paragraf */
-        .content:hover {
-            background-color: #F5F5F5;
-            border-radius: 10px;
-            padding: 10px;
-            transition: background-color 0.3s ease;
-        }
-
-        /* Styling tombol */
-        .btn {
-            background-color: #800000;
-            color: white;
-            padding: 12px 25px;
-            font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #a83232;
         }
 
     </style>
