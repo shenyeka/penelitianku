@@ -79,7 +79,7 @@ elif st.session_state.step == 5:
 
     pred = fitted_model.predict(start=1, end=len(df)-1, typ='levels')
     actual = df['Jumlah permintaan'].iloc[1:]
-    mape = mean_absolute_percentage_error(actual, pred)
+    mape = mean_absolute_percentage_error(actual, pred)*100
     st.session_state.mape = mape
     st.line_chart(pred)
     st.write(f"Nilai MAPE: {mape:.2f}")
