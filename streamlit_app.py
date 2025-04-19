@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from sklearn.model_selection import train_test_split
 
 # Konfigurasi halaman
 st.set_page_config(
@@ -52,7 +53,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar menu
-menu = st.sidebar.radio("Menu", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "PREDIKSI"])
+menu = st.sidebar.radio("Menu", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"])
 
 # ======================== HOME ========================
 if menu == "HOME":
@@ -164,6 +165,58 @@ elif menu == "STASIONERITAS DATA":
 
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+
+# =================== DATA SPLITTING ===================
+elif menu == "DATA SPLITTING":
+    st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
+
+    uploaded_split_file = st.file_uploader("Unggah Data yang Akan Di-Split (CSV)", type=["csv"])
+
+    if uploaded_split_file is not None:
+        df = pd.read_csv(uploaded_split_file)
+
+        st.write("Preview Data:")
+        st.write(df.head())
+
+        # Pilih kolom waktu jika ada
+        time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
+
+        if time_column != "Tidak Ada":
+            df[time_column] = pd.to_datetime(df[time_column])
+            df.set_index(time_column, inplace=True)
+
+        # Pastikan hanya 1 kolom target (seri waktu)
+        if len(df.columns) == 1:
+            col_name = df.columns[0]
+
+            # Rasio split
+            ratio = st.slider("Pilih Rasio Training:", 0.1, 0.9, 0.8)
+
+            # Splitting manual
+            split_point = int(len(df) * ratio)
+            train_data = df.iloc[:split_point]
+            test_data = df.iloc[split_point:]
+
+            # Simpan ke session state
+            st.session_state["train"] = train_data
+            st.session_state["test"] = test_data
+
+            st.success(f"Data berhasil di-split dengan rasio {int(ratio*100)}% training dan {int((1-ratio)*100)}% testing.")
+
+            # Tampilkan info
+            st.subheader("Data Training:")
+            st.write(train_data.tail())
+            st.line_chart(train_data)
+
+            st.subheader("Data Testing:")
+            st.write(test_data.head())
+            st.line_chart(test_data)
+        else:
+            st.warning("⚠️ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
+
+    else:
+        st.info("Silakan unggah data yang ingin Anda split.")
+
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
