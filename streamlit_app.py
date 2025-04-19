@@ -488,5 +488,44 @@ def predict_next_step(lag32_val, lag33_val):
     pred = anfis_predict(best_params, lag32_arr, lag33_arr, rules_arr)
     return pred[0]
 
+# Asumsikan kamu sudah punya variabel `train` berisi data dengan kolom 'lag32', 'lag33', dan 'target'
+
+if st.button("Simpan Data Lag Residual"):
+    # Simpan ke session_state
+    st.session_state['train'] = train
+    st.success("Data residual dengan lag berhasil disimpan!")
+
+    # Tambahkan tombol lanjutan
+    st.session_state['show_anfis_modeling'] = True
+
+# Tombol lanjutan ke ANFIS hanya muncul jika data sudah disimpan
+if st.session_state.get('show_anfis_modeling', False):
+    if st.button("Lanjutkan ke Pemodelan ANFIS"):
+        # Ambil data
+        train = st.session_state['train']
+        lag32 = train['lag32'].values
+        lag33 = train['lag33'].values
+        target = train['target'].values
+
+        # Inisialisasi fungsi keanggotaan
+        c_lag32, sigma_lag32 = initialize_membership_functions(lag32)
+        c_lag33, sigma_lag33 = initialize_membership_functions(lag33)
+
+        # Simpan parameter MF ke session_state
+        st.session_state['c_lag32'] = c_lag32
+        st.session_state['sigma_lag32'] = sigma_lag32
+        st.session_state['c_lag33'] = c_lag33
+        st.session_state['sigma_lag33'] = sigma_lag33
+
+        # Hitung firing strength (rules)
+        rules = firing_strength(lag32, lag33, c_lag32, sigma_lag32, c_lag33, sigma_lag33)
+
+        # Optimasi parameter ANFIS dengan ABC
+        with st.spinner("Mengoptimasi ANFIS dengan Artificial Bee Colony..."):
+            best_params, best_loss = abc_optimizer(lag32, lag33, rules, target)
+            st.session_state['best_params'] = best_params
+
+        st.success(f"Pemodelan ANFIS selesai! Loss terbaik: {best_loss:.6f}")
+
 
 
