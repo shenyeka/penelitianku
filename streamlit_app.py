@@ -488,23 +488,6 @@ def predict_next_step(lag32_val, lag33_val):
 def main():
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA + ANFIS")
 
-    # Upload file
-    uploaded_file = st.file_uploader("Upload Data", type=['csv'])
-    if uploaded_file is not None:
-        data = pd.read_csv(uploaded_file)
-
-        # Proses data
-        # (Lakukan preprocessing dan bagi data menjadi train dan test di sini)
-
-        if 'train' not in st.session_state:
-            train, test = train_test_split(data, test_size=0.2, shuffle=False)
-            st.session_state['train'] = train
-            st.session_state['test'] = test
-            st.success("Data telah dibagi menjadi training dan testing.")
-        else:
-            train = st.session_state['train']
-            test = st.session_state['test']
-
         # Implementasi model ARIMA dan ANFIS
         if st.button("Latih Model ARIMA dan ANFIS"):
             # Langkah-langkah pelatihan ARIMA, ANFIS, dan optimasi ABC
