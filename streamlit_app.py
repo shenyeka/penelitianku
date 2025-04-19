@@ -52,7 +52,7 @@ elif st.session_state.step == 3:
     df['Bulan'] = pd.to_datetime(df['Bulan'])
     df = df.set_index('Bulan')
     st.session_state.data = df
-    st.line_chart(df['Jumlah Permintaan'])
+    st.line_chart(df['Jumlah permintaan'])
     col1, col2 = st.columns(2)
     if col1.button("Kembali"):
         st.session_state.step = 2
@@ -62,7 +62,7 @@ elif st.session_state.step == 3:
 # Step 4: Plot Data
 elif st.session_state.step == 4:
     st.header("Plot Data")
-    st.line_chart(st.session_state.data['Jumlah Permintaan'])
+    st.line_chart(st.session_state.data['Jumlah permintaan'])
     col1, col2 = st.columns(2)
     if col1.button("Kembali"):
         st.session_state.step = 3
