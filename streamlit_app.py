@@ -75,7 +75,7 @@ elif st.session_state.step == 4:
     if "df" in st.session_state:
         df = st.session_state["df"]
         ts = df[df.columns[0]]
-        model = sm.tsa.ARIMA(ts, order=(1,1,1))
+        model = sm.tsa.ARIMA(ts, order=(1,1,0))
         model_fit = model.fit()
         st.write(model_fit.summary())
         st.session_state["residual"] = model_fit.resid
