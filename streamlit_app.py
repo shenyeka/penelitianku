@@ -228,8 +228,8 @@ elif menu == "PREDIKSI":
 
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
-    train = st.session_state.get('train')
-    test = st.session_state.get('test')
+    train = st.session_state.get('train_data')
+    test = st.session_state.get('test_data')
 
     if train is not None and test is not None:
         st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
