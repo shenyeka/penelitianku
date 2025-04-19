@@ -14,43 +14,24 @@ st.markdown("""
     body {
         background-color: #ffefef;
         color: maroon;
-        font-family: 'Arial', sans-serif;
     }
     .header {
         color: maroon;
-        font-size: 30px;
-        font-weight: bold;
-        text-align: center;
-        padding: 20px;
+        font-size: 28px;
     }
     .subheader {
         color: maroon;
-        font-size: 18px;
-        text-align: center;
     }
-    .button {
+    button {
         background-color: #f4c2c2;
         color: maroon;
         border: none;
         padding: 10px 20px;
         border-radius: 5px;
         font-weight: bold;
-        margin: 10px;
-        display: inline-block;
-        cursor: pointer;
     }
-    .button:hover {
+    button:hover {
         background-color: #ebacac;
-    }
-    .container {
-        text-align: center;
-    }
-    .image-container {
-        margin-top: 20px;
-    }
-    .image-container img {
-        width: 100px;
-        height: auto;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -76,7 +57,7 @@ st.markdown("Aplikasi ini digunakan untuk memprediksi permintaan darah menggunak
 # Step 1: Welcome Screen
 if st.session_state.step == 1:
     st.header("Selamat Datang")
-    if st.button("Lanjut", key="step1", help="Klik untuk melanjutkan"):
+    if st.button("Lanjut"):
         st.session_state.step = 2
 
 # Step 2: Upload Dataset
@@ -88,9 +69,9 @@ elif st.session_state.step == 2:
         st.write("Contoh data:")
         st.write(st.session_state.data.head())
     col1, col2 = st.columns(2)
-    if col1.button("Kembali", key="back_step2", help="Kembali ke halaman sebelumnya"):
+    if col1.button("Kembali"):
         st.session_state.step = 1
-    if col2.button("Lanjut", key="next_step2", help="Lanjutkan ke langkah berikutnya") and st.session_state.data is not None:
+    if col2.button("Lanjut") and st.session_state.data is not None:
         st.session_state.step = 3
 
 # Step 3: Preprocessing Data
@@ -102,9 +83,9 @@ elif st.session_state.step == 3:
     st.session_state.data = df
     st.line_chart(df['Jumlah permintaan'])
     col1, col2 = st.columns(2)
-    if col1.button("Kembali", key="back_step3", help="Kembali ke halaman sebelumnya"):
+    if col1.button("Kembali"):
         st.session_state.step = 2
-    if col2.button("Lanjut", key="next_step3", help="Lanjutkan ke langkah berikutnya"):
+    if col2.button("Lanjut"):
         st.session_state.step = 4
 
 # Step 4: Plot Data
@@ -112,16 +93,16 @@ elif st.session_state.step == 4:
     st.header("Plot Data")
     st.line_chart(st.session_state.data['Jumlah permintaan'])
     col1, col2 = st.columns(2)
-    if col1.button("Kembali", key="back_step4", help="Kembali ke halaman sebelumnya"):
+    if col1.button("Kembali"):
         st.session_state.step = 3
-    if col2.button("Lanjut", key="next_step4", help="Lanjutkan ke langkah berikutnya"):
+    if col2.button("Lanjut"):
         st.session_state.step = 5
 
 # Step 5: ARIMA Modeling
 elif st.session_state.step == 5:
     st.header("Pemodelan ARIMA")
     df = st.session_state.data
-    model = ARIMA(df['Jumlah permintaan'], order=(1, 1, 0))
+    model = ARIMA(df['Jumlah permintaan'], order=(1, 1, 1))
     fitted_model = model.fit()
     st.session_state.arima_model = fitted_model
 
@@ -133,9 +114,9 @@ elif st.session_state.step == 5:
     st.write(f"Nilai MAPE: {mape:.2f}")
 
     col1, col2 = st.columns(2)
-    if col1.button("Kembali", key="back_step5", help="Kembali ke halaman sebelumnya"):
+    if col1.button("Kembali"):
         st.session_state.step = 4
-    if col2.button("Lanjut", key="next_step5", help="Lanjutkan ke langkah berikutnya"):
+    if col2.button("Lanjut"):
         st.session_state.step = 6
 
 # Step 6: ARIMA Residuals
@@ -145,9 +126,9 @@ elif st.session_state.step == 6:
     st.session_state.residuals = residuals
     st.line_chart(residuals)
     col1, col2 = st.columns(2)
-    if col1.button("Kembali", key="back_step6", help="Kembali ke halaman sebelumnya"):
+    if col1.button("Kembali"):
         st.session_state.step = 5
-    if col2.button("Lanjut", key="next_step6", help="Lanjutkan ke langkah berikutnya"):
+    if col2.button("Lanjut"):
         st.session_state.step = 7
 
 # Step 7: ANFIS + ABC Modeling
@@ -155,22 +136,18 @@ elif st.session_state.step == 7:
     st.header("Pemodelan ANFIS + ABC")
     st.write("(Placeholder) Implementasi ANFIS + ABC di sini.")
 
-    # Using a simple placeholder animation effect
+    # Running Animation Placeholder
     st.markdown("""
-    <div class="container">
-        <div class="image-container">
-            <img src="https://i.imgur.com/Aj5YJ0H.gif" alt="Blood Donation Animation">
-        </div>
-        <p style="font-size: 20px; color: maroon;">Optimizing...</p>
+    <div style='text-align: center;'>
+        <img src="path_to_your_blood_splash_animation.gif" style="width:150px; height:auto;">
+        <p style="font-size: 20px; color: maroon;">Running...</p>
     </div>
     """, unsafe_allow_html=True)
 
     # Add bee animation or placeholder
     st.markdown("""
-    <div class="container">
-        <div class="image-container">
-            <img src="https://i.imgur.com/jPj07L9.gif" alt="Bee Animation">
-        </div>
+    <div style='text-align: center;'>
+        <img src="path_to_your_bee_animation.gif" style="width:150px; height:auto;">
         <p style="font-size: 20px; color: maroon;">Optimizing...</p>
     </div>
     """, unsafe_allow_html=True)
