@@ -113,36 +113,53 @@ elif menu == "STASIONERITAS DATA":
         col = st.selectbox("Pilih kolom untuk diuji stasioneritas:", data.columns)
 
         if col:
-            # Uji ADF
+            # Uji ADF awal
+            st.subheader("Uji ADF - Sebelum Differencing")
             adf_result = adfuller(data[col])
-            st.write("Hasil Uji ADF:")
             st.write(f"ADF Statistic: {adf_result[0]:.4f}")
             st.write(f"P-Value: {adf_result[1]:.4f}")
             for key, val in adf_result[4].items():
-                st.write(f"Kritikal Nilai {key}: {val:.4f}")
+                st.write(f"Critical Value ({key}): {val:.4f}")
 
             if adf_result[1] < 0.05:
-                st.success("Data sudah stasioner.")
+                st.success("✅ Data sudah stasioner.")
             else:
-                st.warning("Data tidak stasioner. Melakukan differencing...")
+                st.warning("⚠️ Data tidak stasioner. Melakukan differencing...")
+
+                # Differencing
                 data_diff = data[col].diff().dropna()
 
-                st.write("Plot Data Setelah Differencing:")
+                # Simpan data differencing ke session
+                st.session_state["data_diff"] = data_diff
+
+                # Plot hasil differencing
+                st.subheader("Plot Setelah Differencing:")
                 fig, ax = plt.subplots()
                 sns.lineplot(x=data_diff.index, y=data_diff.values, ax=ax)
                 ax.set_title("Data Setelah Differencing")
                 st.pyplot(fig)
 
-                st.session_state["data_diff"] = data_diff  # Simpan untuk prediksi nanti
+                # Uji ADF ulang setelah differencing
+                st.subheader("Uji ADF - Setelah Differencing")
+                adf_diff_result = adfuller(data_diff)
+                st.write(f"ADF Statistic: {adf_diff_result[0]:.4f}")
+                st.write(f"P-Value: {adf_diff_result[1]:.4f}")
+                for key, val in adf_diff_result[4].items():
+                    st.write(f"Critical Value ({key}): {val:.4f}")
+
+                if adf_diff_result[1] < 0.05:
+                    st.success("✅ Data sudah stasioner setelah differencing.")
+                else:
+                    st.error("❌ Data masih belum stasioner setelah differencing.")
 
             # Plot ACF dan PACF
-            st.write("Plot ACF dan PACF:")
+            st.subheader("Plot ACF dan PACF:")
             fig_acf, ax_acf = plt.subplots()
-            plot_acf(data[col], lags=40, ax=ax_acf)
+            plot_acf(data[col].dropna(), lags=40, ax=ax_acf)
             st.pyplot(fig_acf)
 
             fig_pacf, ax_pacf = plt.subplots()
-            plot_pacf(data[col], lags=40, ax=ax_pacf)
+            plot_pacf(data[col].dropna(), lags=40, ax=ax_pacf)
             st.pyplot(fig_pacf)
 
     else:
