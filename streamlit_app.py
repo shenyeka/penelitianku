@@ -64,7 +64,7 @@ if st.session_state.step == 1:
     st.header("Selamat Datang")
     if st.button("Lanjut"):
         st.session_state.step = 2
-
+        
 # Step 2: Upload Dataset
 elif st.session_state.step == 2:
     st.header("Upload Dataset")
@@ -73,6 +73,11 @@ elif st.session_state.step == 2:
         st.session_state.data = pd.read_csv(uploaded_file)
         st.write("Contoh data:")
         st.write(st.session_state.data.head())
+        
+        # Check the column names
+        st.write("Nama kolom dalam dataset:")
+        st.write(st.session_state.data.columns.tolist())
+        
     col1, col2 = st.columns(2)
     if col1.button("Kembali"):
         st.session_state.step = 1
@@ -83,14 +88,20 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     st.header("Preprocessing Data")
     df = st.session_state.data.copy()
-    df['Bulan'] = pd.to_datetime(df['Bulan'])
-    df = df.set_index('Bulan')
-    st.session_state.data = df
-    st.line_chart(df['Jumlah permintaan'])
+    
+    # Check if 'Bulan' column exists
+    if 'Bulan' in df.columns:
+        df['Bulan'] = pd.to_datetime(df['Bulan'])
+        df = df.set_index('Bulan')
+        st.session_state.data = df
+        st.line_chart(df['Jumlah permintaan'])
+    else:
+        st.error("Kolom 'Bulan' tidak ditemukan dalam dataset. Pastikan file CSV memiliki kolom ini.")
+    
     col1, col2 = st.columns(2)
     if col1.button("Kembali"):
         st.session_state.step = 2
-    if col2.button("Lanjut"):
+    if col2.button("Lanjut") and 'Bulan' in df.columns:
         st.session_state.step = 4
 
 # Step 4: Plot Data
