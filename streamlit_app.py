@@ -472,20 +472,21 @@ def abc_optimizer(lag32, lag33, rules, target,
 
     return best_params, best_fitness
 
-# Fungsi untuk prediksi satu langkah ANFIS
 def predict_next_step(lag32_val, lag33_val):
+    c_lag32 = st.session_state['c_lag32']
+    sigma_lag32 = st.session_state['sigma_lag32']
+    c_lag33 = st.session_state['c_lag33']
+    sigma_lag33 = st.session_state['sigma_lag33']
+    best_params = st.session_state['best_params']
+
     rules_new = firing_strength(lag32_val, lag33_val, c_lag32, sigma_lag32, c_lag33, sigma_lag33)
 
-    # Karena input berupa satu data, ubah jadi array 1 sample
     lag32_arr = np.array([lag32_val])
     lag33_arr = np.array([lag33_val])
     rules_arr = rules_new.reshape(1, -1)
 
     pred = anfis_predict(best_params, lag32_arr, lag33_arr, rules_arr)
     return pred[0]
-
-if __name__ == "__main__":
-    main()
 
 
 
