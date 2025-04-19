@@ -44,10 +44,6 @@ Dashboard ini menampilkan hasil prediksi jumlah permintaan darah menggunakan mod
 
 Silakan pilih rentang waktu untuk melihat tren dan hasil prediksi.
 """)
-
-import tkinter as tk
-from tkinter import filedialog, messagebox
-from tkinter import ttk
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
