@@ -86,7 +86,7 @@ st.markdown("Ini adalah aplikasi prediksi permintaan darah menggunakan metode AR
 import streamlit as st
 from PIL import Image
 
-# Set halaman
+# Harus baris pertama setelah import!
 st.set_page_config(page_title="Prediksi Permintaan Darah", layout="wide")
 
 # Inject CSS
