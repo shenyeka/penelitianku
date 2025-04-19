@@ -189,15 +189,20 @@ elif st.session_state.step == 7:
 # Step 8: Future Predictions
 elif st.session_state.step == 8:
     st.header("Prediksi 6 Bulan ke Depan")
-    # Implement future predictions logic here
-    future_predictions = np.random.rand(6)  # Replace with actual future predictions
-    future_predictions_denorm = scaler.inverse_transform(future_predictions.reshape(-1, 1)).flatten()
+    
+    # Check if the scaler is available
+    if 'scaler' in st.session_state and st.session_state.scaler is not None:
+        # Implement future predictions logic here
+        future_predictions = np.random.rand(6)  # Replace with actual future predictions
+        future_predictions_denorm = st.session_state.scaler.inverse_transform(future_predictions.reshape(-1, 1)).flatten()
 
-    st.write("Hasil Prediksi 6 Bulan ke Depan:")
-    st.write(future_predictions_denorm)
+        st.write("Hasil Prediksi 6 Bulan ke Depan:")
+        st.write(future_predictions_denorm)
 
-    # Plot future predictions
-    st.line_chart(future_predictions_denorm)
+        # Plot future predictions
+        st.line_chart(future_predictions_denorm)
+    else:
+        st.error("Scaler tidak tersedia. Pastikan langkah ANFIS + ABC telah dijalankan dengan benar.")
 
     col1, col2 = st.columns(2)
     if col1.button("Kembali"):
