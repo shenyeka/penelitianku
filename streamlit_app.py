@@ -180,29 +180,24 @@ elif menu == "DATA SPLITTING":
         st.write("Preview Data:")
         st.write(df.head())
 
-        # Pilih kolom waktu jika ada
         time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
 
         if time_column != "Tidak Ada":
             df[time_column] = pd.to_datetime(df[time_column])
             df.set_index(time_column, inplace=True)
 
-        # Pastikan hanya 1 kolom target (seri waktu)
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
-            # FIXED rasio 80:20
             train_size = int(len(df) * 0.8)
             train_data = df.iloc[:train_size]
             test_data = df.iloc[train_size:]
 
-            # Simpan ke session state
-            st.session_state["train"] = train_data
-            st.session_state["test"] = test_data
+            st.session_state["train_data"] = train_data
+            st.session_state["test_data"] = test_data
 
             st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
 
-            # Tampilkan hasil split
             st.subheader("Data Training:")
             st.write(train_data.tail())
             st.line_chart(train_data)
@@ -218,13 +213,13 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan unggah data yang ingin Anda split.")
 
 # =================== PREDIKSI ======================
-# PREDIKSI
 elif menu == "PREDIKSI":
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
-    train = st.session_state['train_data']
-    test = st.session_state['test_data']
 
-    if train is not None and test is not None:
+    if "train_data" in st.session_state and "test_data" in st.session_state:
+        train = st.session_state['train_data']
+        test = st.session_state['test_data']
+
         st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
         p = st.number_input("Masukkan nilai p:", min_value=0, value=1)
         d = st.number_input("Masukkan nilai d:", min_value=0, value=1)
@@ -236,7 +231,6 @@ elif menu == "PREDIKSI":
             st.success("Model ARIMA berhasil dilatih.")
             st.write(model_arima.summary())
 
-            start_test = len(train)
             pred = model_arima.forecast(steps=len(test))
             test['prediksi'] = pred.values
 
