@@ -221,311 +221,141 @@ elif menu == "DATA SPLITTING":
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
-    from statsmodels.tsa.arima.model import ARIMA
-    from statsmodels.tsa.stattools import pacf
-    from sklearn.preprocessing import MinMaxScaler
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
     train = st.session_state.get('train_data')
     test = st.session_state.get('test_data')
 
     if train is not None and test is not None:
-        st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
-        p = st.number_input("Masukkan nilai p:", min_value=0, value=1)
-        d = st.number_input("Masukkan nilai d:", min_value=0, value=1)
-        q = st.number_input("Masukkan nilai q:", min_value=0, value=1)
+        st.subheader("1. Parameter ARIMA")
+        p = st.number_input("p", min_value=0, value=1)
+        d = st.number_input("d", min_value=0, value=1)
+        q = st.number_input("q", min_value=0, value=1)
 
         if st.button("Latih Model ARIMA"):
-            model_arima = ARIMA(train, order=(p, d, q))
-            model_arima = model_arima.fit()
-            st.success("Model ARIMA berhasil dilatih.")
-            st.write(model_arima.summary())
+            series = train.iloc[:, 0]
+            model = ARIMA(series, order=(p, d, q)).fit()
+            st.session_state['model_arima'] = model
+            st.success("Model ARIMA berhasil dilatih")
 
-            start_test = len(train)
-            pred = model_arima.forecast(steps=len(test))
-            test['prediksi'] = pred.values
+            preds = model.forecast(steps=len(test))
+            test = test.copy()
+            test['prediksi'] = preds.values
+            st.write("MAPE:", mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100)
+            st.line_chart({"Aktual": test.iloc[:, 0], "Prediksi": test['prediksi']})
 
-            st.subheader("4. Evaluasi Model dengan MAPE")
-            mape = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
-            st.write(f"MAPE ARIMA: {mape:.2f}%")
+            st.session_state['residual_arima'] = model.resid
 
-            st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
+    if 'residual_arima' in st.session_state:
+        residual = st.session_state['residual_arima']
+        st.line_chart(residual)
 
-            # Simpan model & residual ke session_state
-            st.session_state['model_arima'] = model_arima
-            st.session_state['residual_arima'] = model_arima.resid
+        df = pd.DataFrame({'residual': residual})
+        df.dropna(inplace=True)
+        scaler = MinMaxScaler()
+        df['residual'] = scaler.fit_transform(df[['residual']])
 
-        # Jika model sudah ada, tampilkan tombol lanjutan
-        if 'model_arima' in st.session_state:
-            st.subheader("5. Residual ARIMA")
+        pacf_values = pacf(df['residual'], nlags=33)
+        ci = 1.96 / np.sqrt(len(df))
+        significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
+        st.write("Lag signifikan:", significant_lags)
 
-            if st.button("Lihat Residual ARIMA"):
-                residual = st.session_state['residual_arima']
-                st.line_chart(residual)
+        for lag in significant_lags:
+            df[f'lag{lag}'] = df['residual'].shift(lag)
+        df.dropna(inplace=True)
 
-                # Simpan ke DataFrame untuk normalisasi
-                data_anfis = pd.DataFrame({'residual': residual})
-                st.session_state['data_anfis_raw'] = data_anfis
+        st.session_state['data_anfis'] = df
+        st.write(df.head())
 
-            if st.button("Lanjutkan ke Normalisasi Residual"):
-                if 'data_anfis_raw' in st.session_state:
-                    data_anfis = st.session_state['data_anfis_raw']
-                    scaler_residual = MinMaxScaler()
-                    data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
-                    st.session_state['data_anfis'] = data_anfis
-                    st.session_state['scaler_residual'] = scaler_residual
-                    st.success("Residual berhasil dinormalisasi.")
-                    st.write(data_anfis.head())
-                    st.info("Silakan lanjut ke menu ANFIS untuk melatih model hybrid.")
-                else:
-                    st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
+        plt.figure(figsize=(10, 6))
+        plot_pacf(df['residual'], lags=33)
+        st.pyplot(plt)
 
-            # Langkah baru: Menentukan Input ANFIS dengan PACF
-            if st.button("Tentukan Input ANFIS dari PACF"):
-                if 'data_anfis' in st.session_state:
-                    data_anfis = st.session_state['data_anfis']
-                    
-                    # Hitung PACF dan cari lag signifikan
-                    jp = data_anfis['residual']
-                    pacf_values = pacf(jp, nlags=33)
-                    n = len(jp)  # jumlah data
-                    ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
-                    significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
-                    st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
+        def initialize_membership_functions(data, num_clusters=4):
+            kmeans = KMeans(n_clusters=num_clusters).fit(data.reshape(-1, 1))
+            centers = np.sort(kmeans.cluster_centers_.flatten())
+            sigma = (centers[1] - centers[0]) / 2
+            return centers, sigma
 
-                    # Menambahkan lag signifikan ke data
-                    for lag in significant_lags:
-                        data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
-                    data_anfis.dropna(inplace=True)
+        def gaussian_membership(x, c, sigma):
+            return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
 
-                    st.session_state['data_anfis_with_lags'] = data_anfis
-                    st.success("Lag signifikan berhasil ditambahkan.")
-                    st.write(data_anfis.head())
+        def firing_strength(x1, x2, c1, s1, c2, s2):
+            x1_low = gaussian_membership(x1, c1[0], s1)
+            x1_high = gaussian_membership(x1, c1[1], s1)
+            x2_low = gaussian_membership(x2, c2[0], s2)
+            x2_high = gaussian_membership(x2, c2[1], s2)
 
-                    # Plot PACF
-                    st.subheader("Plot Partial Autocorrelation Function (PACF)")
-                    plt.figure(figsize=(10, 6))
-                    plot_pacf(jp, lags=33, method='ywm', alpha=0.05)
-                    plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
-                    st.pyplot(plt)
+            return np.array([
+                x1_low * x2_low,
+                x1_low * x2_high,
+                x1_high * x2_low,
+                x1_high * x2_high
+            ]).T
 
-                    # Fungsi untuk inisialisasi fungsi keanggotaan
-def initialize_membership_functions(data_anfis, num_clusters=4):
-    kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data_anfis.reshape(-1, 1))
-    centers = np.sort(kmeans.cluster_centers_.flatten())
-    sigma = (centers[1] - centers[0]) / 2
-    return centers, sigma
+        @jit(nopython=True)
+        def anfis_predict(params, x1, x2, rules):
+            n_samples = x1.shape[0]
+            n_rules = rules.shape[1]
+            p = params[:n_rules]
+            q = params[n_rules:2*n_rules]
+            r = params[2*n_rules:3*n_rules]
+            out = np.zeros(n_samples)
+            for i in range(n_samples):
+                num, denom = 0.0, 0.0
+                for j in range(n_rules):
+                    rule = rules[i, j]
+                    num += rule * (p[j] * x1[i] + q[j] * x2[i] + r[j])
+                    denom += rule
+                out[i] = num / (denom + 1e-8)
+            return out
 
-# Fungsi keanggotaan Gaussian
-def gaussian_membership(x, c, sigma):
-    return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+        @jit(nopython=True)
+        def loss_fn(params, x1, x2, rules, y):
+            preds = anfis_predict(params, x1, x2, rules)
+            return np.mean((y - preds)**2)
 
-# Fungsi untuk menghitung kekuatan pemicu
-def firing_strength(lag32, lag33, c_lag32, sigma_lag32, c_lag33, sigma_lag33):
-    ''' Layar 1 '''
-    lag32_low = gaussian_membership(lag32, c_lag32[0], sigma_lag32)
-    lag32_high = gaussian_membership(lag32, c_lag32[1], sigma_lag32)
-    lag33_low = gaussian_membership(lag33, c_lag33[0], sigma_lag33)
-    lag33_high = gaussian_membership(lag33, c_lag33[1], sigma_lag33)
+        def abc_optimizer(x1, x2, rules, y, n_food=200, n_onlooker=200, iters=1500, limit=150):
+            n_params = 3 * rules.shape[1]
+            foods = np.random.uniform(-1, 1, (n_food, n_params))
+            fit = np.array([loss_fn(f, x1, x2, rules, y) for f in foods])
+            trial = np.zeros(n_food)
+            best = foods[np.argmin(fit)]
+            best_fit = np.min(fit)
+            for t in range(iters):
+                for i in range(n_food):
+                    k = np.random.randint(n_food)
+                    while k == i:
+                        k = np.random.randint(n_food)
+                    phi = np.random.uniform(-1, 1, n_params)
+                    candidate = foods[i] + phi * (foods[i] - foods[k])
+                    candidate = np.clip(candidate, -1, 1)
+                    f_candidate = loss_fn(candidate, x1, x2, rules, y)
+                    if f_candidate < fit[i]:
+                        foods[i] = candidate
+                        fit[i] = f_candidate
+                        trial[i] = 0
+                        if f_candidate < best_fit:
+                            best = candidate
+                            best_fit = f_candidate
+                    else:
+                        trial[i] += 1
+                    if trial[i] > limit:
+                        foods[i] = np.random.uniform(-1, 1, n_params)
+                        fit[i] = loss_fn(foods[i], x1, x2, rules, y)
+                        trial[i] = 0
+            return best, best_fit
 
-    ''' Layar 2 '''
-    rules = np.array([
-        lag32_low * lag33_low,   # A1
-        lag32_low * lag33_high,  # A2
-        lag32_high * lag33_low,  # B1
-        lag32_high * lag33_high, # B2
-    ]).T  # Transpose agar shape sesuai (n_samples, n_rules)
+        if st.button("Latih Model ANFIS"):
+            df = st.session_state['data_anfis']
+            x1 = df[f'lag{significant_lags[-2]}'].values
+            x2 = df[f'lag{significant_lags[-1]}'].values
+            y = df['residual'].values
 
-    return rules
+            c1, s1 = initialize_membership_functions(x1)
+            c2, s2 = initialize_membership_functions(x2)
+            rules = firing_strength(x1, x2, c1, s1, c2, s2)
+            best_params, loss = abc_optimizer(x1, x2, rules, y)
 
-# Fungsi ANFIS untuk prediksi
-@jit(nopython=True)
-def anfis_predict(params, lag32, lag33, rules):
-    n_samples = lag32.shape[0]
-    n_rules = rules.shape[1]
-
-    # Split parameters
-    p = params[:n_rules]
-    q = params[n_rules:2*n_rules]
-    r = params[2*n_rules:3*n_rules]
-
-    outputs = np.zeros(n_samples)
-
-    for i in range(n_samples):
-        weighted_sum = 0.0
-        rule_sum = 0.0
-
-        for j in range(n_rules):
-            rule_val = rules[i, j]
-            rule_output = p[j] * lag32[i] + q[j] * lag33[i] + r[j]
-
-            weighted_sum += rule_val * rule_output
-            rule_sum += rule_val
-
-        outputs[i] = weighted_sum / (rule_sum + 1e-8)  # avoid division by zero
-
-    return outputs
-
-# Fungsi loss MSE untuk ANFIS
-@jit(nopython=True)
-def loss_function(params, lag32, lag33, rules, target):
-    preds = anfis_predict(params, lag32, lag33, rules)
-    error = 0.0
-    for i in range(len(target)):
-        diff = target[i] - preds[i]
-        error += diff * diff
-    return error / len(target)
-
-# Fungsi untuk optimasi dengan Artificial Bee Colony
-def abc_optimizer(lag32, lag33, rules, target,
-                  num_food_sources=200,
-                  num_onlooker_bees=200,
-                  max_iter=2000,
-                  limit=150,
-                  param_bounds=(-1, 1)):
-
-    n_rules = rules.shape[1]
-    n_params = 3 * n_rules
-
-    food_sources = np.random.uniform(param_bounds[0], param_bounds[1],
-                                     (num_food_sources, n_params))
-    fitness = np.zeros(num_food_sources)
-    trial = np.zeros(num_food_sources, dtype=np.int32)
-
-    for i in range(num_food_sources):
-        fitness[i] = loss_function(food_sources[i], lag32, lag33, rules, target)
-
-    best_idx = np.argmin(fitness)
-    best_fitness = fitness[best_idx]
-    best_params = food_sources[best_idx].copy()
-    candidate = np.zeros(n_params)
-
-    for iteration in range(max_iter):
-        # === EMPLOYED BEES ===
-        for i in range(num_food_sources):
-            k = i
-            while k == i:
-                k = np.random.randint(0, num_food_sources)
-
-            phi = np.random.uniform(-1, 1, n_params)
-            candidate[:] = food_sources[i] + phi * (food_sources[i] - food_sources[k])
-            candidate = np.clip(candidate, param_bounds[0], param_bounds[1])
-
-            candidate_fit = loss_function(candidate, lag32, lag33, rules, target)
-
-            if candidate_fit < fitness[i]:
-                food_sources[i] = candidate.copy()
-                fitness[i] = candidate_fit
-                trial[i] = 0
-
-                if candidate_fit < best_fitness:
-                    best_fitness = candidate_fit
-                    best_params = candidate.copy()
-            else:
-                trial[i] += 1
-
-        # === ONLOOKER BEES ===
-        fitness_inv = 1.0 / (1.0 + fitness)
-        probs = fitness_inv / np.sum(fitness_inv)
-
-        for _ in range(num_onlooker_bees):
-            i = np.random.choice(num_food_sources, p=probs)
-
-            k = i
-            while k == i:
-                k = np.random.randint(0, num_food_sources)
-
-            phi = np.random.uniform(-1, 1, n_params)
-            candidate[:] = food_sources[i] + phi * (food_sources[i] - food_sources[k])
-            candidate = np.clip(candidate, param_bounds[0], param_bounds[1])
-
-            candidate_fit = loss_function(candidate, lag32, lag33, rules, target)
-
-            if candidate_fit < fitness[i]:
-                food_sources[i] = candidate.copy()
-                fitness[i] = candidate_fit
-                trial[i] = 0
-
-                if candidate_fit < best_fitness:
-                    best_fitness = candidate_fit
-                    best_params = candidate.copy()
-            else:
-                trial[i] += 1
-
-        # === SCOUT BEES ===
-        for i in range(num_food_sources):
-            if trial[i] > limit:
-                food_sources[i] = np.random.uniform(param_bounds[0], param_bounds[1], n_params)
-                fitness[i] = loss_function(food_sources[i], lag32, lag33, rules, target)
-                trial[i] = 0
-
-                if fitness[i] < best_fitness:
-                    best_fitness = fitness[i]
-                    best_params = food_sources[i].copy()
-
-        # === LOGGING ===
-        if iteration % 100 == 0 or iteration == max_iter - 1:
-            print(f"Iteration {iteration}, Best Loss: {best_fitness:.6f}")
-
-    return best_params, best_fitness
-
-def predict_next_step(lag32_val, lag33_val):
-    c_lag32 = st.session_state['c_lag32']
-    sigma_lag32 = st.session_state['sigma_lag32']
-    c_lag33 = st.session_state['c_lag33']
-    sigma_lag33 = st.session_state['sigma_lag33']
-    best_params = st.session_state['best_params']
-
-    rules_new = firing_strength(lag32_val, lag33_val, c_lag32, sigma_lag32, c_lag33, sigma_lag33)
-
-    lag32_arr = np.array([lag32_val])
-    lag33_arr = np.array([lag33_val])
-    rules_arr = rules_new.reshape(1, -1)
-
-    pred = anfis_predict(best_params, lag32_arr, lag33_arr, rules_arr)
-    return pred[0]
-
-# Asumsikan kamu sudah punya variabel `train` berisi data dengan kolom 'lag32', 'lag33', dan 'target'
-
-if st.button("Simpan Data Lag Residual"):
-    # Simpan ke session_state
-    st.session_state['train'] = train
-    st.success("Data residual dengan lag berhasil disimpan!")
-
-    # Tambahkan tombol lanjutan
-    st.session_state['show_anfis_modeling'] = True
-
-# Tombol lanjutan ke ANFIS hanya muncul jika data sudah disimpan
-if st.session_state.get('show_anfis_modeling', False):
-    if st.button("Lanjutkan ke Pemodelan ANFIS"):
-        # Ambil data
-        train = st.session_state['train']
-        lag32 = train['lag32'].values
-        lag33 = train['lag33'].values
-        target = train['target'].values
-
-        # Inisialisasi fungsi keanggotaan
-        c_lag32, sigma_lag32 = initialize_membership_functions(lag32)
-        c_lag33, sigma_lag33 = initialize_membership_functions(lag33)
-
-        # Simpan parameter MF ke session_state
-        st.session_state['c_lag32'] = c_lag32
-        st.session_state['sigma_lag32'] = sigma_lag32
-        st.session_state['c_lag33'] = c_lag33
-        st.session_state['sigma_lag33'] = sigma_lag33
-
-        # Hitung firing strength (rules)
-        rules = firing_strength(lag32, lag33, c_lag32, sigma_lag32, c_lag33, sigma_lag33)
-
-        # Optimasi parameter ANFIS dengan ABC
-        with st.spinner("Mengoptimasi ANFIS dengan Artificial Bee Colony..."):
-            best_params, best_loss = abc_optimizer(lag32, lag33, rules, target)
-            st.session_state['best_params'] = best_params
-
-        st.success(f"Pemodelan ANFIS selesai! Loss terbaik: {best_loss:.6f}")
-
-
-
+            st.write("Loss ANFIS:", loss)
+            preds = anfis_predict(best_params, x1, x2, rules)
+            st.line_chart({"Actual": y, "Predicted": preds})
