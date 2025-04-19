@@ -89,21 +89,36 @@ elif st.session_state.step == 3:
     st.header("Preprocessing Data")
     df = st.session_state.data.copy()
     
-    # Check if 'Bulan' column exists
+    # Check for the 'Bulan' column
     if 'Bulan' in df.columns:
+        # Convert 'Bulan' to datetime and set as index
         df['Bulan'] = pd.to_datetime(df['Bulan'])
-        df = df.set_index('Bulan')
+        df.set_index('Bulan', inplace=True)
+    else:
+        st.error("Kolom 'Bulan' tidak ditemukan dalam dataset. Pastikan file CSV memiliki kolom ini.")
+        st.stop()  # Stop execution if the column is not found
+
+    # Preprocess 'Jumlah permintaan' column
+    if 'Jumlah permintaan' in df.columns:
+        # Handle missing values (e.g., fill with the mean or drop)
+        df['Jumlah permintaan'].fillna(df['Jumlah permintaan'].mean(), inplace=True)
+        
+        # Optionally, you can scale the 'Jumlah permintaan' column
+        scaler = MinMaxScaler()
+        df['Jumlah permintaan'] = scaler.fit_transform(df[['Jumlah permintaan']])
+        st.session_state.scaler = scaler  # Store the scaler for later use
+
         st.session_state.data = df
         st.line_chart(df['Jumlah permintaan'])
     else:
-        st.error("Kolom 'Bulan' tidak ditemukan dalam dataset. Pastikan file CSV memiliki kolom ini.")
-    
+        st.error("Kolom 'Jumlah permintaan' tidak ditemukan dalam dataset.")
+        st.stop()  # Stop execution if the column is not found
+
     col1, col2 = st.columns(2)
     if col1.button("Kembali"):
         st.session_state.step = 2
-    if col2.button("Lanjut") and 'Bulan' in df.columns:
+    if col2.button("Lanjut"):
         st.session_state.step = 4
-
 # Step 4: Plot Data
 elif st.session_state.step == 4:
     st.header("Plot Data")
