@@ -2,152 +2,570 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
-from sklearn.metrics import mean_absolute_percentage_error
-from streamlit.components.v1 import html
+from sklearn.preprocessing import MinMaxScaler
+from statsmodels.tsa.stattools import pacf
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
+import time
+from numba import jit
+import warnings
+warnings.filterwarnings('ignore')
 
-st.set_page_config(layout="centered")
+# Judul Aplikasi
+st.title('Selamat Datang di Sistem Prediksi Permintaan Darah')
+st.subheader('Menggunakan ARIMA-ANFIS dengan Optimasi Artificial Bee Colony (ABC)')
 
-# Style Settings
-st.markdown("""
-<style>
-    body {
-        background-color: #ffefef;
-        color: maroon;
-    }
-    .header {
-        color: maroon;
-        font-size: 28px;
-    }
-    .subheader {
-        color: maroon;
-    }
-    button {
-        background-color: #f4c2c2;
-        color: maroon;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-weight: bold;
-    }
-    button:hover {
-        background-color: #ebacac;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Sidebar untuk navigasi
+menu = st.sidebar.selectbox(
+    'Menu',
+    ['Upload Data', 'Preprocessing Data', 'Plot Data', 'Uji Stasioneritas', 
+     'Differencing', 'Plot ACF/PACF', 'Pemodelan ARIMA', 'Residual ARIMA',
+     'Pemodelan ANFIS-ABC', 'Hasil Prediksi', 'Prediksi 6 Bulan Kedepan']
+)
 
-# State to store data
-if 'step' not in st.session_state:
-    st.session_state.step = 1
+# Inisialisasi session state untuk menyimpan data
 if 'data' not in st.session_state:
     st.session_state.data = None
-if 'arima_model' not in st.session_state:
-    st.session_state.arima_model = None
-if 'residuals' not in st.session_state:
-    st.session_state.residuals = None
-if 'predictions' not in st.session_state:
-    st.session_state.predictions = None
-if 'mape' not in st.session_state:
-    st.session_state.mape = None
+if 'data_preprocessed' not in st.session_state:
+    st.session_state.data_preprocessed = None
+if 'data_stationary' not in st.session_state:
+    st.session_state.data_stationary = None
+if 'model_arima' not in st.session_state:
+    st.session_state.model_arima = None
+if 'arima_results' not in st.session_state:
+    st.session_state.arima_results = None
+if 'data_anfis' not in st.session_state:
+    st.session_state.data_anfis = None
+if 'best_params' not in st.session_state:
+    st.session_state.best_params = None
+if 'best_loss' not in st.session_state:
+    st.session_state.best_loss = None
 
-# App Title
-st.title("Prediksi Permintaan Darah")
-st.markdown("Aplikasi ini digunakan untuk memprediksi permintaan darah menggunakan model ARIMA yang dioptimasi ANFIS + ABC.")
+# Fungsi untuk menghitung metrik
+def calculate_metrics(actual, predicted):
+    mse = mean_squared_error(actual, predicted)
+    mae = mean_absolute_error(actual, predicted)
+    mape = mean_absolute_percentage_error(actual, predicted) * 100
+    rmse = np.sqrt(mse)
+    return mse, mae, mape, rmse
 
-# Step 1: Welcome Screen
-if st.session_state.step == 1:
-    st.header("Selamat Datang")
-    if st.button("Lanjut"):
-        st.session_state.step = 2
-
-# Step 2: Upload Dataset
-elif st.session_state.step == 2:
-    st.header("Upload Dataset")
-    uploaded_file = st.file_uploader("Unggah file CSV", type=["csv"])
+# Halaman Upload Data
+if menu == 'Upload Data':
+    st.header('Upload Dataset')
+    uploaded_file = st.file_uploader("Upload file CSV", type=['csv'])
+    
     if uploaded_file is not None:
-        st.session_state.data = pd.read_csv(uploaded_file)
-        st.write("Contoh data:")
-        st.write(st.session_state.data.head())
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 1
-    if col2.button("Lanjut") and st.session_state.data is not None:
-        st.session_state.step = 3
+        try:
+            data = pd.read_csv(uploaded_file)
+            st.session_state.data = data
+            st.success('Data berhasil diupload!')
+            st.write('Preview data:')
+            st.dataframe(data.head())
+            
+            # Pilih kolom yang akan digunakan
+            numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
+            date_cols = data.select_dtypes(include=['datetime64']).columns.tolist()
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                date_column = st.selectbox('Pilih kolom tanggal', date_cols if date_cols else [None])
+            with col2:
+                value_column = st.selectbox('Pilih kolom nilai', numeric_cols)
+            
+            if date_column and value_column:
+                st.session_state.data_preprocessed = data.set_index(date_column)[[value_column]]
+                st.session_state.data_preprocessed.columns = ['Jumlah permintaan']
+        except Exception as e:
+            st.error(f'Error: {str(e)}')
 
-# Step 3: Preprocessing Data
-elif st.session_state.step == 3:
-    st.header("Preprocessing Data")
-    df = st.session_state.data.copy()
-    df['Bulan'] = pd.to_datetime(df['Bulan'])
-    df = df.set_index('Bulan')
-    st.session_state.data = df
-    st.line_chart(df['Jumlah permintaan'])
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 2
-    if col2.button("Lanjut"):
-        st.session_state.step = 4
+# Halaman Preprocessing Data
+elif menu == 'Preprocessing Data' and st.session_state.data_preprocessed is not None:
+    st.header('Preprocessing Data')
+    data = st.session_state.data_preprocessed
+    
+    st.write('Data sebelum preprocessing:')
+    st.dataframe(data.head())
+    
+    # Cek missing values
+    st.subheader('Cek Missing Values')
+    st.write(data.isnull().sum())
+    
+    # Handle missing values
+    if data.isnull().sum().any():
+        handle_missing = st.selectbox('Metode handling missing values:', ['Drop NA', 'Fill with Mean', 'Fill with Median'])
+        if handle_missing == 'Drop NA':
+            data = data.dropna()
+        elif handle_missing == 'Fill with Mean':
+            data = data.fillna(data.mean())
+        else:
+            data = data.fillna(data.median())
+    
+    st.session_state.data_preprocessed = data
+    st.success('Preprocessing selesai!')
+    st.write('Data setelah preprocessing:')
+    st.dataframe(data.head())
 
-# Step 4: Plot Data
-elif st.session_state.step == 4:
-    st.header("Plot Data")
-    st.line_chart(st.session_state.data['Jumlah permintaan'])
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 3
-    if col2.button("Lanjut"):
-        st.session_state.step = 5
+# Halaman Plot Data
+elif menu == 'Plot Data' and st.session_state.data_preprocessed is not None:
+    st.header('Visualisasi Data')
+    data = st.session_state.data_preprocessed
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(data, label='Jumlah permintaan darah')
+    ax.set_title('Data Jumlah Permintaan Darah')
+    ax.set_xlabel('Tanggal')
+    ax.set_ylabel('Jumlah')
+    ax.legend()
+    st.pyplot(fig)
 
-# Step 5: ARIMA Modeling
-elif st.session_state.step == 5:
-    st.header("Pemodelan ARIMA")
-    df = st.session_state.data
-    model = ARIMA(df['Jumlah permintaan'], order=(1, 1, 1))
-    fitted_model = model.fit()
-    st.session_state.arima_model = fitted_model
+# Halaman Uji Stasioneritas
+elif menu == 'Uji Stasioneritas' and st.session_state.data_preprocessed is not None:
+    st.header('Uji Stasioneritas dengan ADF Test')
+    data = st.session_state.data_preprocessed
+    
+    st.write('Data yang digunakan:')
+    st.dataframe(data.head())
+    
+    result = adfuller(data['Jumlah permintaan'])
+    st.write('ADF Statistic:', result[0])
+    st.write('p-value:', result[1])
+    st.write('Critical Values:')
+    for key, value in result[4].items():
+        st.write(f'   {key}: {value}')
+    
+    if result[1] > 0.05:
+        st.warning('Data tidak stasioner (p-value > 0.05)')
+    else:
+        st.success('Data stasioner (p-value ≤ 0.05)')
+        st.session_state.data_stationary = data.copy()
 
-    pred = fitted_model.predict(start=1, end=len(df)-1, typ='levels')
-    actual = df['Jumlah permintaan'].iloc[1:]
-    mape = mean_absolute_percentage_error(actual, pred) * 100
-    st.session_state.mape = mape
-    st.line_chart(pred)
-    st.write(f"Nilai MAPE: {mape:.2f}")
+# Halaman Differencing
+elif menu == 'Differencing' and st.session_state.data_preprocessed is not None:
+    st.header('Differencing Data')
+    data = st.session_state.data_preprocessed
+    
+    if st.session_state.data_stationary is None:
+        st.warning('Data belum stasioner, lakukan differencing')
+        
+        order_diff = st.slider('Orde Differencing', 1, 3, 1)
+        
+        if st.button('Lakukan Differencing'):
+            data_diff = data.diff(order_diff).dropna()
+            st.session_state.data_stationary = data_diff
+            
+            # Plot hasil differencing
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+            ax1.plot(data, label='Data Asli')
+            ax1.set_title('Data Asli')
+            ax1.legend()
+            
+            ax2.plot(data_diff, label=f'Data setelah differencing orde {order_diff}')
+            ax2.set_title('Data setelah Differencing')
+            ax2.legend()
+            
+            plt.tight_layout()
+            st.pyplot(fig)
+            
+            # Uji stasioneritas setelah differencing
+            result = adfuller(data_diff['Jumlah permintaan'])
+            st.write('ADF Statistic setelah differencing:', result[0])
+            st.write('p-value setelah differencing:', result[1])
+            
+            if result[1] > 0.05:
+                st.warning('Data masih tidak stasioner, coba orde differencing yang lebih tinggi')
+            else:
+                st.success('Data sekarang stasioner!')
+    else:
+        st.success('Data sudah stasioner')
+        st.write(st.session_state.data_stationary.head())
 
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 4
-    if col2.button("Lanjut"):
-        st.session_state.step = 6
+# Halaman Plot ACF/PACF
+elif menu == 'Plot ACF/PACF' and st.session_state.data_stationary is not None:
+    st.header('Plot ACF dan PACF')
+    data = st.session_state.data_stationary
+    
+    lags = st.slider('Jumlah Lag', 10, 50, 40)
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    plot_acf(data, lags=lags, ax=ax1)
+    plot_pacf(data, lags=lags, ax=ax2)
+    st.pyplot(fig)
 
-# Step 6: ARIMA Residuals
-elif st.session_state.step == 6:
-    st.header("Residual ARIMA")
-    residuals = st.session_state.arima_model.resid
-    st.session_state.residuals = residuals
-    st.line_chart(residuals)
-    col1, col2 = st.columns(2)
-    if col1.button("Kembali"):
-        st.session_state.step = 5
-    if col2.button("Lanjut"):
-        st.session_state.step = 7
+# Halaman Pemodelan ARIMA
+elif menu == 'Pemodelan ARIMA' and st.session_state.data_stationary is not None:
+    st.header('Pemodelan ARIMA')
+    data = st.session_state.data_stationary
+    
+    st.write('Berdasarkan plot ACF/PACF, tentukan parameter ARIMA:')
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        p = st.number_input('Parameter p (AR)', 0, 10, 1)
+    with col2:
+        d = st.number_input('Parameter d (I)', 0, 3, 1)
+    with col3:
+        q = st.number_input('Parameter q (MA)', 0, 10, 0)
+    
+    if st.button('Bangun Model ARIMA'):
+        with st.spinner('Membangun model ARIMA...'):
+            try:
+                model = ARIMA(data, order=(p, d, q))
+                model_fit = model.fit()
+                st.session_state.model_arima = model_fit
+                
+                st.success('Model ARIMA berhasil dibangun!')
+                st.write(model_fit.summary())
+                
+                # Prediksi dan evaluasi
+                predictions = model_fit.predict()
+                actual = data['Jumlah permintaan']
+                
+                mse, mae, mape, rmse = calculate_metrics(actual, predictions)
+                
+                st.session_state.arima_results = {
+                    'mse': mse,
+                    'mae': mae,
+                    'mape': mape,
+                    'rmse': rmse
+                }
+                
+                st.subheader('Hasil Evaluasi Model ARIMA:')
+                st.write(f'MSE: {mse:.4f}')
+                st.write(f'MAE: {mae:.4f}')
+                st.write(f'MAPE: {mape:.4f}%')
+                st.write(f'RMSE: {rmse:.4f}')
+                
+                # Plot hasil prediksi
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.plot(actual, label='Aktual')
+                ax.plot(predictions, label='Prediksi')
+                ax.set_title('Perbandingan Aktual vs Prediksi ARIMA')
+                ax.legend()
+                st.pyplot(fig)
+                
+            except Exception as e:
+                st.error(f'Error: {str(e)}')
 
-# Step 7: ANFIS + ABC Modeling
-elif st.session_state.step == 7:
-    st.header("Pemodelan ANFIS + ABC")
-    st.write("(Placeholder) Implementasi ANFIS + ABC di sini.")
+# Halaman Residual ARIMA
+elif menu == 'Residual ARIMA' and st.session_state.model_arima is not None:
+    st.header('Residual Model ARIMA')
+    model = st.session_state.model_arima
+    
+    residuals = pd.DataFrame(model.resid, columns=['residual'])
+    st.session_state.data_anfis = residuals
+    
+    st.write('Statistik Residual:')
+    st.write(residuals.describe())
+    
+    # Plot residual
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(residuals, label='Residual')
+    ax.set_title('Plot Residual ARIMA')
+    ax.legend()
+    st.pyplot(fig)
+    
+    # Normalisasi residual untuk ANFIS
+    scaler = MinMaxScaler()
+    residuals['residual'] = scaler.fit_transform(residuals[['residual']])
+    st.session_state.data_anfis = residuals
+    
+    st.success('Residual telah diproses untuk pemodelan ANFIS')
 
-    # Running Animation Placeholder
-    st.markdown("""
-    <div style='text-align: center;'>
-        <img src="path_to_your_blood_splash_animation.gif" style="width:150px; height:auto;">
-        <p style="font-size: 20px; color: maroon;">Running...</p>
-    </div>
-    """, unsafe_allow_html=True)
+# Halaman Pemodelan ANFIS-ABC
+elif menu == 'Pemodelan ANFIS-ABC' and st.session_state.data_anfis is not None:
+    st.header('Pemodelan ANFIS dengan Optimasi ABC')
+    data_anfis = st.session_state.data_anfis
+    
+    st.write('Menentukan lag signifikan untuk input ANFIS:')
+    
+    # Hitung PACF untuk menentukan lag signifikan
+    jp = data_anfis['residual']
+    pacf_values = pacf(jp, nlags=33)
+    n = len(jp)
+    ci = 1.96 / np.sqrt(n)
+    significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
+    
+    st.write('Lag signifikan:', significant_lags)
+    
+    if len(significant_lags) >= 2:
+        lag1, lag2 = significant_lags[:2]
+        
+        # Buat fitur lag
+        data_anfis[f'residual_lag{lag1}'] = data_anfis['residual'].shift(lag1)
+        data_anfis[f'residual_lag{lag2}'] = data_anfis['residual'].shift(lag2)
+        data_anfis.dropna(inplace=True)
+        
+        target = data_anfis.iloc[:, 0].values
+        lag1_values = data_anfis.iloc[:, 1].values
+        lag2_values = data_anfis.iloc[:, 2].values
+        
+        # Fungsi untuk ANFIS
+        def initialize_membership_functions(data, num_clusters=4):
+            kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
+            centers = np.sort(kmeans.cluster_centers_.flatten())
+            sigma = (centers[1] - centers[0]) / 2
+            return centers, sigma
+        
+        def gaussian_membership(x, c, sigma):
+            return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+        
+        def firing_strength(lag1, lag2, c_lag1, sigma_lag1, c_lag2, sigma_lag2):
+            lag1_low = gaussian_membership(lag1, c_lag1[0], sigma_lag1)
+            lag1_high = gaussian_membership(lag1, c_lag1[1], sigma_lag1)
+            lag2_low = gaussian_membership(lag2, c_lag2[0], sigma_lag2)
+            lag2_high = gaussian_membership(lag2, c_lag2[1], sigma_lag2)
+            
+            rules = np.array([
+                lag1_low * lag2_low,
+                lag1_low * lag2_high,
+                lag1_high * lag2_low,
+                lag1_high * lag2_high,
+            ]).T
+            
+            return rules
+        
+        if st.button('Mulai Optimasi ANFIS dengan ABC'):
+            with st.spinner('Menjalankan optimasi ABC...'):
+                # Inisialisasi fungsi keanggotaan
+                c_lag1, sigma_lag1 = initialize_membership_functions(lag1_values)
+                c_lag2, sigma_lag2 = initialize_membership_functions(lag2_values)
+                
+                # Hitung firing strength
+                rules = firing_strength(lag1_values, lag2_values, c_lag1, sigma_lag1, c_lag2, sigma_lag2)
+                normalized_rules = rules / rules.sum(axis=1, keepdims=True)
+                
+                # Fungsi ANFIS dengan JIT
+                @jit(nopython=True)
+                def anfis_predict(params, lag1, lag2, rules):
+                    n_samples = lag1.shape[0]
+                    n_rules = rules.shape[1]
+                    p = params[:n_rules]
+                    q = params[n_rules:2*n_rules]
+                    r = params[2*n_rules:3*n_rules]
+                    outputs = np.zeros(n_samples)
+                    
+                    for i in range(n_samples):
+                        weighted_sum = 0.0
+                        rule_sum = 0.0
+                        
+                        for j in range(n_rules):
+                            rule_val = rules[i, j]
+                            rule_output = p[j] * lag1[i] + q[j] * lag2[i] + r[j]
+                            weighted_sum += rule_val * rule_output
+                            rule_sum += rule_val
+                        
+                        outputs[i] = weighted_sum / (rule_sum + 1e-8)
+                    
+                    return outputs
+                
+                # Fungsi ABC
+                def abc_optimizer(lag1, lag2, rules, target, num_food_sources=100, max_iter=500):
+                    n_rules = rules.shape[1]
+                    n_params = 3 * n_rules
+                    
+                    # Inisialisasi
+                    food_sources = np.random.uniform(-1, 1, (num_food_sources, n_params))
+                    fitness = np.array([mean_squared_error(target, anfis_predict(fs, lag1, lag2, rules)) 
+                                      for fs in food_sources])
+                    best_idx = np.argmin(fitness)
+                    best_params = food_sources[best_idx].copy()
+                    best_fitness = fitness[best_idx]
+                    
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    for iteration in range(max_iter):
+                        # Employed bees
+                        for i in range(num_food_sources):
+                            k = np.random.randint(0, num_food_sources)
+                            while k == i:
+                                k = np.random.randint(0, num_food_sources)
+                            
+                            phi = np.random.uniform(-1, 1, n_params)
+                            candidate = food_sources[i] + phi * (food_sources[i] - food_sources[k])
+                            candidate = np.clip(candidate, -1, 1)
+                            
+                            candidate_fitness = mean_squared_error(target, anfis_predict(candidate, lag1, lag2, rules))
+                            
+                            if candidate_fitness < fitness[i]:
+                                food_sources[i] = candidate
+                                fitness[i] = candidate_fitness
+                                
+                                if candidate_fitness < best_fitness:
+                                    best_params = candidate.copy()
+                                    best_fitness = candidate_fitness
+                        
+                        # Onlooker bees
+                        probs = (1 / (1 + fitness)) / np.sum(1 / (1 + fitness))
+                        
+                        for _ in range(num_food_sources):
+                            i = np.random.choice(num_food_sources, p=probs)
+                            k = np.random.randint(0, num_food_sources)
+                            while k == i:
+                                k = np.random.randint(0, num_food_sources)
+                            
+                            phi = np.random.uniform(-1, 1, n_params)
+                            candidate = food_sources[i] + phi * (food_sources[i] - food_sources[k])
+                            candidate = np.clip(candidate, -1, 1)
+                            
+                            candidate_fitness = mean_squared_error(target, anfis_predict(candidate, lag1, lag2, rules))
+                            
+                            if candidate_fitness < fitness[i]:
+                                food_sources[i] = candidate
+                                fitness[i] = candidate_fitness
+                                
+                                if candidate_fitness < best_fitness:
+                                    best_params = candidate.copy()
+                                    best_fitness = candidate_fitness
+                        
+                        # Update progress
+                        progress = (iteration + 1) / max_iter
+                        progress_bar.progress(progress)
+                        status_text.text(f'Iterasi {iteration + 1}/{max_iter}, Best Loss: {best_fitness:.6f}')
+                    
+                    return best_params, best_fitness
+                
+                # Jalankan optimasi
+                best_params, best_loss = abc_optimizer(lag1_values, lag2_values, normalized_rules, target)
+                st.session_state.best_params = best_params
+                st.session_state.best_loss = best_loss
+                
+                st.success('Optimasi ABC selesai!')
+                st.write(f'Best Loss: {best_loss:.6f}')
+                
+                # Prediksi dengan model ANFIS
+                pred_anfis = anfis_predict(best_params, lag1_values, lag2_values, normalized_rules)
+                
+                # Plot hasil
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.plot(target, label='Aktual')
+                ax.plot(pred_anfis, label='Prediksi ANFIS')
+                ax.set_title('Perbandingan Aktual vs Prediksi ANFIS')
+                ax.legend()
+                st.pyplot(fig)
+                
+                # Hitung metrik
+                mse, mae, mape, rmse = calculate_metrics(target, pred_anfis)
+                st.write(f'MSE ANFIS: {mse:.4f}')
+                st.write(f'MAE ANFIS: {mae:.4f}')
+                st.write(f'MAPE ANFIS: {mape:.4f}%')
+                st.write(f'RMSE ANFIS: {rmse:.4f}')
+    else:
+        st.warning('Tidak cukup lag signifikan untuk membangun model ANFIS')
 
-    # Add bee animation or placeholder
-    st.markdown("""
-    <div style='text-align: center;'>
-        <img src="path_to_your_bee_animation.gif" style="width:150px; height:auto;">
-        <p style="font-size: 20px; color: maroon;">Optimizing...</p>
-    </div>
-    """, unsafe_allow_html=True)
+# Halaman Hasil Prediksi
+elif menu == 'Hasil Prediksi' and st.session_state.model_arima is not None and st.session_state.best_params is not None:
+    st.header('Hasil Prediksi Hybrid ARIMA-ANFIS')
+    
+    # Prediksi ARIMA
+    model_arima = st.session_state.model_arima
+    pred_arima = model_arima.predict()
+    
+    # Prediksi ANFIS
+    data_anfis = st.session_state.data_anfis
+    jp = data_anfis['residual'].values
+    lag1, lag2 = [int(col.split('_')[1][3:]) for col in data_anfis.columns if 'lag' in col][:2]
+    
+    lag1_values = data_anfis.iloc[:, 1].values
+    lag2_values = data_anfis.iloc[:, 2].values
+    
+    # Inisialisasi fungsi keanggotaan
+    c_lag1, sigma_lag1 = initialize_membership_functions(lag1_values)
+    c_lag2, sigma_lag2 = initialize_membership_functions(lag2_values)
+    
+    # Hitung firing strength
+    rules = firing_strength(lag1_values, lag2_values, c_lag1, sigma_lag1, c_lag2, sigma_lag2)
+    normalized_rules = rules / rules.sum(axis=1, keepdims=True)
+    
+    # Prediksi ANFIS
+    pred_anfis = anfis_predict(st.session_state.best_params, lag1_values, lag2_values, normalized_rules)
+    
+    # Gabungkan prediksi ARIMA dan ANFIS
+    pred_hybrid = pred_arima[lag2:] + pred_anfis
+    
+    # Ambil data aktual
+    actual = st.session_state.data_stationary['Jumlah permintaan'].values[lag2:]
+    
+    # Hitung metrik
+    mse, mae, mape, rmse = calculate_metrics(actual, pred_hybrid)
+    
+    st.subheader('Hasil Evaluasi Model Hybrid:')
+    st.write(f'MSE: {mse:.4f}')
+    st.write(f'MAE: {mae:.4f}')
+    st.write(f'MAPE: {mape:.4f}%')
+    st.write(f'RMSE: {rmse:.4f}')
+    
+    # Plot hasil
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(actual, label='Aktual')
+    ax.plot(pred_hybrid, label='Prediksi Hybrid')
+    ax.set_title('Perbandingan Aktual vs Prediksi Hybrid ARIMA-ANFIS')
+    ax.legend()
+    st.pyplot(fig)
+
+# Halaman Prediksi 6 Bulan Kedepan
+elif menu == 'Prediksi 6 Bulan Kedepan' and st.session_state.model_arima is not None and st.session_state.best_params is not None:
+    st.header('Prediksi 6 Bulan Kedepan')
+    
+    n_steps = 6
+    
+    # Prediksi ARIMA
+    model_arima = st.session_state.model_arima
+    forecast_arima = model_arima.forecast(steps=n_steps)
+    
+    # Prediksi ANFIS
+    data_anfis = st.session_state.data_anfis
+    jp = data_anfis['residual'].values
+    lag1, lag2 = [int(col.split('_')[1][3:]) for col in data_anfis.columns if 'lag' in col][:2]
+    
+    # Fungsi prediksi satu langkah ANFIS
+    def predict_next_step(lag1_val, lag2_val):
+        rules_new = firing_strength(np.array([lag1_val]), np.array([lag2_val]), c_lag1, sigma_lag1, c_lag2, sigma_lag2)
+        normalized_rules_new = rules_new / rules_new.sum(axis=1, keepdims=True)
+        pred = anfis_predict(st.session_state.best_params, np.array([lag1_val]), np.array([lag2_val]), normalized_rules_new)
+        return pred[0]
+    
+    # Inisialisasi nilai lag terakhir
+    last_lag1 = data_anfis.iloc[-1, 1]
+    last_lag2 = data_anfis.iloc[-1, 2]
+    
+    forecast_anfis = []
+    for _ in range(n_steps):
+        pred = predict_next_step(last_lag1, last_lag2)
+        forecast_anfis.append(pred)
+        last_lag2 = last_lag1
+        last_lag1 = pred
+    
+    # Gabungkan prediksi
+    forecast_hybrid = forecast_arima + np.array(forecast_anfis)
+    
+    # Buat DataFrame hasil prediksi
+    last_date = st.session_state.data_stationary.index[-1]
+    future_dates = pd.date_range(start=last_date, periods=n_steps+1, freq='M')[1:]
+    
+    result_df = pd.DataFrame({
+        'Tanggal': future_dates,
+        'Prediksi ARIMA': forecast_arima,
+        'Prediksi ANFIS': forecast_anfis,
+        'Prediksi Hybrid': forecast_hybrid
+    })
+    
+    st.write('Hasil Prediksi 6 Bulan Kedepan:')
+    st.dataframe(result_df)
+    
+    # Plot hasil prediksi
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(st.session_state.data_stationary.index, st.session_state.data_stationary['Jumlah permintaan'], label='Data Historis')
+    ax.plot(result_df['Tanggal'], result_df['Prediksi Hybrid'], label='Prediksi Hybrid', marker='o')
+    ax.set_title('Prediksi 6 Bulan Kedepan')
+    ax.legend()
+    st.pyplot(fig)
+
+# Pesan jika data belum siap
+else:
+    if menu not in ['Upload Data', 'Selamat Datang']:
+        st.warning('Silakan lengkapi langkah-langkah sebelumnya atau upload data terlebih dahulu')
