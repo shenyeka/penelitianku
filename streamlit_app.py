@@ -2,112 +2,109 @@ import streamlit as st
 import pandas as pd
 import math
 from pathlib import Path
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
-# === Halaman Navigasi ===
-menu = st.sidebar.selectbox("Menu", [
-    "Selamat Datang",
-    "Upload Dataset",
-    "Preprocessing Data",
-    "Plot Data",
-    "Pemodelan ARIMA",
-    "Residual ARIMA",
-    "ANFIS + ABC"
-])
+# Inisialisasi session_state
+if "step" not in st.session_state:
+    st.session_state.step = 1
 
-# === Selamat Datang ===
-if menu == "Selamat Datang":
-    st.title("Prediksi Permintaan Darah")
-    st.write("Selamat datang di aplikasi prediksi permintaan darah menggunakan model ARIMA-ANFIS dengan optimasi Artificial Bee Colony.")
+st.title("Prediksi Permintaan Darah - ARIMA ANFIS ABC")
 
-# === Upload Dataset ===
-elif menu == "Upload Dataset":
-    st.title("Upload Dataset")
-    uploaded_file = st.file_uploader("Pilih file CSV", type="csv")
-    if uploaded_file:
-        data = pd.read_csv(uploaded_file)
-        st.write("Preview Data:")
-        st.dataframe(data.head())
-        st.session_state['data'] = data
+# Fungsi tombol navigasi
+def tombol_navigasi():
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.session_state.step > 1:
+            if st.button("⬅️ Kembali"):
+                st.session_state.step -= 1
+    with col2:
+        if st.session_state.step < 7:
+            if st.button("Lanjut ➡️"):
+                st.session_state.step += 1
 
-# === Preprocessing Data ===
-elif menu == "Preprocessing Data":
-    st.title("Preprocessing Data")
-    if 'data' in st.session_state:
-        data = st.session_state['data']
-        data['Bulan'] = pd.to_datetime(data['Bulan'])
-        data = data.set_index('Bulan')
-        st.write("Cek data null:")
-        st.write(data.isnull().sum())
-        st.session_state['data_processing'] = data
+# STEP 1: Upload Dataset
+if st.session_state.step == 1:
+    st.subheader("1. Upload Dataset")
+    uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        st.session_state["df"] = df
+        st.write("Contoh data:")
+        st.write(df.head())
+    tombol_navigasi()
+
+# STEP 2: Preprocessing Data
+elif st.session_state.step == 2:
+    st.subheader("2. Preprocessing Data")
+    if "df" in st.session_state:
+        df = st.session_state["df"]
+        if 'Bulan' in df.columns:
+            df['Bulan'] = pd.to_datetime(df['Bulan'])
+            df = df.sort_values('Bulan')
+            df = df.set_index('Bulan')
+            st.session_state["df"] = df
+            st.write(df.head())
+        else:
+            st.error("Kolom 'Bulan' tidak ditemukan dalam dataset.")
     else:
-        st.warning("Silakan upload data terlebih dahulu.")
+        st.warning("Silakan upload dataset terlebih dahulu.")
+    tombol_navigasi()
 
-# === Plot Data ===
-elif menu == "Plot Data":
-    st.title("Plot Data Jumlah Permintaan Darah")
-    if 'data_processing' in st.session_state:
-        data_processing = st.session_state['data_processing']
-        plt.figure(figsize=(10, 5))
-        plt.plot(data_processing, label='Jumlah permintaan darah')
-        plt.title('Data Jumlah Permintaan Darah 2011-2024')
-        plt.xlabel('Tahun')
-        plt.legend()
+# STEP 3: Plot Data
+elif st.session_state.step == 3:
+    st.subheader("3. Plot Data Permintaan Darah")
+    if "df" in st.session_state:
+        df = st.session_state["df"]
+        plt.figure(figsize=(10, 4))
+        plt.plot(df.index, df[df.columns[0]], label='Permintaan Darah')
+        plt.xlabel('Bulan')
+        plt.ylabel('Jumlah')
+        plt.title('Plot Permintaan Darah')
+        plt.grid(True)
         st.pyplot(plt)
     else:
-        st.warning("Silakan lakukan preprocessing data terlebih dahulu.")
+        st.warning("Silakan upload dan preprocessing dataset terlebih dahulu.")
+    tombol_navigasi()
 
-# === Pemodelan ARIMA ===
-elif menu == "Pemodelan ARIMA":
-    st.title("Pemodelan ARIMA")
-    if 'data_processing' in st.session_state:
-        data = st.session_state['data_processing']
-        train = data.iloc[:-39]
-        test = data.iloc[-39:]
-
-        from statsmodels.tsa.arima.model import ARIMA
-        import numpy as np
-        from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
-
-        model_arima = ARIMA(train, order=(1, 1, 0)).fit()
-        pred = model_arima.forecast(steps=len(test))
-        test['Jumlah permintaan_pred'] = pred.values
-
-        st.write("ARIMA Summary")
-        st.text(model_arima.summary())
-
-        mse = mean_squared_error(test['Jumlah permintaan'], test['Jumlah permintaan_pred'])
-        mae = mean_absolute_error(test['Jumlah permintaan'], test['Jumlah permintaan_pred'])
-        mape = mean_absolute_percentage_error(test['Jumlah permintaan'], test['Jumlah permintaan_pred']) * 100
-        rmse = np.sqrt(mse)
-
-        st.write(f"MSE: {mse:.2f}, MAE: {mae:.2f}, MAPE: {mape:.2f}%, RMSE: {rmse:.2f}")
-
-        st.session_state['model_arima'] = model_arima
-        st.session_state['test'] = test
+# STEP 4: Pemodelan ARIMA
+elif st.session_state.step == 4:
+    st.subheader("4. Pemodelan ARIMA")
+    if "df" in st.session_state:
+        df = st.session_state["df"]
+        ts = df[df.columns[0]]
+        model = sm.tsa.ARIMA(ts, order=(1,1,1))
+        model_fit = model.fit()
+        st.write(model_fit.summary())
+        st.session_state["residual"] = model_fit.resid
     else:
-        st.warning("Silakan lakukan preprocessing data terlebih dahulu.")
+        st.warning("Silakan upload dan preprocessing dataset terlebih dahulu.")
+    tombol_navigasi()
 
-# === Residual ARIMA ===
-elif menu == "Residual ARIMA":
-    st.title("Residual ARIMA")
-    if 'model_arima' in st.session_state:
-        resid = st.session_state['model_arima'].resid
-        st.line_chart(resid)
-        st.session_state['residual'] = resid
+# STEP 5: Residual ARIMA
+elif st.session_state.step == 5:
+    st.subheader("5. Plot Residual ARIMA")
+    if "residual" in st.session_state:
+        resid = st.session_state["residual"]
+        plt.figure(figsize=(10, 4))
+        plt.plot(resid)
+        plt.title("Residual ARIMA")
+        plt.grid(True)
+        st.pyplot(plt)
     else:
-        st.warning("Model ARIMA belum tersedia.")
+        st.warning("Model ARIMA belum dijalankan.")
+    tombol_navigasi()
 
-# === ANFIS + ABC ===
-elif menu == "ANFIS + ABC":
-    st.title("ANFIS + Optimasi ABC")
-    st.write("Bagian ini menampilkan hasil pemodelan ANFIS dengan optimasi menggunakan Artificial Bee Colony.")
-    st.info("Implementasi lengkap ANFIS + ABC cukup panjang. Untuk kodenya dapat Anda lihat di file utama Python Anda.")
-    st.code("""
-# Contoh penggunaan:
-best_params, best_loss = abc_optimizer(lag32, lag33, rules, target)
-prediksi = predict_next_step(lag32_val, lag33_val)
-    """)
+# STEP 6: Pemodelan ANFIS + Optimasi ABC
+elif st.session_state.step == 6:
+    st.subheader("6. Pemodelan ANFIS + Optimasi ABC")
+    st.info("Halaman ini akan digunakan untuk implementasi ANFIS + ABC. (Belum diimplementasikan)")
+    tombol_navigasi()
+
+# STEP 7: Selesai
+elif st.session_state.step == 7:
+    st.subheader("7. Selesai")
+    st.success("Prediksi selesai. Anda dapat mengulang proses atau mengembangkan lebih lanjut.")
+    tombol_navigasi()
