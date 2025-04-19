@@ -207,7 +207,7 @@ elif menu == "STASIONERITAS DATA":
     Pada langkah ini, kita akan melakukan Uji Augmented Dickey-Fuller (ADF) untuk menguji apakah data stasioner. Jika data tidak stasioner, kita akan melakukan differencing.
     </div>""", unsafe_allow_html=True)
     
-    if data_global is not None:
+    if data_global is not None and not data_global.empty:
         # Lakukan Uji Augmented Dickey-Fuller (ADF)
         adf_test = adfuller(data_global.iloc[:, 0])  # Menggunakan kolom pertama sebagai contoh
         
@@ -251,7 +251,6 @@ elif menu == "STASIONERITAS DATA":
         
     else:
         st.write("Data belum diproses, silakan kembali ke menu 'DATA PREPROCESSING'.")
-
 
 elif menu == "PREDIKSI":
     st.markdown("## Prediksi Permintaan Darah")
