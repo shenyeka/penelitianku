@@ -12,6 +12,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.cluster import KMeans
 from scipy.optimize import minimize
 from sklearn.metrics import mean_squared_error
+from numba import jit
 import io
 
 # Konfigurasi halaman
