@@ -7,6 +7,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_percentage_error
 from statsmodels.tsa.arima.model import ARIMA
+from sklearn.preprocessing import MinMaxScaler
 import io
 
 # Konfigurasi halaman
@@ -215,12 +216,15 @@ elif menu == "DATA SPLITTING":
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
+    from statsmodels.tsa.arima.model import ARIMA
+    from sklearn.preprocessing import MinMaxScaler
+
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
-    if "train_data" in st.session_state and "test_data" in st.session_state:
-        train = st.session_state['train_data']
-        test = st.session_state['test_data']
+    train = st.session_state.get('train')
+    test = st.session_state.get('test')
 
+    if train is not None and test is not None:
         st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
         p = st.number_input("Masukkan nilai p:", min_value=0, value=1)
         d = st.number_input("Masukkan nilai d:", min_value=0, value=1)
@@ -232,6 +236,7 @@ elif menu == "PREDIKSI":
             st.success("Model ARIMA berhasil dilatih.")
             st.write(model_arima.summary())
 
+            start_test = len(train)
             pred = model_arima.forecast(steps=len(test))
             test['prediksi'] = pred.values
 
@@ -240,6 +245,38 @@ elif menu == "PREDIKSI":
             st.write(f"MAPE ARIMA: {mape:.2f}%")
 
             st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
+
+            # =========================
+            # TAHAP LANJUT: RESIDUAL
+            # =========================
+            if st.button("Lanjutkan ke Residual ARIMA untuk ANFIS"):
+                st.subheader("5. Residual dari Model ARIMA")
+
+                # Ambil residual
+                residual = model_arima.resid
+                data_anfis = pd.DataFrame({'residual': residual})
+
+                # Simpan ke session_state untuk ANFIS
+                st.session_state['data_anfis_raw'] = data_anfis
+
+                st.write("Residual ARIMA:")
+                st.line_chart(data_anfis['residual'])
+
+                st.subheader("6. Normalisasi Residual")
+                scaler_residual = MinMaxScaler()
+                data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
+
+                st.session_state['data_anfis'] = data_anfis
+                st.session_state['scaler_residual'] = scaler_residual
+
+                st.success("Residual berhasil dinormalisasi dan siap untuk tahap ANFIS.")
+
+                # Preview hasil normalisasi
+                st.write(data_anfis.head())
+
+                # Navigasi manual selanjutnya
+                st.info("Silakan lanjut ke menu ANFIS untuk pemodelan hybrid.")
     else:
         st.warning("Silakan lakukan data splitting terlebih dahulu.")
+
 
