@@ -246,36 +246,34 @@ elif menu == "PREDIKSI":
 
             st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
 
-            # =========================
-            # TAHAP LANJUT: RESIDUAL
-            # =========================
-            if st.button("Lanjutkan ke Residual ARIMA untuk ANFIS"):
-                st.subheader("5. Residual dari Model ARIMA")
+            # Simpan model & residual ke session_state
+            st.session_state['model_arima'] = model_arima
+            st.session_state['residual_arima'] = model_arima.resid
 
-                # Ambil residual
-                residual = model_arima.resid
+        # Jika model sudah ada, tampilkan tombol lanjutan
+        if 'model_arima' in st.session_state:
+            st.subheader("5. Residual ARIMA")
+
+            if st.button("Lihat Residual ARIMA"):
+                residual = st.session_state['residual_arima']
+                st.line_chart(residual)
+
+                # Simpan ke DataFrame untuk normalisasi
                 data_anfis = pd.DataFrame({'residual': residual})
-
-                # Simpan ke session_state untuk ANFIS
                 st.session_state['data_anfis_raw'] = data_anfis
 
-                st.write("Residual ARIMA:")
-                st.line_chart(data_anfis['residual'])
-
-                st.subheader("6. Normalisasi Residual")
-                scaler_residual = MinMaxScaler()
-                data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
-
-                st.session_state['data_anfis'] = data_anfis
-                st.session_state['scaler_residual'] = scaler_residual
-
-                st.success("Residual berhasil dinormalisasi dan siap untuk tahap ANFIS.")
-
-                # Preview hasil normalisasi
-                st.write(data_anfis.head())
-
-                # Navigasi manual selanjutnya
-                st.info("Silakan lanjut ke menu ANFIS untuk pemodelan hybrid.")
+            if st.button("Lanjutkan ke Normalisasi Residual"):
+                if 'data_anfis_raw' in st.session_state:
+                    data_anfis = st.session_state['data_anfis_raw']
+                    scaler_residual = MinMaxScaler()
+                    data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
+                    st.session_state['data_anfis'] = data_anfis
+                    st.session_state['scaler_residual'] = scaler_residual
+                    st.success("Residual berhasil dinormalisasi.")
+                    st.write(data_anfis.head())
+                    st.info("Silakan lanjut ke menu ANFIS untuk melatih model hybrid.")
+                else:
+                    st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
     else:
         st.warning("Silakan lakukan data splitting terlebih dahulu.")
 
