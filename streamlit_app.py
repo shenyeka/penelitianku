@@ -89,15 +89,6 @@ elif st.session_state.step == 3:
     st.header("Preprocessing Data")
     df = st.session_state.data.copy()
     
-    # Check for the 'Bulan' column
-    if 'Tanggal' in df.columns:
-        # Convert 'Bulan' to datetime and set as index
-        df['Tanggal'] = pd.to_datetime(df['Tanggal'])
-        df.set_index('Tanggal', inplace=True)
-    else:
-        st.error("Kolom 'Tanggal' tidak ditemukan dalam dataset. Pastikan file CSV memiliki kolom ini.")
-        st.stop()  # Stop execution if the column is not found
-
     # Preprocess 'Jumlah permintaan' column
     if 'Jumlah permintaan' in df.columns:
         # Handle missing values (e.g., fill with the mean or drop)
@@ -119,6 +110,7 @@ elif st.session_state.step == 3:
         st.session_state.step = 2
     if col2.button("Lanjut"):
         st.session_state.step = 4
+        
 # Step 4: Plot Data
 elif st.session_state.step == 4:
     st.header("Plot Data")
