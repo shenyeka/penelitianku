@@ -5,6 +5,8 @@ import seaborn as sns
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_percentage_error
+import io
 
 # Konfigurasi halaman
 st.set_page_config(
@@ -216,6 +218,33 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan unggah data yang ingin Anda split.")
 
 # =================== PREDIKSI ======================
+# PREDIKSI
 elif menu == "PREDIKSI":
-    st.markdown("<div class='header-container'>PREDIKSI</div>", unsafe_allow_html=True)
-    st.write("Menu ini akan berisi implementasi ARIMA-ANFIS dan optimasi ABC.")
+    st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
+    train = st.session_state['train_data']
+    test = st.session_state['test_data']
+
+    if train is not None and test is not None:
+        st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
+        p = st.number_input("Masukkan nilai p:", min_value=0, value=1)
+        d = st.number_input("Masukkan nilai d:", min_value=0, value=1)
+        q = st.number_input("Masukkan nilai q:", min_value=0, value=1)
+
+        if st.button("Latih Model ARIMA"):
+            model_arima = ARIMA(train, order=(p, d, q))
+            model_arima = model_arima.fit()
+            st.success("Model ARIMA berhasil dilatih.")
+            st.write(model_arima.summary())
+
+            start_test = len(train)
+            pred = model_arima.forecast(steps=len(test))
+            test['prediksi'] = pred.values
+
+            st.subheader("4. Evaluasi Model dengan MAPE")
+            mape = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
+            st.write(f"MAPE ARIMA: {mape:.2f}%")
+
+            st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
+    else:
+        st.warning("Silakan lakukan data splitting terlebih dahulu.")
+
