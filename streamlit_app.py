@@ -484,15 +484,6 @@ def predict_next_step(lag32_val, lag33_val):
     pred = anfis_predict(best_params, lag32_arr, lag33_arr, rules_arr)
     return pred[0]
 
-# Fungsi utama aplikasi Streamlit
-def main():
-    st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA + ANFIS")
-
-        # Implementasi model ARIMA dan ANFIS
-        if st.button("Latih Model ARIMA dan ANFIS"):
-            # Langkah-langkah pelatihan ARIMA, ANFIS, dan optimasi ABC
-            pass
-
 if __name__ == "__main__":
     main()
 
