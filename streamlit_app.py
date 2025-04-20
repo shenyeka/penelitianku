@@ -312,5 +312,28 @@ elif menu == "PREDIKSI":
                     plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
                     st.pyplot(plt)
 
+# Tambahan: Memilih Target dan Input ANFIS
+if 'data_anfis_with_lags' in st.session_state:
+    st.subheader("6. Tentukan Target dan Input untuk ANFIS")
+
+    data_anfis = st.session_state['data_anfis_with_lags']
+    all_columns = list(data_anfis.columns)
+
+    target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
+    input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
+
+    if st.button("Simpan Dataset ANFIS"):
+        if target_col and input_cols:
+            X = data_anfis[input_cols].values
+            y = data_anfis[target_col].values.reshape(-1, 1)
+
+            st.session_state['X_anfis'] = X
+            st.session_state['y_anfis'] = y
+
+            st.success("✅ Dataset ANFIS berhasil disimpan.")
+            st.write("Shape Input (X):", X.shape)
+            st.write("Shape Target (y):", y.shape)
+
         else:
-            st.warning("Silakan lakukan preprocessing dan PACF terlebih dahulu untuk mendapatkan input ANFIS.")
+            st.warning("⚠️ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+
