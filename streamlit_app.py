@@ -336,19 +336,31 @@ with st.sidebar:
 
 # ======================== HOME ========================
 if menu == "HOME":
-    st.markdown("<div class='header-container pulse'>PREDIKSI PERMINTAAN DARAH<br>MENGGUNAKAN ARIMA-ANFIS DENGAN OPTIMASI ABC</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='header-container pulse'>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 12L10 15L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+            </svg>
+            PREDIKSI PERMINTAAN DARAH<br>ARIMA-ANFIS OPTIMASI ABC
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("""
     <div class="content">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;">
-                <path d="M7 12L10 15L17 8" stroke="#c83264" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="12" cy="12" r="10" stroke="#c83264" stroke-width="2"/>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;">
+                <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 8V16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 12H16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
-        <p style="text-align: center; font-size: 1.1rem; line-height: 1.8;">
-        Antarmuka ini menggunakan metode hybrid <b style="color: #c83264;">ARIMA-ANFIS</b> dengan optimasi <b style="color: #c83264;">Artificial Bee Colony</b> (ABC)
-        untuk memprediksi permintaan darah pada Unit Transfusi Darah (UTD).<br><br>
-        Silakan mulai dengan mengunggah data pada menu <b style="color: #c83264;">DATA PREPROCESSING</b>.
+        <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
+        Sistem ini menggunakan metode hybrid <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
+        <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony</span> (ABC) untuk memprediksi permintaan darah 
+        pada Unit Transfusi Darah (UTD) dengan akurasi tinggi.
         </p>
     </div>
     """, unsafe_allow_html=True)
