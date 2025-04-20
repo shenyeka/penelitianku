@@ -21,17 +21,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# Styling CSS
+# Styling CSS dengan perpaduan soft pink dan maroon
 st.markdown("""
     <style>
         body {
-            background-color: #FADADD;
+            background-color: #FFF0F5;
             font-family: 'Arial', sans-serif;
             font-size: 18px;
         }
 
         .header-container {
-            background: #800000;
+            background: linear-gradient(135deg, #800000, #C04000);
             color: white;
             padding: 40px;
             text-align: center;
@@ -39,13 +39,15 @@ st.markdown("""
             font-weight: bold;
             border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(128, 0, 0, 0.2);
             transform: scale(1.05);
             transition: transform 0.3s ease;
+            border: 1px solid #FFD1DC;
         }
 
         .header-container:hover {
-            transform: scale(1.1);
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(128, 0, 0, 0.3);
         }
 
         .content {
@@ -53,10 +55,73 @@ st.markdown("""
             font-size: 20px;
             line-height: 1.8;
             margin: 20px 10%;
-            padding: 20px;
-            background-color: #fff;
+            padding: 25px;
+            background-color: #FFF9FA;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(192, 64, 0, 0.1);
+            border: 1px solid #FFE4E1;
+            color: #5A2A27;
+        }
+
+        .stButton>button {
+            background-color: #800000;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stButton>button:hover {
+            background-color: #A0522D;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(128, 0, 0, 0.3);
+        }
+
+        .sidebar .sidebar-content {
+            background-color: #FFF0F5;
+            border-right: 1px solid #FFD1DC;
+        }
+
+        .stRadio>div>div {
+            background-color: #FFF9FA;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .stRadio>div>div>label {
+            color: #5A2A27;
+            font-weight: 500;
+        }
+
+        .stSelectbox, .stMultiselect, .stNumberInput {
+            background-color: #FFF9FA;
+            border-radius: 6px;
+        }
+
+        .stAlert {
+            border-radius: 8px;
+        }
+
+        .stSuccess {
+            background-color: #F0FFF0;
+            border-color: #D4EDDA;
+        }
+
+        .stWarning {
+            background-color: #FFF8E1;
+            border-color: #FFECB3;
+        }
+
+        .stError {
+            background-color: #FFEBEE;
+            border-color: #F8D7DA;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -66,7 +131,7 @@ menu = st.sidebar.radio("Menu", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DA
 
 # ======================== HOME ========================
 if menu == "HOME":
-    st.markdown("<div class='header-container'>PREDIKSI PERMINTAAN DARAH<br>MENGGUNAKAN MENGGUNAKAN ARIMA-ANFIS DENGAN OPTIMASI ABC</div>", unsafe_allow_html=True)
+    st.markdown("<div class='header-container'>PREDIKSI PERMINTAAN DARAH<br>MENGGUNAKAN ARIMA-ANFIS DENGAN OPTIMASI ABC</div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="content">
     Antarmuka ini menggunakan metode hybrid <b>ARIMA-ANFIS</b> dengan optimasi <b>Artificial Bee Colony</b> (ABC)
