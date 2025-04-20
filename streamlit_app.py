@@ -298,8 +298,16 @@ if menu == "HOME":
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("KEMBALI", disabled=True):
+            pass
+    with col2:
+        if st.button("LANJUT KE DATA PREPROCESSING"):
+            menu = "DATA PREPROCESSING"
+            st.experimental_rerun()
 
-# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
@@ -336,6 +344,16 @@ elif menu == "DATA PREPROCESSING":
             st.session_state["data"] = data
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
+    
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("KEMBALI KE HOME"):
+            menu = "HOME"
+            st.experimental_rerun()
+    with col2:
+        if st.button("LANJUT KE STASIONERITAS DATA"):
+            menu = "STASIONERITAS DATA"
+            st.experimental_rerun()
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
@@ -399,6 +417,16 @@ elif menu == "STASIONERITAS DATA":
 
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+    
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("KEMBALI KE DATA PREPROCESSING"):
+            menu = "DATA PREPROCESSING"
+            st.experimental_rerun()
+    with col2:
+        if st.button("LANJUT KE DATA SPLITTING"):
+            menu = "DATA SPLITTING"
+            st.experimental_rerun()
 
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
@@ -443,6 +471,16 @@ elif menu == "DATA SPLITTING":
 
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
+    
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("KEMBALI KE STASIONERITAS DATA"):
+            menu = "STASIONERITAS DATA"
+            st.experimental_rerun()
+    with col2:
+        if st.button("LANJUT KE PREDIKSI"):
+            menu = "PREDIKSI"
+            st.experimental_rerun()
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
@@ -537,27 +575,37 @@ elif menu == "PREDIKSI":
                     plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
                     st.pyplot(plt)
 
-# Tambahan: Memilih Target dan Input ANFIS
-if 'data_anfis_with_lags' in st.session_state:
-    st.subheader("6. Tentukan Target dan Input untuk ANFIS")
+    # Tambahan: Memilih Target dan Input ANFIS
+    if 'data_anfis_with_lags' in st.session_state:
+        st.subheader("6. Tentukan Target dan Input untuk ANFIS")
 
-    data_anfis = st.session_state['data_anfis_with_lags']
-    all_columns = list(data_anfis.columns)
+        data_anfis = st.session_state['data_anfis_with_lags']
+        all_columns = list(data_anfis.columns)
 
-    target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
-    input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
+        target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
+        input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
 
-    if st.button("Simpan Dataset ANFIS"):
-        if target_col and input_cols:
-            X = data_anfis[input_cols].values
-            y = data_anfis[target_col].values.reshape(-1, 1)
+        if st.button("Simpan Dataset ANFIS"):
+            if target_col and input_cols:
+                X = data_anfis[input_cols].values
+                y = data_anfis[target_col].values.reshape(-1, 1)
 
-            st.session_state['X_anfis'] = X
-            st.session_state['y_anfis'] = y
+                st.session_state['X_anfis'] = X
+                st.session_state['y_anfis'] = y
 
-            st.success("✅ Dataset ANFIS berhasil disimpan.")
-            st.write("Shape Input (X):", X.shape)
-            st.write("Shape Target (y):", y.shape)
+                st.success("✅ Dataset ANFIS berhasil disimpan.")
+                st.write("Shape Input (X):", X.shape)
+                st.write("Shape Target (y):", y.shape)
 
-        else:
-            st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+            else:
+                st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+    
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("KEMBALI KE DATA SPLITTING"):
+            menu = "DATA SPLITTING"
+            st.experimental_rerun()
+    with col2:
+        if st.button("SELESAI"):
+            st.balloons()
+            st.success("Proses prediksi selesai!")
