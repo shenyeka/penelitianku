@@ -306,7 +306,17 @@ if menu == "HOME":
     with col2:
         if st.button("LANJUT KE DATA PREPROCESSING"):
             menu = "DATA PREPROCESSING"
-            st.experimental_rerun()
+            if 'rerun' not in st.session_state:
+    st.session_state.rerun = False
+
+if st.session_state.rerun:
+    st.session_state.rerun = False
+    st.experimental_rerun()
+
+if st.button("Klik untuk reload"):
+    st.session_state.rerun = True
+    st.experimental_rerun()
+    
 
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
