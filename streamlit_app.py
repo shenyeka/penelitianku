@@ -280,6 +280,8 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     menu = st.radio("", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"])
 
+# [Previous imports and setup code remain the same...]
+
 # ======================== HOME ========================
 if menu == "HOME":
     st.markdown("<div class='header-container pulse'>PREDIKSI PERMINTAAN DARAH<br>MENGGUNAKAN ARIMA-ANFIS DENGAN OPTIMASI ABC</div>", unsafe_allow_html=True)
@@ -298,8 +300,16 @@ if menu == "HOME":
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("KEMBALI", disabled=True):
+            pass  # Disabled on home page
+    with col2:
+        if st.button("LANJUT"):
+            menu = "DATA PREPROCESSING"
+            st.experimental_set_query_params(menu=menu)
 
-# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
@@ -336,6 +346,16 @@ elif menu == "DATA PREPROCESSING":
             st.session_state["data"] = data
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("KEMBALI"):
+            menu = "HOME"
+            st.experimental_set_query_params(menu=menu)
+    with col2:
+        if st.button("LANJUT"):
+            menu = "STASIONERITAS DATA"
+            st.experimental_set_query_params(menu=menu)
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
@@ -399,6 +419,16 @@ elif menu == "STASIONERITAS DATA":
 
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("KEMBALI"):
+            menu = "DATA PREPROCESSING"
+            st.experimental_set_query_params(menu=menu)
+    with col2:
+        if st.button("LANJUT"):
+            menu = "DATA SPLITTING"
+            st.experimental_set_query_params(menu=menu)
 
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
@@ -443,6 +473,16 @@ elif menu == "DATA SPLITTING":
 
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("KEMBALI"):
+            menu = "STASIONERITAS DATA"
+            st.experimental_set_query_params(menu=menu)
+    with col2:
+        if st.button("LANJUT"):
+            menu = "PREDIKSI"
+            st.experimental_set_query_params(menu=menu)
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
@@ -537,27 +577,36 @@ elif menu == "PREDIKSI":
                     plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
                     st.pyplot(plt)
 
-# Tambahan: Memilih Target dan Input ANFIS
-if 'data_anfis_with_lags' in st.session_state:
-    st.subheader("6. Tentukan Target dan Input untuk ANFIS")
+    # Tambahan: Memilih Target dan Input ANFIS
+    if 'data_anfis_with_lags' in st.session_state:
+        st.subheader("6. Tentukan Target dan Input untuk ANFIS")
 
-    data_anfis = st.session_state['data_anfis_with_lags']
-    all_columns = list(data_anfis.columns)
+        data_anfis = st.session_state['data_anfis_with_lags']
+        all_columns = list(data_anfis.columns)
 
-    target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
-    input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
+        target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
+        input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
 
-    if st.button("Simpan Dataset ANFIS"):
-        if target_col and input_cols:
-            X = data_anfis[input_cols].values
-            y = data_anfis[target_col].values.reshape(-1, 1)
+        if st.button("Simpan Dataset ANFIS"):
+            if target_col and input_cols:
+                X = data_anfis[input_cols].values
+                y = data_anfis[target_col].values.reshape(-1, 1)
 
-            st.session_state['X_anfis'] = X
-            st.session_state['y_anfis'] = y
+                st.session_state['X_anfis'] = X
+                st.session_state['y_anfis'] = y
 
-            st.success("✅ Dataset ANFIS berhasil disimpan.")
-            st.write("Shape Input (X):", X.shape)
-            st.write("Shape Target (y):", y.shape)
+                st.success("✅ Dataset ANFIS berhasil disimpan.")
+                st.write("Shape Input (X):", X.shape)
+                st.write("Shape Target (y):", y.shape)
 
-        else:
-            st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+            else:
+                st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("KEMBALI"):
+            menu = "DATA SPLITTING"
+            st.experimental_set_query_params(menu=menu)
+    with col2:
+        if st.button("LANJUT", disabled=True):
+            pass  # Disabled on last page
