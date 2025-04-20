@@ -554,7 +554,7 @@ elif menu == "HYBRID PREDICTION":
                     for i, lag in enumerate(selected_lags):
                         mf_values = []
                         for c in centers[i]:
-                            mf_values.append(np.exp(-((input_vec[0, i] - c)**2 / (2 * sigmas[i]**2)))
+                            mf_values.append(np.exp(-((input_vec[0, i] - c)**2 / (2 * sigmas[i]**2))))
                         # Update firing strengths
                         # (This needs proper implementation for multiple inputs)
                         # Simplified for demo - should use proper rule combination
