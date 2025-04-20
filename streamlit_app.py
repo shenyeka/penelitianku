@@ -15,6 +15,12 @@ from sklearn.metrics import mean_squared_error
 from numba import jit
 import io
 
+st.set_page_config(
+    page_title="Prediksi Permintaan Darah",
+    page_icon="➕",  # emoji plus
+    layout="wide"
+)
+
 # Konfigurasi halaman
 st.set_page_config(
     page_title="Prediksi Permintaan Darah",
