@@ -15,9 +15,10 @@ from sklearn.metrics import mean_squared_error
 from numba import jit
 import io
 
+# Set page config must be the first command
 st.set_page_config(
     page_title="Prediksi Permintaan Darah",
-    page_icon="➕",  # emoji plus
+    page_icon="red_plus_icon.png",  # Atau emoji yang diinginkan
     layout="wide"
 )
 
