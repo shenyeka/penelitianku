@@ -351,11 +351,11 @@ elif menu == "DATA PREPROCESSING":
     with col1:
         if st.button("KEMBALI"):
             menu = "HOME"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
     with col2:
         if st.button("LANJUT"):
             menu = "STASIONERITAS DATA"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
@@ -424,11 +424,11 @@ elif menu == "STASIONERITAS DATA":
     with col1:
         if st.button("KEMBALI"):
             menu = "DATA PREPROCESSING"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
     with col2:
         if st.button("LANJUT"):
             menu = "DATA SPLITTING"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
 
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
@@ -478,11 +478,11 @@ elif menu == "DATA SPLITTING":
     with col1:
         if st.button("KEMBALI"):
             menu = "STASIONERITAS DATA"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
     with col2:
         if st.button("LANJUT"):
             menu = "PREDIKSI"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
@@ -606,7 +606,7 @@ elif menu == "PREDIKSI":
     with col1:
         if st.button("KEMBALI"):
             menu = "DATA SPLITTING"
-            st.experimental_set_query_params(menu=menu)
+            st.rerun()(menu=menu)
     with col2:
         if st.button("LANJUT", disabled=True):
             pass  # Disabled on last page
