@@ -337,5 +337,227 @@ elif menu == "DATA PREPROCESSING":
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-# [Continue with all your existing code exactly as before...]
-# Just replace the remaining header containers with the new styled ones where needed
+# ================== STASIONERITAS DATA =====================
+elif menu == "STASIONERITAS DATA":
+    st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
+
+    if "data" in st.session_state:
+        data = st.session_state["data"]
+        st.write("Menggunakan data hasil preprocessing.")
+
+        col = st.selectbox("Pilih kolom untuk diuji stasioneritas:", data.columns)
+
+        if col:
+            # Uji ADF awal
+            st.subheader("Uji ADF - Sebelum Differencing")
+            adf_result = adfuller(data[col])
+            st.write(f"ADF Statistic: {adf_result[0]:.4f}")
+            st.write(f"P-Value: {adf_result[1]:.4f}")
+            for key, val in adf_result[4].items():
+                st.write(f"Critical Value ({key}): {val:.4f}")
+
+            if adf_result[1] < 0.05:
+                st.success("✅ Data sudah stasioner.")
+            else:
+                st.warning("⚠ Data tidak stasioner. Melakukan differencing...")
+
+                # Differencing
+                data_diff = data[col].diff().dropna()
+
+                # Simpan data differencing ke session
+                st.session_state["data_diff"] = data_diff
+
+                # Plot hasil differencing
+                st.subheader("Plot Setelah Differencing:")
+                fig, ax = plt.subplots()
+                sns.lineplot(x=data_diff.index, y=data_diff.values, ax=ax)
+                ax.set_title("Data Setelah Differencing")
+                st.pyplot(fig)
+
+                # Uji ADF ulang setelah differencing
+                st.subheader("Uji ADF - Setelah Differencing")
+                adf_diff_result = adfuller(data_diff)
+                st.write(f"ADF Statistic: {adf_diff_result[0]:.4f}")
+                st.write(f"P-Value: {adf_diff_result[1]:.4f}")
+                for key, val in adf_diff_result[4].items():
+                    st.write(f"Critical Value ({key}): {val:.4f}")
+
+                if adf_diff_result[1] < 0.05:
+                    st.success("✅ Data sudah stasioner setelah differencing.")
+                else:
+                    st.error("❌ Data masih belum stasioner setelah differencing.")
+
+            # Plot ACF dan PACF
+            st.subheader("Plot ACF dan PACF:")
+            fig_acf, ax_acf = plt.subplots()
+            plot_acf(data[col].dropna(), lags=40, ax=ax_acf)
+            st.pyplot(fig_acf)
+
+            fig_pacf, ax_pacf = plt.subplots()
+            plot_pacf(data[col].dropna(), lags=40, ax=ax_pacf)
+            st.pyplot(fig_pacf)
+
+    else:
+        st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+
+# =================== DATA SPLITTING ===================
+elif menu == "DATA SPLITTING":
+    st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
+
+    uploaded_split_file = st.file_uploader("Unggah Data yang Akan Di-Split (CSV)", type=["csv"])
+
+    if uploaded_split_file is not None:
+        df = pd.read_csv(uploaded_split_file)
+
+        st.write("Preview Data:")
+        st.write(df.head())
+
+        time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
+
+        if time_column != "Tidak Ada":
+            df[time_column] = pd.to_datetime(df[time_column])
+            df.set_index(time_column, inplace=True)
+
+        if len(df.columns) == 1:
+            col_name = df.columns[0]
+
+            train_size = int(len(df) * 0.8)
+            train_data = df.iloc[:train_size]
+            test_data = df.iloc[train_size:]
+
+            st.session_state["train_data"] = train_data
+            st.session_state["test_data"] = test_data
+
+            st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
+
+            st.subheader("Data Training:")
+            st.write(train_data.tail())
+            st.line_chart(train_data)
+
+            st.subheader("Data Testing:")
+            st.write(test_data.head())
+            st.line_chart(test_data)
+
+        else:
+            st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
+
+    else:
+        st.info("Silakan unggah data yang ingin Anda split.")
+
+# =================== PREDIKSI ======================
+elif menu == "PREDIKSI":
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.stattools import pacf
+    from sklearn.preprocessing import MinMaxScaler
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
+
+    train = st.session_state.get('train_data')
+    test = st.session_state.get('test_data')
+
+    if train is not None and test is not None:
+        st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
+        p = st.number_input("Masukkan nilai p:", min_value=0, value=1)
+        d = st.number_input("Masukkan nilai d:", min_value=0, value=1)
+        q = st.number_input("Masukkan nilai q:", min_value=0, value=1)
+
+        if st.button("Latih Model ARIMA"):
+            model_arima = ARIMA(train, order=(p, d, q))
+            model_arima = model_arima.fit()
+            st.success("Model ARIMA berhasil dilatih.")
+            st.write(model_arima.summary())
+
+            start_test = len(train)
+            pred = model_arima.forecast(steps=len(test))
+            test['prediksi'] = pred.values
+
+            st.subheader("4. Evaluasi Model dengan MAPE")
+            mape = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
+            st.write(f"MAPE ARIMA: {mape:.2f}%")
+
+            st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
+
+            # Simpan model & residual ke session_state
+            st.session_state['model_arima'] = model_arima
+            st.session_state['residual_arima'] = model_arima.resid
+
+        # Jika model sudah ada, tampilkan tombol lanjutan
+        if 'model_arima' in st.session_state:
+            st.subheader("5. Residual ARIMA")
+
+            if st.button("Lihat Residual ARIMA"):
+                residual = st.session_state['residual_arima']
+                st.line_chart(residual)
+
+                # Simpan ke DataFrame untuk normalisasi
+                data_anfis = pd.DataFrame({'residual': residual})
+                st.session_state['data_anfis_raw'] = data_anfis
+
+            if st.button("Lanjutkan ke Normalisasi Residual"):
+                if 'data_anfis_raw' in st.session_state:
+                    data_anfis = st.session_state['data_anfis_raw']
+                    scaler_residual = MinMaxScaler()
+                    data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
+                    st.session_state['data_anfis'] = data_anfis
+                    st.session_state['scaler_residual'] = scaler_residual
+                    st.success("Residual berhasil dinormalisasi.")
+                    st.write(data_anfis.head())
+                    st.info("Silakan lanjut ke menu ANFIS untuk melatih model hybrid.")
+                else:
+                    st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
+
+            # Langkah baru: Menentukan Input ANFIS dengan PACF
+            if st.button("Tentukan Input ANFIS dari PACF"):
+                if 'data_anfis' in st.session_state:
+                    data_anfis = st.session_state['data_anfis']
+                    
+                    # Hitung PACF dan cari lag signifikan
+                    jp = data_anfis['residual']
+                    pacf_values = pacf(jp, nlags=33)
+                    n = len(jp)  # jumlah data
+                    ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
+                    significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
+                    st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
+
+                    # Menambahkan lag signifikan ke data
+                    for lag in significant_lags:
+                        data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
+                    data_anfis.dropna(inplace=True)
+
+                    st.session_state['data_anfis_with_lags'] = data_anfis
+                    st.success("Lag signifikan berhasil ditambahkan.")
+                    st.write(data_anfis.head())
+
+                    # Plot PACF
+                    st.subheader("Plot Partial Autocorrelation Function (PACF)")
+                    plt.figure(figsize=(10, 6))
+                    plot_pacf(jp, lags=33, method='ywm', alpha=0.05)
+                    plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
+                    st.pyplot(plt)
+
+# Tambahan: Memilih Target dan Input ANFIS
+if 'data_anfis_with_lags' in st.session_state:
+    st.subheader("6. Tentukan Target dan Input untuk ANFIS")
+
+    data_anfis = st.session_state['data_anfis_with_lags']
+    all_columns = list(data_anfis.columns)
+
+    target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
+    input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
+
+    if st.button("Simpan Dataset ANFIS"):
+        if target_col and input_cols:
+            X = data_anfis[input_cols].values
+            y = data_anfis[target_col].values.reshape(-1, 1)
+
+            st.session_state['X_anfis'] = X
+            st.session_state['y_anfis'] = y
+
+            st.success("✅ Dataset ANFIS berhasil disimpan.")
+            st.write("Shape Input (X):", X.shape)
+            st.write("Shape Target (y):", y.shape)
+
+        else:
+            st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
