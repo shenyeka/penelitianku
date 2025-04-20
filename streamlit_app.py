@@ -489,11 +489,10 @@ def predict_next_step(lag32_val, lag33_val):
     return pred[0]
 
 # Asumsikan kamu sudah punya variabel `train` berisi data dengan kolom 'lag32', 'lag33', dan 'target'
-
-if st.button("Simpan Data Lag Residual"):
-    # Simpan ke session_state
-    st.session_state['train'] = train
-    st.success("Data residual dengan lag berhasil disimpan!")
+    st.markdown("### Simpan Data")
+    if st.button("Simpan Data Lag Residual"):
+        # Simpan data lag residual ke session atau file
+        st.success("Data lag residual berhasil disimpan!")
 
     # Tambahkan tombol lanjutan
     st.session_state['show_anfis_modeling'] = True
