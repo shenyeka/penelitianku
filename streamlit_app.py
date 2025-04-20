@@ -360,7 +360,7 @@ if menu == "HOME":
         <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
         Sistem ini menggunakan metode hybrid <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
         <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony</span> (ABC) untuk memprediksi permintaan darah 
-        pada Unit Transfusi Darah (UTD) dengan akurasi tinggi.
+        pada Unit Transfusi Darah (UTD).
         </p>
     </div>
     """, unsafe_allow_html=True)
