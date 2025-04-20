@@ -294,6 +294,7 @@ if menu == "HOME":
         <p style="text-align: center; font-size: 1.1rem; line-height: 1.8;">
         Antarmuka ini menggunakan metode hybrid <b style="color: #c83264;">ARIMA-ANFIS</b> dengan optimasi <b style="color: #c83264;">Artificial Bee Colony</b> (ABC)
         untuk memprediksi permintaan darah pada Unit Transfusi Darah (UTD).<br><br>
+        <span style="color: red; font-size: 20px;">➕</span>.
         Silakan mulai dengan mengunggah data pada menu <b style="color: #c83264;">DATA PREPROCESSING</b>.
         </p>
     </div>
