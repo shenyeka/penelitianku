@@ -363,17 +363,18 @@ if menu == "HOME":
         pada Unit Transfusi Darah (UTD) dengan akurasi tinggi.
         </p>
         
-        <div style="background: rgba(200, 80, 100, 0.1); border-left: 4px solid #c04070; padding: 1.2rem; border-radius: 10px; margin-top: 2rem;">
-            <h4 style="color: #c04070; margin-top: 0;">📌 Panduan Penggunaan:</h4>
-            <ol style="color: #5a2a3a;">
-                <li>Unggah dataset di menu <b>DATA PREPROCESSING</b></li>
-                <li>Periksa stasioneritas data di menu <b>STASIONERITAS DATA</b></li>
-                <li>Bagi data menjadi training & testing di <b>DATA SPLITTING</b></li>
-                <li>Lakukan prediksi di menu <b>PREDIKSI</b></li>
-            </ol>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<div style="background: rgba(200, 80, 100, 0.1); border-left: 4px solid #c04070; padding: 1.2rem; border-radius: 10px; margin-top: 2rem;">
+    <h4 style="color: #c04070; margin-top: 0;">📌 <b>Panduan Penggunaan:</b></h4>
+    <ol style="color: #5a2a3a; line-height: 1.6;">
+        <li>Unggah dataset di menu <b>DATA PREPROCESSING</b></li>
+        <li>Periksa stasioneritas data di menu <b>STASIONERITAS DATA</b></li>
+        <li>Bagi data menjadi training & testing di <b>DATA SPLITTING</b></li>
+        <li>Lakukan prediksi di menu <b>PREDIKSI</b></li>
+    </ol>
+</div>
+""", unsafe_allow_html=True)
+
 
 # [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
