@@ -526,3 +526,46 @@ if st.session_state.get('show_anfis_modeling', False):
             st.session_state['best_params'] = best_params
 
         st.success(f"Pemodelan ANFIS selesai! Loss terbaik: {best_loss:.6f}")
+
+        # =============================================
+        #        HYBRID: ANFIS + OPTIMASI ABC
+        # =============================================
+
+        st.subheader("Model ANFIS dengan Optimasi ABC (Hybrid)")
+
+        if 'data_anfis_with_lags' in st.session_state:
+            st.write("Jumlah data residual yang tersedia:", len(st.session_state['data_anfis_with_lags']))
+
+            data_anfis = st.session_state['data_anfis_with_lags']
+            x1 = data_anfis['residual_lag32'].values
+            x2 = data_anfis['residual_lag33'].values
+            y = data_anfis['residual'].values
+
+            if st.button("Latih Model ANFIS + Optimasi ABC"):
+                with st.spinner("Sedang mengoptimasi parameter ANFIS dengan ABC..."):
+                    from scipy.optimize import differential_evolution
+
+                    bounds = [(0, 1)]*2 + [(0.01, 1)] + [(0, 1)]*2 + [(0.01, 1)] + [(-1, 1)]*12
+
+                    result = differential_evolution(lambda ind: objective_function(ind, x1, x2, y),
+                                                    bounds, maxiter=100, popsize=15, seed=42)
+                    best_params = decode_parameters(result.x)
+                    st.session_state['anfis_best_params'] = best_params
+
+                    predictions = [anfis_output(a, b, best_params) for a, b in zip(x1, x2)]
+                    st.session_state['anfis_predictions'] = predictions
+                    st.session_state['anfis_actuals'] = y
+
+                    st.success("Model ANFIS berhasil dilatih dengan optimasi ABC.")
+                    st.write("MSE:", mean_squared_error(y, predictions))
+
+                    fig, ax = plt.subplots()
+                    ax.plot(y, label="Aktual", linestyle='--')
+                    ax.plot(predictions, label="Prediksi", color='tab:red')
+                    ax.set_title("Prediksi Residual oleh Model ANFIS + ABC")
+                    ax.legend()
+                    st.pyplot(fig)
+
+        else:
+            st.warning("Silakan lakukan preprocessing dan PACF terlebih dahulu untuk mendapatkan input ANFIS.")
+
