@@ -22,13 +22,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Konfigurasi halaman
-st.set_page_config(
-    page_title="Prediksi Permintaan Darah",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Elegant Pink-Maroon Theme with Enhanced Interactivity
 st.markdown("""
     <style>
