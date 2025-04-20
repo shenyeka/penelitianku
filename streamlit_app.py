@@ -18,7 +18,7 @@ import io
 # Set page config must be the first command
 st.set_page_config(
     page_title="Prediksi Permintaan Darah",
-    page_icon="red_plus_icon.png",  # Atau emoji yang diinginkan
+    page_icon="➕",  # Atau emoji yang diinginkan
     layout="wide"
 )
 
