@@ -346,7 +346,7 @@ elif menu == "ANFIS CONFIGURATION":
                     for i in range(n_inputs):
                         for s in range(n_samples):
                             for m in range(n_mf):
-                                membership_values[i, s, m] = np.exp(-((X[s, i] - centers[i][m])**2 / (2 * sigmas[i]**2))
+                                membership_values[i, s, m] = np.exp(-((X[s, i] - centers[i][m])**2 / (2 * sigmas[i]**2)))
                     
                     # Calculate firing strengths for all rules
                     rules = np.ones((n_samples, n_rules))
