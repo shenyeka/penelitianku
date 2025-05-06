@@ -334,12 +334,16 @@ with st.sidebar:
     if "menu" not in st.session_state:
     st.session_state.menu = "HOME"
 
+if "menu" not in st.session_state:
+    st.session_state.menu = "HOME"
+
 with st.sidebar:
     st.markdown("""
     <div style='text-align: center; margin-bottom: 2.5rem;'>
         <h2 style='color: #c04070; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);' class='floating'>🩸 MENU NAVIGASI</h2>
     </div>
     """, unsafe_allow_html=True)
+
     selected_menu = st.radio(
         "", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"],
         index=["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"].index(st.session_state.menu),
@@ -348,6 +352,7 @@ with st.sidebar:
     st.session_state.menu = selected_menu
 
 menu = st.session_state.menu
+
 
 
 # ======================== HOME ========================
