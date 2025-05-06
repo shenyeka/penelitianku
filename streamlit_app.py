@@ -401,6 +401,11 @@ elif menu == "DATA PREPROCESSING":
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
+            # Tombol lanjutkan ke STASIONERITAS DATA
+            if st.button("Lanjutkan ke Stasioneritas Data"):
+                st.session_state.menu = "STASIONERITAS DATA"
+                st.experimental_rerun()
+
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
