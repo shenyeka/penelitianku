@@ -335,7 +335,6 @@ with st.sidebar:
                 label_visibility="collapsed")
 
 
-
 # ======================== HOME ========================
 if menu == "HOME":
     st.markdown("""
