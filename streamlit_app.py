@@ -405,6 +405,7 @@ elif menu == "DATA PREPROCESSING":
             # Tombol lanjutkan ke STASIONERITAS DATA
             if st.button("Lanjutkan ke Stasioneritas Data"):
                 st.session_state.menu = "STASIONERITAS DATA"
+                # Refresh the page with the new menu
                 st.experimental_rerun()
 
 # ================== STASIONERITAS DATA =====================
