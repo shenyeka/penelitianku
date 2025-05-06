@@ -364,7 +364,6 @@ if menu == "HOME":
     </div>
     """, unsafe_allow_html=True)
 
-# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
@@ -402,11 +401,8 @@ elif menu == "DATA PREPROCESSING":
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-            # Tombol lanjutkan ke STASIONERITAS DATA
-            if st.button("Lanjutkan ke Stasioneritas Data"):
-                st.session_state.menu = "STASIONERITAS DATA"
-                # Refresh the page with the new menu
-                st.experimental_rerun()
+            # Update the session state to move to the next menu
+            st.session_state.menu = "STASIONERITAS DATA"
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
