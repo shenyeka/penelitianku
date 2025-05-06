@@ -364,6 +364,11 @@ if menu == "HOME":
     </div>
     """, unsafe_allow_html=True)
 
+    # Button for navigating to Data Preprocessing
+    if st.button("Lanjutkan ke Data Preprocessing"):
+        st.session_state.menu = "DATA PREPROCESSING"
+        st.experimental_rerun()
+
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
@@ -401,8 +406,10 @@ elif menu == "DATA PREPROCESSING":
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-            # Update the session state to move to the next menu
+        # Button to continue to STASIONERITAS DATA
+        if st.button("Lanjutkan ke Stasioneritas Data"):
             st.session_state.menu = "STASIONERITAS DATA"
+            st.experimental_rerun()
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
