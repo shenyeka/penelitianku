@@ -335,6 +335,10 @@ with st.sidebar:
                 label_visibility="collapsed")
 
 
+# Check if the session state already has a menu
+if "menu" not in st.session_state:
+    st.session_state.menu = "HOME"  # Default menu is HOME
+    
 # ======================== HOME ========================
 if menu == "HOME":
     st.markdown("""
