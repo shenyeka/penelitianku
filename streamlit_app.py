@@ -562,7 +562,7 @@ elif menu == "PREDIKSI":
     test = st.session_state.get('test_data')
 
     if train is not None and test is not None:
-        st.subheader("1. Tentukan Parameter ARIMA (1, 0, 1)")
+        st.subheader("Pemodelan ARIMA (1, 0, 1)")
 
         # Langsung tentukan model ARIMA dengan parameter (1, 0, 1)
         p, d, q = 1, 0, 1
@@ -602,7 +602,7 @@ elif menu == "PREDIKSI":
 
         # Jika model sudah ada, tampilkan tombol lanjutan
         if 'model_arima' in st.session_state:
-            st.subheader("5. Residual ARIMA")
+            st.subheader("Input ANFIS")
 
             if st.button("Lihat Residual ARIMA"):
                 residual = st.session_state['residual_arima']
