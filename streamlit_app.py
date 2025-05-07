@@ -368,7 +368,7 @@ if menu == "HOME":
     """, unsafe_allow_html=True)
 
     # Button for navigating to Data Preprocessing
-    if st.button("Lanjutkan ke Data Preprocessing"):
+    if st.button("Start"):
         st.session_state.menu = "DATA PREPROCESSING"
         st.experimental_rerun()
 
