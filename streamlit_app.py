@@ -426,15 +426,14 @@ elif menu == "DATA PREPROCESSING":
                 # Simpan data di session_state setelah penetapan index
                 st.session_state["data"] = data
 
+                # Pengecekan dan penghapusan missing value setelah tombol ditekan
                 if st.button("Lanjutkan ke Pengecekan Missing Value"):
                     missing = data.isnull().sum()
+                    st.write(f"Jumlah missing values per kolom: {missing}")
                     if missing.any():
-                        st.warning("Data memiliki missing values.")
-                        st.write(f"Jumlah missing values per kolom: {missing}")
-                        # Menambahkan opsi untuk menghapus data atau tidak
-                        if st.button("Hapus Baris dengan Missing Values"):
-                            data.dropna(inplace=True)
-                            st.write("Baris dengan missing values telah dihapus.")
+                        st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
+                        data.dropna(inplace=True)
+                        st.write("Baris dengan missing values telah dihapus.")
                     else:
                         st.success("Tidak ada missing values dalam data.")
 
@@ -446,7 +445,6 @@ elif menu == "DATA PREPROCESSING":
 
                         st.session_state["data"] = data
                         st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
-
 
 
 # ================== STASIONERITAS DATA =====================
