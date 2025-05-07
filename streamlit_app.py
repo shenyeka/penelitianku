@@ -551,6 +551,7 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
+
 # PREDIKSI
 elif menu == "PREDIKSI":
     from statsmodels.tsa.arima.model import ARIMA
