@@ -407,7 +407,7 @@ st.markdown("""
             <li>Format waktu direkomendasikan dalam <span class="highlight">YYYY-MM-DD</span> untuk konsistensi</li>
         </ul>
     </div>
-""", unsafe_allow_html=True)
+""")
     
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
 
