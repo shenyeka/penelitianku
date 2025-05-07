@@ -365,11 +365,17 @@ if menu == "HOME":
     </div>
     """, unsafe_allow_html=True)
 
-# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
 
+    # Menambahkan catatan kriteria dataset
+    st.markdown("""
+        **Catatan Penting**:
+        - Dataset yang diunggah harus berupa **data deret waktu** (time series) yang memiliki kolom waktu sebagai indeks.
+        - Dataset juga harus **univariat**, yaitu hanya memiliki satu variabel target yang ingin diprediksi (misalnya, jumlah permintaan darah, Nilai inflasi, dll).
+    """)
+    
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
 
     if uploaded_file is not None:
@@ -402,6 +408,7 @@ elif menu == "DATA PREPROCESSING":
             st.session_state["data"] = data
 
             st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
+
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
