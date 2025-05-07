@@ -511,7 +511,6 @@ elif menu == "STASIONERITAS DATA":
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
 
 
-Anda bilang:
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
     st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
