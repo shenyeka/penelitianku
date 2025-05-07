@@ -372,8 +372,8 @@ elif menu == "DATA PREPROCESSING":
     # Menambahkan catatan kriteria dataset
     st.markdown("""
         **Catatan Penting**:
-        - Dataset yang diunggah harus berupa **data deret waktu** (time series) yang memiliki kolom waktu sebagai indeks.
-        - Dataset juga harus **univariat**, yaitu hanya memiliki satu variabel target yang ingin diprediksi (misalnya, jumlah permintaan darah, Nilai inflasi, dll).
+        - Dataset harus berupa **data deret waktu** (time series) yang memiliki kolom waktu sebagai indeks.
+        - Dataset harus **univariat**, yaitu hanya memiliki satu variabel target yang ingin diprediksi (misalnya, jumlah permintaan darah, nilai inflasi, dll).
     """)
     
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
