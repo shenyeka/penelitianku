@@ -549,13 +549,12 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
-# =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
     from statsmodels.tsa.arima.model import ARIMA
-    from statsmodels.tsa.stattools import pacf
-    from sklearn.preprocessing import MinMaxScaler
+    from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
     import numpy as np
     import matplotlib.pyplot as plt
+    import streamlit as st
 
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
@@ -563,10 +562,10 @@ elif menu == "PREDIKSI":
     test = st.session_state.get('test_data')
 
     if train is not None and test is not None:
-        st.subheader("1. Tentukan Parameter ARIMA (p,d,q)")
-        p = st.number_input("Masukkan nilai p:", min_value=0, value=1)
-        d = st.number_input("Masukkan nilai d:", min_value=0, value=1)
-        q = st.number_input("Masukkan nilai q:", min_value=0, value=1)
+        st.subheader("1. Tentukan Parameter ARIMA (1, 0, 1)")
+
+        # Langsung tentukan model ARIMA dengan parameter (1, 0, 1)
+        p, d, q = 1, 0, 1
 
         if st.button("Latih Model ARIMA"):
             model_arima = ARIMA(train, order=(p, d, q))
@@ -575,18 +574,31 @@ elif menu == "PREDIKSI":
             st.write(model_arima.summary())
 
             start_test = len(train)
-            pred = model_arima.forecast(steps=len(test))
-            test['prediksi'] = pred.values
+            pred_train = model_arima.predict(start=0, end=start_test-1)
+            pred_test = model_arima.forecast(steps=len(test))
 
-            st.subheader("4. Evaluasi Model dengan MAPE")
-            mape = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
-            st.write(f"MAPE ARIMA: {mape:.2f}%")
+            # Tambahkan prediksi ke data
+            test['prediksi'] = pred_test
+
+            st.subheader("4. Evaluasi Model dengan MAPE dan RMSE")
+
+            # Hitung MAPE dan RMSE untuk training dan testing
+            mape_train = mean_absolute_percentage_error(train, pred_train) * 100
+            rmse_train = np.sqrt(mean_squared_error(train, pred_train))
+            mape_test = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
+            rmse_test = np.sqrt(mean_squared_error(test.iloc[:, 0], test['prediksi']))
+
+            st.write(f"MAPE Training: {mape_train:.2f}%")
+            st.write(f"RMSE Training: {rmse_train:.2f}")
+            st.write(f"MAPE Testing: {mape_test:.2f}%")
+            st.write(f"RMSE Testing: {rmse_test:.2f}")
 
             st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
 
             # Simpan model & residual ke session_state
             st.session_state['model_arima'] = model_arima
             st.session_state['residual_arima'] = model_arima.resid
+
 
         # Jika model sudah ada, tampilkan tombol lanjutan
         if 'model_arima' in st.session_state:
