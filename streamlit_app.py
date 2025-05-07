@@ -508,11 +508,11 @@ elif menu == "STASIONERITAS DATA":
 elif menu == "DATA SPLITTING":
     st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
 
-    uploaded_split_file = st.file_uploader("Unggah Data yang Akan Di-Split (CSV)", type=["csv"])
-
-    if uploaded_split_file is not None:
-        df = pd.read_csv(uploaded_split_file)
-
+    # Check if preprocessing data exists in session state
+    if "data" in st.session_state:
+        df = st.session_state["data"]
+        st.write("Menggunakan data hasil preprocessing.")
+        
         st.write("Preview Data:")
         st.write(df.head())
 
@@ -546,8 +546,7 @@ elif menu == "DATA SPLITTING":
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
     else:
-        st.info("Silakan unggah data yang ingin Anda split.")
-
+        st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
 # =================== PREDIKSI ======================
