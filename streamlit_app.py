@@ -336,6 +336,8 @@ with st.sidebar:
 
 
 
+# ... [previous code remains the same until the menu section] ...
+
 # ======================== HOME ========================
 if menu == "HOME":
     st.markdown("""
@@ -364,8 +366,17 @@ if menu == "HOME":
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Navigation buttons for HOME
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("⬅ Kembali", disabled=True):
+            pass
+    with col2:
+        if st.button("Lanjut ke Data Preprocessing ➡"):
+            st.session_state.menu = "DATA PREPROCESSING"
+            st.experimental_rerun()
 
-# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
@@ -403,10 +414,19 @@ elif menu == "DATA PREPROCESSING":
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-            # Tombol lanjutkan ke STASIONERITAS DATA
-            if st.button("Lanjutkan ke Stasioneritas Data"):
+    # Navigation buttons for DATA PREPROCESSING
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("⬅ Kembali ke Home"):
+            st.session_state.menu = "HOME"
+            st.experimental_rerun()
+    with col2:
+        if uploaded_file is not None and time_col:
+            if st.button("Lanjut ke Stasioneritas Data ➡"):
                 st.session_state.menu = "STASIONERITAS DATA"
                 st.experimental_rerun()
+        else:
+            st.button("Lanjut ke Stasioneritas Data ➡", disabled=True)
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
@@ -471,6 +491,24 @@ elif menu == "STASIONERITAS DATA":
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
 
+    # Navigation buttons for STASIONERITAS DATA
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        if st.button("⬅ Kembali ke Data Preprocessing"):
+            st.session_state.menu = "DATA PREPROCESSING"
+            st.experimental_rerun()
+    with col2:
+        if st.button("⬆ Kembali ke Home"):
+            st.session_state.menu = "HOME"
+            st.experimental_rerun()
+    with col3:
+        if "data" in st.session_state and col:
+            if st.button("Lanjut ke Data Splitting ➡"):
+                st.session_state.menu = "DATA SPLITTING"
+                st.experimental_rerun()
+        else:
+            st.button("Lanjut ke Data Splitting ➡", disabled=True)
+
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
     st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
@@ -512,8 +550,23 @@ elif menu == "DATA SPLITTING":
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
 
-    else:
-        st.info("Silakan unggah data yang ingin Anda split.")
+    # Navigation buttons for DATA SPLITTING
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        if st.button("⬅ Kembali ke Stasioneritas Data"):
+            st.session_state.menu = "STASIONERITAS DATA"
+            st.experimental_rerun()
+    with col2:
+        if st.button("⬆ Kembali ke Home"):
+            st.session_state.menu = "HOME"
+            st.experimental_rerun()
+    with col3:
+        if "train_data" in st.session_state and "test_data" in st.session_state:
+            if st.button("Lanjut ke Prediksi ➡"):
+                st.session_state.menu = "PREDIKSI"
+                st.experimental_rerun()
+        else:
+            st.button("Lanjut ke Prediksi ➡", disabled=True)
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
@@ -608,8 +661,19 @@ elif menu == "PREDIKSI":
                     plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
                     st.pyplot(plt)
 
+    # Navigation buttons for PREDIKSI
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("⬅ Kembali ke Data Splitting"):
+            st.session_state.menu = "DATA SPLITTING"
+            st.experimental_rerun()
+    with col2:
+        if st.button("⬆ Kembali ke Home"):
+            st.session_state.menu = "HOME"
+            st.experimental_rerun()
+
 # Tambahan: Memilih Target dan Input ANFIS
-if 'data_anfis_with_lags' in st.session_state:
+if 'data_anfis_with_lags' in st.session_state and menu == "PREDIKSI":
     st.subheader("6. Tentukan Target dan Input untuk ANFIS")
 
     data_anfis = st.session_state['data_anfis_with_lags']
@@ -629,6 +693,6 @@ if 'data_anfis_with_lags' in st.session_state:
             st.success("✅ Dataset ANFIS berhasil disimpan.")
             st.write("Shape Input (X):", X.shape)
             st.write("Shape Target (y):", y.shape)
-
+            
         else:
-            st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+            st.warning("⚠ Mohon pilih target dan dua input untuk menyimpan dataset ANFIS.")
