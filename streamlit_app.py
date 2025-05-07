@@ -417,7 +417,7 @@ elif menu == "DATA PREPROCESSING":
 
         time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
 
-        if st.button("Lakukan Preprocessing"):
+        if st.button("Periksa missing value"):
             if time_col:
                 try:
                     data[time_col] = pd.to_datetime(data[time_col])
@@ -459,7 +459,7 @@ elif menu == "STASIONERITAS DATA":
 
         col = st.selectbox("Pilih kolom untuk diuji stasioneritas:", data.columns)
 
-        if st.button("Lakukan Uji Stasioneritas"):
+        if st.button("Uji Stasioneritas"):
             if col:
                 # Uji ADF awal
                 st.subheader("Uji ADF awal")
