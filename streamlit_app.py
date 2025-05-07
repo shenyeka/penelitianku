@@ -406,7 +406,7 @@ elif menu == "DATA PREPROCESSING":
                 <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
         </div>
     """, unsafe_allow_html=True)
-    
+
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
 
     if uploaded_file is not None:
@@ -425,23 +425,8 @@ elif menu == "DATA PREPROCESSING":
             # Tangani missing values
             missing = data.isnull().sum()
             if missing.any():
-                st.warning("Data memiliki missing values.")
-
-                # Pilihan untuk menangani missing values
-                fill_option = st.radio("Pilih metode untuk menangani missing values", options=["Hapus Baris", "Isi dengan Rata-Rata", "Interpolasi"])
-                
-                if fill_option == "Hapus Baris":
-                    data.dropna(inplace=True)
-                    st.success("Baris dengan nilai kosong telah dihapus.")
-                elif fill_option == "Isi dengan Rata-Rata":
-                    data.fillna(data.mean(), inplace=True)
-                    st.success("Nilai kosong telah diisi dengan rata-rata.")
-                elif fill_option == "Interpolasi":
-                    data.interpolate(method='linear', inplace=True)
-                    st.success("Nilai kosong telah diisi dengan interpolasi linear.")
-                
-            else:
-                st.success("Tidak ada missing values pada data.")
+                st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
+                data.dropna(inplace=True)
 
             # Tampilkan plot
             st.write("Plot Data Setelah Preprocessing:")
@@ -453,9 +438,7 @@ elif menu == "DATA PREPROCESSING":
             # Simpan data ke session_state
             st.session_state["data"] = data
 
-            st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
-
-
+            st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
