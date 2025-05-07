@@ -344,7 +344,7 @@ if menu == "HOME":
             </span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True
     
     st.markdown("""
     <div class="content">
