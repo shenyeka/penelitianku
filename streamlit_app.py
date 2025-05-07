@@ -369,45 +369,45 @@ if menu == "HOME":
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
 
-st.markdown("""
-    <style>
-        .note-box {
-            background-color: #f8f9fa;
-            border-left: 5px solid #e74c3c;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 0 8px 8px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .note-title {
-            color: #e74c3c;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-        .note-list {
-            padding-left: 20px;
-        }
-        .note-list li {
-            margin-bottom: 8px;
-        }
-        .highlight {
-            background-color: #fffde7;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-weight: 500;
-        }
-    </style>
+    st.markdown("""
+        <style>
+            .note-box {
+                background-color: #f8f9fa;
+                border-left: 5px solid #e74c3c;
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 0 8px 8px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .note-title {
+                color: #e74c3c;
+                font-weight: 600;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+            }
+            .note-list {
+                padding-left: 20px;
+            }
+            .note-list li {
+                margin-bottom: 8px;
+            }
+            .highlight {
+                background-color: #fffde7;
+                padding: 2px 4px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+        </style>
 
-    <div class="note-box">
-        <div class="note-title">📋 Panduan Kriteria Dataset</div>
-        <ul class="note-list">
-            <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
-            <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
-            <li>Format waktu direkomendasikan dalam <span class="highlight">YYYY-MM-DD</span> untuk konsistensi</li>
-        </ul>
-    </div>
-""")
+        <div class="note-box">
+            <div class="note-title">📋 Panduan Kriteria Dataset</div>
+            <ul class="note-list">
+                <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
+                <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
+                <li>Format waktu direkomendasikan dalam <span class="highlight">YYYY-MM-DD</span> untuk konsistensi</li>
+            </ul>
+        </div>
+    """, unsafe_allow_html=True)
     
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
 
