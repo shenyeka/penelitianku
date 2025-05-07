@@ -526,37 +526,34 @@ elif menu == "DATA SPLITTING":
                 st.error(f"❌ Kolom yang dipilih tidak dapat dikonversi ke format datetime. Kesalahan: {e}")
                 st.stop()
 
-        # Hanya lanjut jika setelah set_index hanya tersisa 1 kolom (target)
+        # Hanya lanjut jika hanya tersisa 1 kolom target (numerik)
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
-            # Konversi ke numerik jika perlu
+            # Pastikan numerik
             df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
-
-            # Drop NA jika ada hasil konversi yang gagal
             df.dropna(inplace=True)
 
             train_size = int(len(df) * 0.8)
             train_data = df.iloc[:train_size].copy()
             test_data = df.iloc[train_size:].copy()
 
-            # Simpan untuk proses berikutnya
+            # Simpan ke session_state
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
 
             st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
 
-            st.subheader("Data Training:")
-            st.write(train_data)
+            st.subheader("Data Training (Hanya Kolom Target):")
+            st.write(train_data[[col_name]])
 
-            st.subheader("Data Testing:")
-            st.write(test_data)
+            st.subheader("Data Testing (Hanya Kolom Target):")
+            st.write(test_data[[col_name]])
 
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target setelah memilih kolom waktu.")
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
-
 
 
 # =================== PREDIKSI ======================
