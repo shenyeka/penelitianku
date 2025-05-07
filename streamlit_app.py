@@ -357,7 +357,7 @@ if menu == "HOME":
             </svg>
         </div>
         <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
-        Sistem ini menggunakan metode hybrid <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
+        Sistem ini menggunakan metode <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
         <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony</span> (ABC) untuk memprediksi permintaan darah 
         pada Unit Transfusi Darah (UTD).
         </p>
@@ -373,7 +373,7 @@ if menu == "HOME":
             <li><strong>DATA PREPROCESSING</strong>: Lakukan pembersihan dan normalisasi data untuk memastikan kualitas input model.</li>
             <li><strong>STASIONERITAS DATA</strong>: Uji stasioneritas data menggunakan metode statistik sebelum diterapkan pada ARIMA.</li>
             <li><strong>DATA SPLITTING</strong>: Pisahkan data menjadi data latih dan data uji agar proses prediksi lebih akurat.</li>
-            <li><strong>PREDIKSI</strong>: Lakukan prediksi permintaan darah menggunakan model hybrid ARIMA-ANFIS dengan optimasi ABC.</li>
+            <li><strong>PREDIKSI</strong>: Lakukan prediksi permintaan darah menggunakan model ARIMA-ANFIS dengan optimasi ABC.</li>
         </ul>
         <p style="text-align: center; color: #5a2a3a;"><em>Pastikan untuk mengikuti alur dari atas ke bawah agar proses prediksi berjalan optimal.</em></p>
     </div>
@@ -637,7 +637,7 @@ elif menu == "PREDIKSI":
                     st.session_state['scaler_residual'] = scaler_residual
                     st.success("Residual berhasil dinormalisasi.")
                     st.write(data_anfis.head())
-                    st.info("Silakan lanjut ke menu ANFIS untuk melatih model hybrid.")
+                    st.info("Silakan lanjut ke menu ANFIS.")
                 else:
                     st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
 
