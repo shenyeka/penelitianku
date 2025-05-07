@@ -551,7 +551,6 @@ elif menu == "DATA SPLITTING":
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
-)
 
 
 # =================== PREDIKSI ======================
