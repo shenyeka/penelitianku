@@ -346,7 +346,7 @@ if menu == "HOME":
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
+
     st.markdown("""
     <div class="content">
         <div style="text-align: center; margin-bottom: 2rem;">
@@ -363,6 +363,22 @@ if menu == "HOME":
         </p>
     </div>
     """, unsafe_allow_html=True)
+
+    # Panduan Penggunaan GUI
+    st.markdown("""
+    <div class="guide" style="background-color: #fff0f5; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 0 10px rgba(192, 64, 112, 0.2); margin-top: 2rem;">
+        <h3 style="color: #c04070; text-align: center; font-weight: bold;">📘 Panduan Penggunaan Sistem</h3>
+        <ul style="font-size: 1.05rem; line-height: 1.8; color: #5a2a3a;">
+            <li><strong>HOME</strong>: Halaman utama yang menjelaskan tujuan dan metode prediksi sistem.</li>
+            <li><strong>DATA PREPROCESSING</strong>: Lakukan pembersihan dan normalisasi data untuk memastikan kualitas input model.</li>
+            <li><strong>STASIONERITAS DATA</strong>: Uji stasioneritas data menggunakan metode statistik sebelum diterapkan pada ARIMA.</li>
+            <li><strong>DATA SPLITTING</strong>: Pisahkan data menjadi data latih dan data uji agar proses prediksi lebih akurat.</li>
+            <li><strong>PREDIKSI</strong>: Lakukan prediksi permintaan darah menggunakan model hybrid ARIMA-ANFIS dengan optimasi ABC.</li>
+        </ul>
+        <p style="text-align: center; color: #5a2a3a;"><em>Pastikan untuk mengikuti alur dari atas ke bawah agar proses prediksi berjalan optimal.</em></p>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
