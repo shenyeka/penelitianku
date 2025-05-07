@@ -515,28 +515,24 @@ elif menu == "STASIONERITAS DATA":
 elif menu == "DATA SPLITTING":
     st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
 
-    # Check if preprocessing data exists in session state
+    # Periksa apakah data preprocessing tersedia
     if "data" in st.session_state:
         df = st.session_state["data"]
         st.write("Menggunakan data hasil preprocessing.")
-        
+
         st.write("Preview Data:")
         st.write(df.head())
 
-        time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
-
-        if time_column != "Tidak Ada":
-            df[time_column] = pd.to_datetime(df[time_column])
-            df.set_index(time_column, inplace=True)
-
+        # Pastikan hanya satu kolom target (univariat)
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
+            # Split data
             train_size = int(len(df) * 0.8)
             train_data = df.iloc[:train_size].copy()
             test_data = df.iloc[train_size:].copy()
 
-            # Simpan untuk proses berikutnya
+            # Simpan untuk proses selanjutnya
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
 
@@ -549,13 +545,13 @@ elif menu == "DATA SPLITTING":
             st.subheader("Data Testing:")
             st.write(test_data)
             st.line_chart(test_data)
-
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
     else:
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
+# PREDIKSI
 elif menu == "PREDIKSI":
     from statsmodels.tsa.arima.model import ARIMA
     from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
