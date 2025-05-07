@@ -524,27 +524,66 @@ elif menu == "DATA SPLITTING":
 
         if len(df.columns) == 1:
             col_name = df.columns[0]
-
+            
+            # Split data
             train_size = int(len(df) * 0.8)
             train_data = df.iloc[:train_size]
             test_data = df.iloc[train_size:]
-
-            st.session_state["train_data"] = train_data
-            st.session_state["test_data"] = test_data
+            
+            # Tambahkan kolom 'Type' untuk membedakan train dan test
+            train_data['Type'] = 'Training'
+            test_data['Type'] = 'Testing'
+            
+            # Gabungkan data untuk ditampilkan
+            combined_data = pd.concat([train_data, test_data])
+            
+            st.session_state["train_data"] = train_data.drop(columns=['Type'])
+            st.session_state["test_data"] = test_data.drop(columns=['Type'])
 
             st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
-
-            st.subheader("Data Training:")
-            st.write(train_data.tail())
-            st.line_chart(train_data)
-
-            st.subheader("Data Testing:")
-            st.write(test_data.head())
-            st.line_chart(test_data)
+            
+            # Tampilkan data dalam satu tabel dengan tabs
+            tab1, tab2 = st.tabs(["Tabel Gabungan", "Visualisasi"])
+            
+            with tab1:
+                st.subheader("Data Training & Testing")
+                st.dataframe(combined_data.style.applymap(
+                    lambda x: 'background-color: #e6f7ff' if x == 'Training' else 'background-color: #fff2e6'
+                ), height=400)
+                
+                # Tombol download
+                csv = combined_data.to_csv(index=True).encode('utf-8')
+                st.download_button(
+                    label="Download Data Split (CSV)",
+                    data=csv,
+                    file_name='data_split.csv',
+                    mime='text/csv'
+                )
+            
+            with tab2:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.subheader("Data Training")
+                    st.line_chart(train_data.drop(columns=['Type']))
+                    st.write(f"Jumlah data: {len(train_data)}")
+                
+                with col2:
+                    st.subheader("Data Testing")
+                    st.line_chart(test_data.drop(columns=['Type']))
+                    st.write(f"Jumlah data: {len(test_data)}")
+                
+                # Visualisasi gabungan
+                st.subheader("Visualisasi Gabungan")
+                fig, ax = plt.subplots(figsize=(10, 4))
+                train_data[col_name].plot(ax=ax, label='Training', color='blue')
+                test_data[col_name].plot(ax=ax, label='Testing', color='orange')
+                ax.axvline(x=train_data.index[-1], color='red', linestyle='--', label='Split Point')
+                ax.set_title(f"Data Split - {col_name}")
+                ax.legend()
+                st.pyplot(fig)
 
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
-
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
 
