@@ -523,12 +523,7 @@ elif menu == "DATA SPLITTING":
         st.write("Preview Data:")
         st.write(df.head())
 
-        time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
-
-        if time_column != "Tidak Ada":
-            df[time_column] = pd.to_datetime(df[time_column])
-            df.set_index(time_column, inplace=True)
-
+        # Pastikan hanya satu kolom target
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
@@ -549,12 +544,12 @@ elif menu == "DATA SPLITTING":
             st.subheader("Data Testing:")
             st.write(test_data)
             st.line_chart(test_data)
-
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
     else:
-        st.info("Silakan lakukan preprocessing data terlebih dahulu.") 
-        
+        st.info("Silakan lakukan preprocessing data terlebih dahulu.")
+
+
 # ========PREDIKSI=====
 elif menu == "PREDIKSI":
     from statsmodels.tsa.arima.model import ARIMA
