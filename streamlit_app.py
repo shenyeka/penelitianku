@@ -527,8 +527,8 @@ elif menu == "DATA SPLITTING":
             
             # Split data
             train_size = int(len(df) * 0.8)
-            train_data = df.iloc[:train_size]
-            test_data = df.iloc[train_size:]
+            train_data = df.iloc[:train_size].copy()
+            test_data = df.iloc[train_size:].copy()
             
             # Tambahkan kolom 'Type' untuk membedakan train dan test
             train_data['Type'] = 'Training'
@@ -547,9 +547,17 @@ elif menu == "DATA SPLITTING":
             
             with tab1:
                 st.subheader("Data Training & Testing")
-                st.dataframe(combined_data.style.applymap(
-                    lambda x: 'background-color: #e6f7ff' if x == 'Training' else 'background-color: #fff2e6'
-                ), height=400)
+                
+                # Style hanya kolom 'Type' saja
+                def color_type(val):
+                    if val == 'Training':
+                        return 'background-color: #e6f7ff'
+                    elif val == 'Testing':
+                        return 'background-color: #fff2e6'
+                    return ''
+                
+                styled_data = combined_data.style.applymap(color_type, subset=['Type'])
+                st.dataframe(styled_data, height=400)
                 
                 # Tombol download
                 csv = combined_data.to_csv(index=True).encode('utf-8')
