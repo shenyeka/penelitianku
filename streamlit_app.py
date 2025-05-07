@@ -526,27 +526,30 @@ elif menu == "DATA SPLITTING":
             col_name = df.columns[0]
 
             train_size = int(len(df) * 0.8)
-            train_data = df.iloc[:train_size]
-            test_data = df.iloc[train_size:]
+            train_data = df.iloc[:train_size].copy()
+            test_data = df.iloc[train_size:].copy()
+
+            # Tambahkan kolom penanda
+            train_data["Data"] = "Train"
+            test_data["Data"] = "Test"
+
+            # Gabungkan
+            combined_data = pd.concat([train_data, test_data])
 
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
 
             st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
 
-            st.subheader("Data Training:")
-            st.write(train_data.tail())
-            st.line_chart(train_data)
+            st.subheader("Data Training & Testing:")
+            st.write(combined_data)
 
-            st.subheader("Data Testing:")
-            st.write(test_data.head())
-            st.line_chart(test_data)
-
+            st.line_chart(combined_data[[col_name]])
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
-
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
+
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
