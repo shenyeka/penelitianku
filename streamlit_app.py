@@ -355,80 +355,13 @@ if menu == "HOME":
                 <path d="M8 12H16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
-        <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a; margin-bottom: 2.5rem;">
+        <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
         Sistem ini menggunakan metode hybrid <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
         <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony</span> (ABC) untuk memprediksi permintaan darah 
         pada Unit Transfusi Darah (UTD).
         </p>
-        
-        <div style="background: linear-gradient(135deg, #fdf2f4 0%, #fae8eb 100%); border-radius: 16px; padding: 1.75rem; box-shadow: 0 6px 18px rgba(202, 64, 112, 0.12); margin-bottom: 2.5rem; border: 1px solid #f8d7e3; transition: transform 0.3s ease, box-shadow 0.3s ease;">
-    <h3 style="color: #c04070; text-align: center; margin-bottom: 1.25rem; border-bottom: 2px dashed #e8b5c5; padding-bottom: 0.75rem; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px;">📋 PANDUAN PENGGUNAAN SISTEM</h3>
-    <div style="display: flex; justify-content: center;">
-        <ol style="text-align: left; color: #5a2a3a; line-height: 2.2; padding-left: 2rem; max-width: 650px; margin: 0; counter-reset: item;">
-            <li style="position: relative; padding-left: 2rem; margin-bottom: 1rem; counter-increment: item;">
-                <b style="color: #c04070; font-size: 1.1rem;">DATA PREPROCESSING</b> - Unggah dan bersihkan data mentah, termasuk handling missing values dan outlier
-            </li>
-            <li style="position: relative; padding-left: 2rem; margin-bottom: 1rem; counter-increment: item;">
-                <b style="color: #c04070; font-size: 1.1rem;">STASIONERITAS DATA</b> - Periksa stasioneritas dengan ADF test dan transformasi data jika diperlukan
-            </li>
-            <li style="position: relative; padding-left: 2rem; margin-bottom: 1rem; counter-increment: item;">
-                <b style="color: #c04070; font-size: 1.1rem;">DATA SPLITTING</b> - Bagi data menjadi training (70-80%) dan testing (20-30%)
-            </li>
-            <li style="position: relative; padding-left: 2rem; counter-increment: item;">
-                <b style="color: #c04070; font-size: 1.1rem;">PREDIKSI</b> - Lakukan prediksi menggunakan model hybrid ARIMA-ANFIS dengan optimasi ABC
-            </li>
-        </ol>
     </div>
-</div>
-
-<div style="background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%); border-radius: 16px; padding: 2rem; box-shadow: 0 6px 18px rgba(64, 112, 160, 0.12); border: 1px solid #d1e0f0; transition: transform 0.3s ease, box-shadow 0.3s ease;">
-    <h3 style="color: #4070a0; text-align: center; margin-bottom: 1.5rem; border-bottom: 2px dashed #b5c5e8; padding-bottom: 0.75rem; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px;">✨ FITUR UNGGULAN SISTEM</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: center;">
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid #f0f0f0; cursor: default; transform: translateY(0);" 
-             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(202, 64, 112, 0.15)'" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'">
-            <div style="font-size: 2.5rem; color: #c04070; margin-bottom: 1rem;">🧠</div>
-            <h4 style="color: #5a2a3a; margin: 0.75rem 0; font-size: 1.2rem;">Kecerdasan Hybrid</h4>
-            <p style="color: #666; font-size: 0.95rem; margin: 0; line-height: 1.6;">Gabungan keunggulan model ARIMA untuk analisis time series dengan kemampuan adaptif ANFIS</p>
-        </div>
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid #f0f0f0; cursor: default; transform: translateY(0);" 
-             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(202, 64, 112, 0.15)'" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'">
-            <div style="font-size: 2.5rem; color: #c04070; margin-bottom: 1rem;">🐝</div>
-            <h4 style="color: #5a2a3a; margin: 0.75rem 0; font-size: 1.2rem;">Optimasi ABC</h4>
-            <p style="color: #666; font-size: 0.95rem; margin: 0; line-height: 1.6;">Algoritma Artificial Bee Colony untuk menemukan parameter optimal model secara efisien</p>
-        </div>
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid #f0f0f0; cursor: default; transform: translateY(0);" 
-             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(202, 64, 112, 0.15)'" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'">
-            <div style="font-size: 2.5rem; color: #c04070; margin-bottom: 1rem;">💖</div>
-            <h4 style="color: #5a2a3a; margin: 0.75rem 0; font-size: 1.2rem;">Prediksi Darah</h4>
-            <p style="color: #666; font-size: 0.95rem; margin: 0; line-height: 1.6;">Akurasi tinggi dalam memprediksi kebutuhan darah untuk manajemen stok yang efektif</p>
-        </div>
-    </div>
-</div>
-
-<style>
-    ol {
-        list-style-type: none;
-    }
-    ol li:before {
-        content: counter(item);
-        position: absolute;
-        left: 0;
-        top: 0;
-        background: #c04070;
-        color: white;
-        width: 1.8rem;
-        height: 1.8rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 0.9rem;
-    }
-</style>
+    """, unsafe_allow_html=True). 
 
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
