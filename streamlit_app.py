@@ -557,6 +557,7 @@ elif menu == "PREDIKSI":
     import numpy as np
     import matplotlib.pyplot as plt
     import streamlit as st
+    import pandas as pd
 
     st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
@@ -596,13 +597,10 @@ elif menu == "PREDIKSI":
             st.write(f"RMSE Testing: {rmse_test:.2f}")
 
             st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
-            
-            st.subheader("Analisis Hasil Prediksi ARIMA")
 
-            # Menilai akurasi prediksi
-            st.write("Perbandingan antara nilai aktual dan prediksi model ARIMA dapat memberikan insight tentang seberapa baik model ini dapat memprediksi permintaan darah.")
-            
-            # Tampilkan beberapa poin perbandingan antara data aktual dan prediksi
+            st.subheader("5. Analisis Hasil Prediksi ARIMA")
+
+            # Perbandingan antara data aktual dan prediksi
             comparison = pd.DataFrame({
                 'Tanggal': test.index,
                 'Aktual': test.iloc[:, 0],
@@ -610,9 +608,23 @@ elif menu == "PREDIKSI":
                 'Selisih': test.iloc[:, 0] - test['prediksi']
             })
 
+            # Tampilkan beberapa data perbandingan untuk memberikan gambaran
             st.write(comparison.head())
 
-            # Visualisasi prediksi vs aktual
+            # Menilai akurasi prediksi berdasarkan selisih
+            st.write("Analisis Perbandingan Prediksi dan Aktual:")
+            total_selisih = comparison['Selisih'].sum()
+            mean_selisih = comparison['Selisih'].mean()
+            abs_mean_selisih = comparison['Selisih'].abs().mean()
+
+            if abs_mean_selisih < 0.05:
+                st.write("Prediksi ARIMA sangat akurat, dengan selisih yang sangat kecil antara nilai prediksi dan aktual.")
+            elif abs_mean_selisih < 0.1:
+                st.write("Prediksi ARIMA cukup baik, meskipun ada beberapa variasi antara nilai prediksi dan aktual.")
+            else:
+                st.write("Prediksi ARIMA kurang akurat, dengan selisih yang cukup besar antara nilai prediksi dan aktual. Model mungkin perlu disesuaikan.")
+
+            # Visualisasi perbandingan
             st.subheader("Visualisasi Hasil Prediksi vs Aktual")
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.plot(test.index, test.iloc[:, 0], label="Data Aktual", color='blue', linestyle='--')
@@ -623,11 +635,24 @@ elif menu == "PREDIKSI":
             ax.legend()
             st.pyplot(fig)
 
-            st.write("Analisis hasil prediksi:")
-            st.write("1. Model ARIMA dapat memprediksi tren permintaan darah dengan baik jika prediksi mengikuti pola yang serupa dengan data aktual.")
-            st.write("2. Jika terdapat selisih besar antara prediksi dan aktual, itu menunjukkan bahwa model ARIMA mungkin kurang optimal, dan perlu dilakukan penyesuaian parameter.")
-            st.write("3. Perbandingan MAPE dan RMSE antara data training dan testing dapat memberikan gambaran tentang performa model.")
-            st.write("4. Secara keseluruhan, analisis ini menunjukkan bagaimana model ARIMA dapat digunakan untuk peramalan permintaan darah jangka pendek.")
+            # Analisis berdasarkan nilai MAPE dan RMSE
+            st.write("Analisis berdasarkan nilai MAPE dan RMSE:")
+            if mape_test < 10:
+                st.write("MAPE menunjukkan model yang sangat akurat, dengan kesalahan prediksi kurang dari 10%.")
+            elif mape_test < 20:
+                st.write("MAPE menunjukkan model yang cukup baik, dengan kesalahan prediksi antara 10% dan 20%.")
+            else:
+                st.write("MAPE menunjukkan model yang kurang baik, dengan kesalahan prediksi lebih dari 20%.")
+
+            if rmse_test < 100:
+                st.write("RMSE menunjukkan model yang cukup baik, dengan kesalahan prediksi rendah.")
+            elif rmse_test < 200:
+                st.write("RMSE menunjukkan model yang cukup baik, meskipun ada beberapa kesalahan prediksi.")
+            else:
+                st.write("RMSE menunjukkan model yang kurang baik, dengan kesalahan prediksi cukup tinggi.")
+
+            st.write("Secara keseluruhan, model ARIMA ini dapat digunakan untuk prediksi permintaan darah dalam jangka pendek. Namun, untuk hasil yang lebih akurat, parameter model mungkin perlu disesuaikan lebih lanjut.")
+
 
             # Simpan model & residual ke session_state
             st.session_state['model_arima'] = model_arima
