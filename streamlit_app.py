@@ -404,8 +404,6 @@ elif menu == "DATA PREPROCESSING":
             <ul class="note-list">
                 <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
                 <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
-                <li>Format waktu direkomendasikan dalam <span class="highlight">YYYY-MM-DD</span> untuk konsistensi</li>
-            </ul>
         </div>
     """, unsafe_allow_html=True)
     
