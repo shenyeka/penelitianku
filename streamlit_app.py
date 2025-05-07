@@ -596,6 +596,38 @@ elif menu == "PREDIKSI":
             st.write(f"RMSE Testing: {rmse_test:.2f}")
 
             st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
+            
+            st.subheader("Analisis Hasil Prediksi ARIMA")
+
+            # Menilai akurasi prediksi
+            st.write("Perbandingan antara nilai aktual dan prediksi model ARIMA dapat memberikan insight tentang seberapa baik model ini dapat memprediksi permintaan darah.")
+            
+            # Tampilkan beberapa poin perbandingan antara data aktual dan prediksi
+            comparison = pd.DataFrame({
+                'Tanggal': test.index,
+                'Aktual': test.iloc[:, 0],
+                'Prediksi': test['prediksi'],
+                'Selisih': test.iloc[:, 0] - test['prediksi']
+            })
+
+            st.write(comparison.head())
+
+            # Visualisasi prediksi vs aktual
+            st.subheader("Visualisasi Hasil Prediksi vs Aktual")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(test.index, test.iloc[:, 0], label="Data Aktual", color='blue', linestyle='--')
+            ax.plot(test.index, test['prediksi'], label="Prediksi ARIMA", color='orange', linestyle='-')
+            ax.set_xlabel('Tanggal')
+            ax.set_ylabel('Permintaan Darah')
+            ax.set_title('Perbandingan Data Aktual dan Prediksi ARIMA')
+            ax.legend()
+            st.pyplot(fig)
+
+            st.write("Analisis hasil prediksi:")
+            st.write("1. Model ARIMA dapat memprediksi tren permintaan darah dengan baik jika prediksi mengikuti pola yang serupa dengan data aktual.")
+            st.write("2. Jika terdapat selisih besar antara prediksi dan aktual, itu menunjukkan bahwa model ARIMA mungkin kurang optimal, dan perlu dilakukan penyesuaian parameter.")
+            st.write("3. Perbandingan MAPE dan RMSE antara data training dan testing dapat memberikan gambaran tentang performa model.")
+            st.write("4. Secara keseluruhan, analisis ini menunjukkan bagaimana model ARIMA dapat digunakan untuk peramalan permintaan darah jangka pendek.")
 
             # Simpan model & residual ke session_state
             st.session_state['model_arima'] = model_arima
