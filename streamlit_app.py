@@ -519,20 +519,28 @@ elif menu == "DATA SPLITTING":
         time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
 
         if time_column != "Tidak Ada":
-            df[time_column] = pd.to_datetime(df[time_column])
-            df.set_index(time_column, inplace=True)
+            try:
+                df[time_column] = pd.to_datetime(df[time_column], errors='raise')
+                df.set_index(time_column, inplace=True)
+            except Exception as e:
+                st.error(f"❌ Kolom yang dipilih tidak dapat dikonversi ke format datetime. Kesalahan: {e}")
+                st.stop()
 
+        # Hanya lanjut jika setelah set_index hanya tersisa 1 kolom (target)
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
-            # Pastikan target numerik
+            # Konversi ke numerik jika perlu
             df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
+
+            # Drop NA jika ada hasil konversi yang gagal
+            df.dropna(inplace=True)
 
             train_size = int(len(df) * 0.8)
             train_data = df.iloc[:train_size].copy()
             test_data = df.iloc[train_size:].copy()
 
-            # Simpan ke session_state
+            # Simpan untuk proses berikutnya
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
 
@@ -545,10 +553,9 @@ elif menu == "DATA SPLITTING":
             st.write(test_data)
 
         else:
-            st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
+            st.warning("⚠ Data harus hanya memiliki 1 kolom target setelah memilih kolom waktu.")
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
-
 
 
 
