@@ -445,6 +445,9 @@ elif menu == "DATA PREPROCESSING":
 
                     st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan saat preprocessing: {e}")
+
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
