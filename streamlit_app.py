@@ -335,8 +335,6 @@ with st.sidebar:
                 label_visibility="collapsed")
 
 
-# Define menu items
-menu = st.session_state.get("menu", "HOME")
 
 # ======================== HOME ========================
 if menu == "HOME":
@@ -367,11 +365,7 @@ if menu == "HOME":
     </div>
     """, unsafe_allow_html=True)
 
-    # Button for navigating to Data Preprocessing
-    if st.button("Start"):
-        st.session_state.menu = "DATA PREPROCESSING"
-        st.experimental_rerun()
-
+# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
@@ -409,12 +403,12 @@ elif menu == "DATA PREPROCESSING":
 
             st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-        # Button to continue to STASIONERITAS DATA
-        if st.button("Lanjutkan ke Stasioneritas Data"):
-            st.session_state.menu = "STASIONERITAS DATA"
-            st.experimental_rerun()
+            # Tombol lanjutkan ke STASIONERITAS DATA
+            if st.button("Lanjutkan ke Stasioneritas Data"):
+                st.session_state.menu = "STASIONERITAS DATA"
+                st.experimental_rerun()
 
-# ==================== STASIONERITAS DATA ====================
+# ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
 
