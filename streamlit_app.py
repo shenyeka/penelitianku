@@ -523,7 +523,7 @@ elif menu == "DATA SPLITTING":
         st.write("Preview Data:")
         st.write(df.head())
 
-time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
+        time_column = st.selectbox("Pilih Kolom Waktu (jika ada)", ["Tidak Ada"] + list(df.columns))
 
         if time_column != "Tidak Ada":
             df[time_column] = pd.to_datetime(df[time_column])
