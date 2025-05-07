@@ -334,8 +334,6 @@ with st.sidebar:
     menu = st.radio("", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"],
                 label_visibility="collapsed")
 
-
-
 # ======================== HOME ========================
 if menu == "HOME":
     st.markdown("""
@@ -363,10 +361,7 @@ if menu == "HOME":
         pada Unit Transfusi Darah (UTD).
         </p>
         
-<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px;">
-
-    <!-- Panduan Penggunaan Section -->
-    <div style="background: linear-gradient(135deg, #fdf2f4 0%, #fae8eb 100%); border-radius: 16px; padding: 1.75rem; box-shadow: 0 6px 18px rgba(202, 64, 112, 0.12); margin-bottom: 2.5rem; border: 1px solid #f8d7e3; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+        <div style="background: linear-gradient(135deg, #fdf2f4 0%, #fae8eb 100%); border-radius: 16px; padding: 1.75rem; box-shadow: 0 6px 18px rgba(202, 64, 112, 0.12); margin-bottom: 2.5rem; border: 1px solid #f8d7e3; transition: transform 0.3s ease, box-shadow 0.3s ease;">
     <h3 style="color: #c04070; text-align: center; margin-bottom: 1.25rem; border-bottom: 2px dashed #e8b5c5; padding-bottom: 0.75rem; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px;">📋 PANDUAN PENGGUNAAN SISTEM</h3>
     <div style="display: flex; justify-content: center;">
         <ol style="text-align: left; color: #5a2a3a; line-height: 2.2; padding-left: 2rem; max-width: 650px; margin: 0; counter-reset: item;">
@@ -433,6 +428,7 @@ if menu == "HOME":
         font-weight: bold;
         font-size: 0.9rem;
     }
+</style>
 </style>
 
 # ==================== DATA PREPROCESSING ====================
