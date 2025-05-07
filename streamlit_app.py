@@ -421,11 +421,14 @@ elif menu == "DATA PREPROCESSING":
             data.set_index(time_col, inplace=True)
             st.write("Data Setelah Menetapkan Index Waktu:")
             st.write(data.head())
-
-            # Tangani missing values
+            
+        # Tangani missing values
             missing = data.isnull().sum()
             if missing.any():
                 st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
+                data.dropna(inplace=True)
+            else:
+                st.info("Data tidak memiliki missing values.")
                 data.dropna(inplace=True)
 
             # Tampilkan plot
