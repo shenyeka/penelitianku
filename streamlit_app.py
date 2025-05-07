@@ -404,6 +404,7 @@ elif menu == "DATA PREPROCESSING":
             <ul class="note-list">
                 <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
                 <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
+            </ul>
         </div>
     """, unsafe_allow_html=True)
 
@@ -422,6 +423,9 @@ elif menu == "DATA PREPROCESSING":
                 st.write("Data Setelah Menetapkan Index Waktu:")
                 st.write(data.head())
 
+                # Simpan data di session_state setelah penetapan index
+                st.session_state["data"] = data
+
                 if st.button("Lanjutkan ke Pengecekan Missing Value"):
                     missing = data.isnull().sum()
                     if missing.any():
@@ -436,6 +440,7 @@ elif menu == "DATA PREPROCESSING":
 
                         st.session_state["data"] = data
                         st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
+
 
 
 
