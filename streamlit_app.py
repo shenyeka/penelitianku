@@ -407,7 +407,7 @@ elif menu == "DATA PREPROCESSING":
         </div>
     """, unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
+    uploaded_file = st.file_uploader("Unggah Dataset CSV", type=["csv"])
 
     if uploaded_file is not None:
         data = pd.read_csv(uploaded_file)
