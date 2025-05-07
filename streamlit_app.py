@@ -525,39 +525,42 @@ elif menu == "DATA SPLITTING":
         if len(df.columns) == 1:
             col_name = df.columns[0]
             
-            # Split data
-            train_size = int(len(df) * 0.8)
-            train_data = df.iloc[:train_size].copy()
-            test_data = df.iloc[train_size:].copy()
-            
-            # Tambahkan kolom 'Type' untuk membedakan train dan test
-            train_data['Type'] = 'Training'
-            test_data['Type'] = 'Testing'
-            
-            # Gabungkan data untuk ditampilkan
-            combined_data = pd.concat([train_data, test_data])
-            
-            st.session_state["train_data"] = train_data.drop(columns=['Type'])
-            st.session_state["test_data"] = test_data.drop(columns=['Type'])
+# Split data
+train_size = int(len(df) * 0.8)
+train_data = df.iloc[:train_size].copy()
+test_data = df.iloc[train_size:].copy()
 
-            st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
-            
-            # Tampilkan data dalam satu tabel dengan tabs
-            tab1, tab2 = st.tabs(["Tabel Gabungan", "Visualisasi"])
-            
-            with tab1:
-                st.subheader("Data Training & Testing")
-                
-                # Style hanya kolom 'Type' saja
-                def color_type(val):
-                    if val == 'Training':
-                        return 'background-color: #e6f7ff'
-                    elif val == 'Testing':
-                        return 'background-color: #fff2e6'
-                    return ''
-                
-                styled_data = combined_data.style.applymap(color_type, subset=['Type'])
-                st.dataframe(styled_data, height=400)
+# Tambahkan kolom 'Type' untuk membedakan train dan test
+train_data['Type'] = 'Training'
+test_data['Type'] = 'Testing'
+
+# Gabungkan data untuk ditampilkan (gunakan salinan sebelum drop)
+combined_data = pd.concat([train_data, test_data])
+
+# Simpan data ke session_state tanpa kolom 'Type'
+st.session_state["train_data"] = train_data.drop(columns=['Type'])
+st.session_state["test_data"] = test_data.drop(columns=['Type'])
+
+# PROSES TAMPILKAN TABEL
+tab1, tab2 = st.tabs(["Tabel Gabungan", "Visualisasi"])
+
+with tab1:
+    st.subheader("Data Training & Testing")
+
+    # Cek apakah kolom 'Type' benar-benar ada
+    if 'Type' in combined_data.columns:
+        def color_type(val):
+            if val == 'Training':
+                return 'background-color: #e6f7ff'
+            elif val == 'Testing':
+                return 'background-color: #fff2e6'
+            return ''
+
+        styled_data = combined_data.style.applymap(color_type, subset=['Type'])
+        st.dataframe(styled_data, height=400)
+    else:
+        st.dataframe(combined_data, height=400)
+
                 
                 # Tombol download
                 csv = combined_data.to_csv(index=True).encode('utf-8')
