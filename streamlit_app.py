@@ -456,7 +456,7 @@ elif menu == "STASIONERITAS DATA":
         if st.button("Lakukan Uji Stasioneritas"):
             if col:
                 # Uji ADF awal
-                st.subheader("Uji ADF - Sebelum Differencing")
+                st.subheader("Uji ADF awal")
                 adf_result = adfuller(data[col])
                 st.write(f"ADF Statistic: {adf_result[0]:.4f}")
                 st.write(f"P-Value: {adf_result[1]:.4f}")
