@@ -364,21 +364,13 @@ if menu == "HOME":
         </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Navigation buttons for HOME
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.button("⬅ Kembali", disabled=True)
-    with col2:
-        if st.button("Lanjut ke Data Preprocessing ➡"):
-            menu = "DATA PREPROCESSING"
 
+# [Rest of your code remains exactly the same...]
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
     st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
-    time_col = None
 
     if uploaded_file is not None:
         data = pd.read_csv(uploaded_file)
@@ -408,19 +400,8 @@ elif menu == "DATA PREPROCESSING":
 
             # Simpan data ke session_state
             st.session_state["data"] = data
-            st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-    # Navigation buttons for DATA PREPROCESSING
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("⬅ Kembali ke Home"):
-            menu = "HOME"
-    with col2:
-        if uploaded_file is not None and time_col:
-            if st.button("Lanjut ke Stasioneritas Data ➡"):
-                menu = "STASIONERITAS DATA"
-        else:
-            st.button("Lanjut ke Stasioneritas Data ➡", disabled=True)
+            st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
@@ -444,7 +425,7 @@ elif menu == "STASIONERITAS DATA":
             if adf_result[1] < 0.05:
                 st.success("✅ Data sudah stasioner.")
             else:
-                st.warning("⚠ Data tidak stasioner. Melakukan differencing...")
+                st.warning("⚠ Data tidak stasioner, lakukan differencing...")
 
                 # Differencing
                 data_diff = data[col].diff().dropna()
@@ -484,21 +465,6 @@ elif menu == "STASIONERITAS DATA":
 
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
-
-    # Navigation buttons for STASIONERITAS DATA
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col1:
-        if st.button("⬅ Kembali ke Data Preprocessing"):
-            menu = "DATA PREPROCESSING"
-    with col2:
-        if st.button("⬆ Kembali ke Home"):
-            menu = "HOME"
-    with col3:
-        if "data" in st.session_state and col:
-            if st.button("Lanjut ke Data Splitting ➡"):
-                menu = "DATA SPLITTING"
-        else:
-            st.button("Lanjut ke Data Splitting ➡", disabled=True)
 
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
@@ -541,20 +507,8 @@ elif menu == "DATA SPLITTING":
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
 
-    # Navigation buttons for DATA SPLITTING
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col1:
-        if st.button("⬅ Kembali ke Stasioneritas Data"):
-            menu = "STASIONERITAS DATA"
-    with col2:
-        if st.button("⬆ Kembali ke Home"):
-            menu = "HOME"
-    with col3:
-        if "train_data" in st.session_state and "test_data" in st.session_state:
-            if st.button("Lanjut ke Prediksi ➡"):
-                menu = "PREDIKSI"
-        else:
-            st.button("Lanjut ke Prediksi ➡", disabled=True)
+    else:
+        st.info("Silakan unggah data yang ingin Anda split.")
 
 # =================== PREDIKSI ======================
 elif menu == "PREDIKSI":
@@ -564,7 +518,7 @@ elif menu == "PREDIKSI":
     import numpy as np
     import matplotlib.pyplot as plt
 
-    st.markdown("<div class='header-container'>PREDIKSI PERMINTAAN DARAH</div>", unsafe_allow_html=True)
+    st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
 
     train = st.session_state.get('train_data')
     test = st.session_state.get('test_data')
@@ -649,17 +603,8 @@ elif menu == "PREDIKSI":
                     plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
                     st.pyplot(plt)
 
-    # Navigation buttons for PREDIKSI
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("⬅ Kembali ke Data Splitting"):
-            menu = "DATA SPLITTING"
-    with col2:
-        if st.button("⬆ Kembali ke Home"):
-            menu = "HOME"
-
 # Tambahan: Memilih Target dan Input ANFIS
-if 'data_anfis_with_lags' in st.session_state and menu == "PREDIKSI":
+if 'data_anfis_with_lags' in st.session_state:
     st.subheader("6. Tentukan Target dan Input untuk ANFIS")
 
     data_anfis = st.session_state['data_anfis_with_lags']
@@ -678,6 +623,7 @@ if 'data_anfis_with_lags' in st.session_state and menu == "PREDIKSI":
 
             st.success("✅ Dataset ANFIS berhasil disimpan.")
             st.write("Shape Input (X):", X.shape)
-            st.write("Shape Target (y):", y.shape)            
+            st.write("Shape Target (y):", y.shape)
+
         else:
-            st.warning("⚠ Mohon pilih target dan dua input untuk menyimpan dataset ANFIS.")
+            st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
