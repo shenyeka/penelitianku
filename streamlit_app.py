@@ -361,7 +361,7 @@ if menu == "HOME":
         pada Unit Transfusi Darah (UTD).
         </p>
     </div>
-    """, unsafe_allow_html=True). 
+    """, unsafe_allow_html=True)
 
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
