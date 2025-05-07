@@ -525,11 +525,14 @@ elif menu == "DATA SPLITTING":
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
+            # Pastikan target numerik
+            df[col_name] = pd.to_numeric(df[col_name], errors='coerce')
+
             train_size = int(len(df) * 0.8)
             train_data = df.iloc[:train_size].copy()
             test_data = df.iloc[train_size:].copy()
 
-            # Simpan untuk proses berikutnya
+            # Simpan ke session_state
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
 
@@ -537,16 +540,15 @@ elif menu == "DATA SPLITTING":
 
             st.subheader("Data Training:")
             st.write(train_data)
-            st.line_chart(train_data)
 
             st.subheader("Data Testing:")
             st.write(test_data)
-            st.line_chart(test_data)
 
         else:
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
     else:
         st.info("Silakan unggah data yang ingin Anda split.")
+
 
 
 
