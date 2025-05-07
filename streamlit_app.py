@@ -357,12 +357,55 @@ if menu == "HOME":
                 <path d="M8 12H16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
-        <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
+        <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a; margin-bottom: 2.5rem;">
         Sistem ini menggunakan metode hybrid <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
         <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony</span> (ABC) untuk memprediksi permintaan darah 
         pada Unit Transfusi Darah (UTD).
         </p>
+        
+        <div style="background: linear-gradient(135deg, #fdf2f4 0%, #fae8eb 100%); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(202, 64, 112, 0.1); margin-bottom: 2rem;">
+            <h3 style="color: #c04070; text-align: center; margin-bottom: 1rem; border-bottom: 2px dashed #e8b5c5; padding-bottom: 0.5rem;">📋 Panduan Penggunaan</h3>
+            <div style="display: flex; justify-content: center;">
+                <ol style="text-align: left; color: #5a2a3a; line-height: 2; padding-left: 1.5rem; max-width: 600px;">
+                    <li><b>DATA PREPROCESSING</b> - Unggah dan bersihkan data mentah</li>
+                    <li><b>STASIONERITAS DATA</b> - Periksa dan atasi stasioneritas data</li>
+                    <li><b>DATA SPLITTING</b> - Bagi data menjadi training dan testing</li>
+                    <li><b>PREDIKSI</b> - Lakukan prediksi menggunakan model hybrid</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(64, 112, 160, 0.1);">
+            <h3 style="color: #4070a0; text-align: center; margin-bottom: 1rem; border-bottom: 2px dashed #b5c5e8; padding-bottom: 0.5rem;">✨ Fitur Unggulan</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; text-align: center;">
+                <div style="background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div style="font-size: 2rem; color: #c04070; margin-bottom: 0.5rem;">🧠</div>
+                    <h4 style="color: #5a2a3a; margin: 0.5rem 0;">Kecerdasan Hybrid</h4>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0;">Kombinasi ARIMA dan ANFIS untuk akurasi optimal</p>
+                </div>
+                <div style="background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div style="font-size: 2rem; color: #c04070; margin-bottom: 0.5rem;">🐝</div>
+                    <h4 style="color: #5a2a3a; margin: 0.5rem 0;">Optimasi ABC</h4>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0;">Algoritma koloni lebah untuk parameter optimal</p>
+                </div>
+                <div style="background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div style="font-size: 2rem; color: #c04070; margin-bottom: 0.5rem;">💖</div>
+                    <h4 style="color: #5a2a3a; margin: 0.5rem 0;">Prediksi Darah</h4>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0;">Membantu manajemen stok darah lebih efektif</p>
+                </div>
+            </div>
+        </div>
     </div>
+    <style>
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    </style>
     """, unsafe_allow_html=True)
 
 # ==================== DATA PREPROCESSING ====================
