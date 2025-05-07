@@ -408,6 +408,7 @@ elif menu == "DATA PREPROCESSING":
         </div>
     """, unsafe_allow_html=True)
 
+    
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
 
     if uploaded_file is not None:
@@ -415,36 +416,32 @@ elif menu == "DATA PREPROCESSING":
         st.write("Preview Data:")
         st.write(data.head())
 
-        if st.button("Lanjutkan ke Penetapan Kolom Waktu"):
-            time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
-            if time_col:
-                data[time_col] = pd.to_datetime(data[time_col])
-                data.set_index(time_col, inplace=True)
-                st.write("Data Setelah Menetapkan Index Waktu:")
-                st.write(data.head())
+        # Pilih kolom waktu
+        time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
+        if time_col:
+            data[time_col] = pd.to_datetime(data[time_col])
+            data.set_index(time_col, inplace=True)
+            st.write("Data Setelah Menetapkan Index Waktu:")
+            st.write(data.head())
 
-                # Simpan data di session_state setelah penetapan index
-                st.session_state["data"] = data
+            # Tangani missing values
+            missing = data.isnull().sum()
+            if missing.any():
+                st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
+                data.dropna(inplace=True)
 
-                # Pengecekan dan penghapusan missing value setelah tombol ditekan
-                if st.button("Lanjutkan ke Pengecekan Missing Value"):
-                    missing = data.isnull().sum()
-                    st.write(f"Jumlah missing values per kolom: {missing}")
-                    if missing.any():
-                        st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
-                        data.dropna(inplace=True)
-                        st.write("Baris dengan missing values telah dihapus.")
-                    else:
-                        st.success("Tidak ada missing values dalam data.")
+            # Tampilkan plot
+            st.write("Plot Data Setelah Preprocessing:")
+            fig, ax = plt.subplots()
+            sns.lineplot(data=data, ax=ax)
+            ax.set_title("Data Time Series")
+            st.pyplot(fig)
 
-                    if st.button("Tampilkan Plot Time Series"):
-                        fig, ax = plt.subplots()
-                        sns.lineplot(data=data, ax=ax)
-                        ax.set_title("Data Time Series")
-                        st.pyplot(fig)
+            # Simpan data ke session_state
+            st.session_state["data"] = data
 
-                        st.session_state["data"] = data
-                        st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
+            st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
+
 
 
 # ================== STASIONERITAS DATA =====================
