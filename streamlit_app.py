@@ -404,10 +404,8 @@ elif menu == "DATA PREPROCESSING":
             <ul class="note-list">
                 <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
                 <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
-            </ul>
         </div>
     """, unsafe_allow_html=True)
-
     
     uploaded_file = st.file_uploader("Unggah Dataset (CSV)", type=["csv"])
 
@@ -441,7 +439,6 @@ elif menu == "DATA PREPROCESSING":
             st.session_state["data"] = data
 
             st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
-
 
 
 # ================== STASIONERITAS DATA =====================
