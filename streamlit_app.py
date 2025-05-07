@@ -429,7 +429,6 @@ if menu == "HOME":
         font-size: 0.9rem;
     }
 </style>
-</style>
 
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
