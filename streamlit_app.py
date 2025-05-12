@@ -569,8 +569,16 @@ elif menu == "STASIONERITAS DATA":
 
                 if adf_result[1] < 0.05:
                     st.success("✅ Data sudah stasioner.")
+                    st.markdown(
+                        "- **P-Value < 0.05**: Menolak hipotesis nol (data memiliki akar unit) → **data stasioner**.\n"
+                        "- ADF Statistic lebih kecil dari nilai kritis → memperkuat bukti bahwa data stasioner."
+                    )
                 else:
                     st.warning("⚠ Data tidak stasioner, lakukan differencing...")
+                    st.markdown(
+                        "- **P-Value ≥ 0.05**: Gagal menolak hipotesis nol → **data tidak stasioner**.\n"
+                        "- ADF Statistic lebih besar dari beberapa nilai kritis → indikasi bahwa data tidak stasioner."
+                    )
 
                     # Differencing
                     data_diff = data[col].diff().dropna()
@@ -593,8 +601,16 @@ elif menu == "STASIONERITAS DATA":
 
                     if adf_diff_result[1] < 0.05:
                         st.success("✅ Data sudah stasioner setelah differencing.")
+                        st.markdown(
+                            "- **P-Value < 0.05**: Menolak hipotesis nol → **data sudah stasioner setelah differencing**.\n"
+                            "- ADF Statistic lebih kecil dari nilai kritis → memperkuat bukti bahwa data sudah stasioner."
+                        )
                     else:
                         st.error("❌ Data masih belum stasioner setelah differencing.")
+                        st.markdown(
+                            "- **P-Value ≥ 0.05**: Gagal menolak hipotesis nol → **data masih belum stasioner** meskipun sudah di-differencing.\n"
+                            "- ADF Statistic belum lebih kecil dari nilai kritis."
+                        )
 
                 # Plot ACF dan PACF
                 st.subheader("Plot ACF dan PACF:")
@@ -605,8 +621,10 @@ elif menu == "STASIONERITAS DATA":
                 fig_pacf, ax_pacf = plt.subplots()
                 plot_pacf(data[col].dropna(), lags=40, ax=ax_pacf)
                 st.pyplot(fig_pacf)
+
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+
 
 
 # =================== DATA SPLITTING ===================
