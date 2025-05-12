@@ -514,15 +514,15 @@ elif menu == "DATA PREPROCESSING":
         # Pilih kolom waktu sebagai index
         time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
 
-        if time_col:  # Correct indentation here
-            try:
-                # Mengubah kolom waktu menjadi datetime dan set sebagai index
-                data[time_col] = pd.to_datetime(data[time_col])
-                data.set_index(time_col, inplace=True)
-                st.write("Data Setelah Menetapkan Index Waktu:")
-                st.write(data.head())
-
-                if st.button("Periksa missing value"):  # Correct indentation here
+            if time_col:
+                try:
+                    # Mengubah kolom waktu menjadi datetime dan set sebagai index
+                    data[time_col] = pd.to_datetime(data[time_col])
+                    data.set_index(time_col, inplace=True)
+                    st.write("Data Setelah Menetapkan Index Waktu:")
+                    st.write(data.head())
+                    
+        if st.button("Periksa missing value"):
                     # Tangani missing values
                     missing = data.isnull().sum()
                     if missing.any():
@@ -542,11 +542,6 @@ elif menu == "DATA PREPROCESSING":
                     st.session_state["data"] = data
 
                     st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
-
-            except Exception as e:
-                st.error(f"Terjadi kesalahan saat preprocessing: {e}")
-    else:
-        st.warning("Data belum diunggah. Silakan kembali ke menu 'INPUT DATA'.")
 
 
 # ================== STASIONERITAS DATA =====================
