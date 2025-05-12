@@ -514,7 +514,6 @@ elif menu == "DATA PREPROCESSING":
         # Pilih kolom waktu sebagai index
         time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
 
-        if st.button("Periksa missing value"):
             if time_col:
                 try:
                     # Mengubah kolom waktu menjadi datetime dan set sebagai index
@@ -522,7 +521,8 @@ elif menu == "DATA PREPROCESSING":
                     data.set_index(time_col, inplace=True)
                     st.write("Data Setelah Menetapkan Index Waktu:")
                     st.write(data.head())
-
+                    
+        if st.button("Periksa missing value"):
                     # Tangani missing values
                     missing = data.isnull().sum()
                     if missing.any():
