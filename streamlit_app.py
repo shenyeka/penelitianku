@@ -331,7 +331,7 @@ with st.sidebar:
         <h2 style='color: #c04070; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);' class='floating'>🩸 MENU NAVIGASI</h2>
     </div>
     """, unsafe_allow_html=True)
-    menu = st.radio("", ["HOME", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"],
+    menu = st.radio("", ["HOME", "INPUT DATA", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"],
                 label_visibility="collapsed")
 
 
@@ -378,6 +378,14 @@ if menu == "HOME":
         <p style="text-align: center; color: #5a2a3a;"><em>Pastikan untuk mengikuti alur dari atas ke bawah agar proses prediksi berjalan optimal.</em></p>
     </div>
     """, unsafe_allow_html=True)
+    
+# ==================== DATA PREPROCESSING ====================
+elif menu == "INPUT DATA":
+(
+    if uploaded_file is not None:
+        data = pd.read_csv(uploaded_file)
+        st.write("Preview Data:")
+        st.write(data.head())
 
 
 # ==================== DATA PREPROCESSING ====================
