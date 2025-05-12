@@ -396,47 +396,47 @@ elif menu == "INPUT DATA":
         </style>
     """, unsafe_allow_html=True)
 
-      # Menampilkan panduan kriteria dataset
-            st.markdown("""
-                <style>
-                    .note-box {
-                        background-color: #f8f9fa;
-                        border-left: 5px solid #e74c3c;
-                        padding: 15px;
-                        margin: 10px 0;
-                        border-radius: 0 8px 8px 0;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    }
-                    .note-title {
-                        color: #e74c3c;
-                        font-weight: 600;
-                        margin-bottom: 10px;
-                        font-size: 1.1em;
-                    }
-                    .note-list {
-                        padding-left: 20px;
-                    }
-                    .note-list li {
-                        margin-bottom: 8px;
-                    }
-                    .highlight {
-                        background-color: #fffde7;
-                        padding: 2px 4px;
-                        border-radius: 4px;
-                        font-weight: 500;
-                    }
-                </style>
+    # Menampilkan panduan kriteria dataset
+    st.markdown("""
+        <style>
+            .note-box {
+                background-color: #f8f9fa;
+                border-left: 5px solid #e74c3c;
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 0 8px 8px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .note-title {
+                color: #e74c3c;
+                font-weight: 600;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+            }
+            .note-list {
+                padding-left: 20px;
+            }
+            .note-list li {
+                margin-bottom: 8px;
+            }
+            .highlight {
+                background-color: #fffde7;
+                padding: 2px 4px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+        </style>
 
-                <div class="note-box">
-                    <div class="note-title">📋 Panduan Kriteria Dataset</div>
-                    <ul class="note-list">
-                        <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
-                        <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
-                        <li>Disarankan dataset memiliki lebih dari <span class="highlight">100 baris</span> untuk analisis yang lebih optimal</li>
-                        <li>Ukuran file maksimal adalah <span class="highlight">200 MB</span></li>
-                    </ul>
-                </div>
-            """, unsafe_allow_html=True)
+        <div class="note-box">
+            <div class="note-title">📋 Panduan Kriteria Dataset</div>
+            <ul class="note-list">
+                <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
+                <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
+                <li>Disarankan dataset memiliki lebih dari <span class="highlight">100 baris</span> untuk analisis yang lebih optimal</li>
+                <li>Ukuran file maksimal adalah <span class="highlight">200 MB</span></li>
+            </ul>
+        </div>
+    """, unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
 
@@ -468,8 +468,7 @@ elif menu == "INPUT DATA":
             st.dataframe(data.head())
 
             # Simpan data ke session_state untuk digunakan di menu DATA PREPROCESSING
-            st.session_state["data"] = data
-
+            st.session_state["data"] = data  # Pastikan "data" disimpan di session_state
 
 # ==================== DATA PREPROCESSING ====================
 elif menu == "DATA PREPROCESSING":
