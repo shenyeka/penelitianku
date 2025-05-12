@@ -664,10 +664,15 @@ elif menu == "PREDIKSI":
     test = st.session_state.get('test_data')
 
     if train is not None and test is not None:
-        st.subheader("Pemodelan ARIMA (1, 0, 1)")
+        st.subheader("Tentukan Parameter ARIMA (p, d, q)")
+        
+        # Input parameter ARIMA
+        p = st.number_input("Masukkan nilai p (autoregressive term)", min_value=0, value=1, step=1)
+        d = st.number_input("Masukkan nilai d (differencing)", min_value=0, value=0, step=1)
+        q = st.number_input("Masukkan nilai q (moving average term)", min_value=0, value=1, step=1)
 
-        # Langsung tentukan model ARIMA dengan parameter (1, 0, 1)
-        p, d, q = 1, 0, 1
+        if st.button("Lakukan Prediksi"):
+            st.write(f"Pemodelan ARIMA ({p}, {d}, {q}) sedang dijalankan...")
 
         if st.button("Latih Model ARIMA"):
             model_arima = ARIMA(train, order=(p, d, q))
