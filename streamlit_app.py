@@ -466,10 +466,10 @@ elif menu == "INPUT DATA":
                 <ul class="note-list">
                     <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
                     <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
+                    <li>Disarankan dataset memiliki lebih dari <span class="highlight">100 baris</span> untuk analisis yang lebih optimal</li>
                 </ul>
             </div>
         """, unsafe_allow_html=True)
-
 
 
 # ==================== DATA PREPROCESSING ====================
