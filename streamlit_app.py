@@ -549,6 +549,7 @@ elif menu == "DATA PREPROCESSING":
 
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
+    from statsmodels.tsa.stattools import adfuller, acf, pacf
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
 
     if "data" in st.session_state:
