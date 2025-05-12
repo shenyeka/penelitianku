@@ -625,7 +625,9 @@ elif menu == "DATA SPLITTING":
         if len(df.columns) == 1:
             col_name = df.columns[0]
 
-            train_size = int(len(df) * 0.8)
+            # Tambahkan slider untuk memilih rasio train dan test
+            split_ratio = st.slider("Pilih rasio pembagian data (Training:Testing)", 0.1, 0.9, 0.8, 0.05)
+            train_size = int(len(df) * split_ratio)
             train_data = df.iloc[:train_size].copy()
             test_data = df.iloc[train_size:].copy()
 
@@ -633,7 +635,7 @@ elif menu == "DATA SPLITTING":
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
 
-            st.success("✅ Data berhasil di-split dengan rasio 80% training dan 20% testing.")
+            st.success(f"✅ Data berhasil di-split dengan rasio {split_ratio*100}% training dan {(1-split_ratio)*100}% testing.")
 
             st.subheader("Data Training:")
             st.write(train_data)
@@ -646,6 +648,7 @@ elif menu == "DATA SPLITTING":
             st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
     else:
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
+
 
 # ========PREDIKSI=====
 elif menu == "PREDIKSI":
