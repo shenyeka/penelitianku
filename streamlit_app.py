@@ -380,7 +380,7 @@ if menu == "HOME":
     """, unsafe_allow_html=True)
     
 # ==================== INPUT DATA ====================
-if menu == "INPUT DATA":
+elif menu == "INPUT DATA":
     # CSS untuk gaya glassmorphism
     st.markdown("""
         <style>
