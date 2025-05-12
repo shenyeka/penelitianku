@@ -381,12 +381,43 @@ if menu == "HOME":
     
 # ==================== INPUT DATA ====================
 elif menu == "INPUT DATA":
+    # CSS untuk gaya glassmorphism
+    st.markdown("""
+        <style>
+        .glass-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
     
     if uploaded_file is not None:
         data = pd.read_csv(uploaded_file)
-        st.write("Preview Data:")
-        st.write(data.head())
+
+        # Informasi data
+        num_rows, num_cols = data.shape
+        st.markdown(f"""
+        <div class="glass-box">
+            <h4>📊 Informasi Data:</h4>
+            <p><b>Jumlah Baris:</b> {num_rows}</p>
+            <p><b>Jumlah Kolom:</b> {num_cols}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Preview data
+        st.markdown("""
+        <div class="glass-box">
+            <h4>🔍 Preview Data (5 baris pertama):</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        st.dataframe(data.head())
 
 
 # ==================== DATA PREPROCESSING ====================
