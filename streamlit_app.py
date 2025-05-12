@@ -671,9 +671,6 @@ elif menu == "PREDIKSI":
         d = st.number_input("Masukkan nilai d (differencing)", min_value=0, value=0, step=1)
         q = st.number_input("Masukkan nilai q (moving average term)", min_value=0, value=1, step=1)
 
-        if st.button("Lakukan Prediksi"):
-            st.write(f"Pemodelan ARIMA ({p}, {d}, {q}) sedang dijalankan...")
-
         if st.button("Latih Model ARIMA"):
             model_arima = ARIMA(train, order=(p, d, q))
             model_arima = model_arima.fit()
