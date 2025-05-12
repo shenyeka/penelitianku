@@ -462,10 +462,8 @@ elif menu == "DATA PREPROCESSING":
         </div>
     """, unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Unggah Dataset CSV", type=["csv"])
-
-    if uploaded_file is not None:
-        data = pd.read_csv(uploaded_file)
+    if "data" in st.session_state:
+        data = st.session_state["data"]
         st.write("Preview Data:")
         st.write(data.head())
 
@@ -501,6 +499,9 @@ elif menu == "DATA PREPROCESSING":
 
                 except Exception as e:
                     st.error(f"Terjadi kesalahan saat preprocessing: {e}")
+
+    else:
+        st.warning("Data belum diunggah. Silakan kembali ke menu 'INPUT DATA'.")
 
 
 # ================== STASIONERITAS DATA =====================
