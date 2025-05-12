@@ -514,19 +514,14 @@ elif menu == "DATA PREPROCESSING":
         # Pilih kolom waktu sebagai index
         time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
 
-        if time_col:
-            try:
-                # Mengubah kolom waktu menjadi datetime dan set sebagai index
-                data[time_col] = pd.to_datetime(data[time_col])
-                data.set_index(time_col, inplace=True)
-                st.write("Data Setelah Menetapkan Index Waktu:")
-                st.write(data.head())
+        if st.button("Periksa missing value"):
+            if time_col:
+                try:
+                    # Mengubah kolom waktu menjadi datetime dan set sebagai index
+                    data[time_col] = pd.to_datetime(data[time_col])
+                    data.set_index(time_col, inplace=True)
 
-                # Simpan data yang sudah diproses ke session_state
-                st.session_state["data"] = data
-
-                # Periksa missing value setelah index ditetapkan
-                if st.button("Periksa missing value"):
+                    # Tangani missing values
                     missing = data.isnull().sum()
                     if missing.any():
                         st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
@@ -546,11 +541,10 @@ elif menu == "DATA PREPROCESSING":
 
                     st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
-            except Exception as e:
-                st.error(f"Terjadi kesalahan saat preprocessing: {e}")
-
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan saat preprocessing: {e}")
     else:
-        st.warning("Data belum diunggah. Silakan kembali ke menu 'INPUT DATA'.")
+        st.warning("Data belum diunggah, silahkan kembali ke menu 'INPUT DATA'.")
 
 
 # ================== STASIONERITAS DATA =====================
