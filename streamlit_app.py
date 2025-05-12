@@ -503,17 +503,21 @@ elif menu == "DATA PREPROCESSING":
                 font-weight: 500;
             }
         </style>
+    """, unsafe_allow_html=True)
 
+    # Check if data exists in session_state
     if "data" in st.session_state:
         data = st.session_state["data"]
         st.write("Preview Data:")
         st.write(data.head())
 
+        # Pilih kolom waktu sebagai index
         time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
 
         if st.button("Periksa missing value"):
             if time_col:
                 try:
+                    # Mengubah kolom waktu menjadi datetime dan set sebagai index
                     data[time_col] = pd.to_datetime(data[time_col])
                     data.set_index(time_col, inplace=True)
                     st.write("Data Setelah Menetapkan Index Waktu:")
@@ -527,23 +531,23 @@ elif menu == "DATA PREPROCESSING":
                     else:
                         st.info("Data tidak memiliki missing values.")
 
-                    # Tampilkan plot
+                    # Tampilkan plot data
                     st.write("Plot Data Setelah Preprocessing:")
                     fig, ax = plt.subplots()
                     sns.lineplot(data=data, ax=ax)
                     ax.set_title("Data Time Series")
                     st.pyplot(fig)
 
-                    # Simpan data ke session_state
+                    # Simpan data yang sudah diproses ke session_state
                     st.session_state["data"] = data
 
                     st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
 
                 except Exception as e:
                     st.error(f"Terjadi kesalahan saat preprocessing: {e}")
-
     else:
         st.warning("Data belum diunggah. Silakan kembali ke menu 'INPUT DATA'.")
+
 
 
 # ================== STASIONERITAS DATA =====================
