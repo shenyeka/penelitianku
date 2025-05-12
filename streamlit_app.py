@@ -503,7 +503,7 @@ elif menu == "DATA PREPROCESSING":
                 font-weight: 500;
             }
         </style>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)  # This is where the CSS block ends
 
     # Check if data exists in session_state
     if "data" in st.session_state:
@@ -546,8 +546,7 @@ elif menu == "DATA PREPROCESSING":
                 except Exception as e:
                     st.error(f"Terjadi kesalahan saat preprocessing: {e}")
     else:
-        st.warning("Data belum diunggah. Silakan kembali ke menu 'INPUT DATA'.")
-
+        st.warning("Data belum diunggah. Silakan kembali ke menu 'DATA PREPROCESSING'.")
 
 
 # ================== STASIONERITAS DATA =====================
