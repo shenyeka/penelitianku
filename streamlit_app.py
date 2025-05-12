@@ -396,80 +396,79 @@ elif menu == "INPUT DATA":
         </style>
     """, unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
-    
-    if uploaded_file is not None:
-        data = pd.read_csv(uploaded_file)
-
-        # Informasi jumlah baris
-        num_rows = data.shape[0]
-        st.markdown(f"""
-        <div class="glass-box">
-            <h4>📊 Informasi Data:</h4>
-            <p><b>Jumlah Baris:</b> {num_rows}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Saran jika dataset lebih dari 100 baris
-        if num_rows > 100:
+      # Menampilkan panduan kriteria dataset
             st.markdown("""
+                <style>
+                    .note-box {
+                        background-color: #f8f9fa;
+                        border-left: 5px solid #e74c3c;
+                        padding: 15px;
+                        margin: 10px 0;
+                        border-radius: 0 8px 8px 0;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .note-title {
+                        color: #e74c3c;
+                        font-weight: 600;
+                        margin-bottom: 10px;
+                        font-size: 1.1em;
+                    }
+                    .note-list {
+                        padding-left: 20px;
+                    }
+                    .note-list li {
+                        margin-bottom: 8px;
+                    }
+                    .highlight {
+                        background-color: #fffde7;
+                        padding: 2px 4px;
+                        border-radius: 4px;
+                        font-weight: 500;
+                    }
+                </style>
+
+                <div class="note-box">
+                    <div class="note-title">📋 Panduan Kriteria Dataset</div>
+                    <ul class="note-list">
+                        <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
+                        <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
+                        <li>Disarankan dataset memiliki lebih dari <span class="highlight">100 baris</span> untuk analisis yang lebih optimal</li>
+                        <li>Ukuran file maksimal adalah <span class="highlight">200 MB</span></li>
+                    </ul>
+                </div>
+            """, unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader("Upload file CSV", type=["csv"])
+
+    # Menambahkan cek ukuran file
+    max_file_size_mb = 200  # Maksimal 200 MB
+    if uploaded_file is not None:
+        file_size_mb = uploaded_file.size / (1024 * 1024)  # Ukuran file dalam MB
+
+        if file_size_mb > max_file_size_mb:
+            st.error(f"Ukuran file terlalu besar! Ukuran file maksimal adalah {max_file_size_mb} MB.")
+        else:
+            data = pd.read_csv(uploaded_file)
+
+            # Informasi jumlah baris
+            num_rows = data.shape[0]
+            st.markdown(f"""
             <div class="glass-box">
-                <h4>📝 Saran:</h4>
-                <p>Dataset Anda memiliki lebih dari <b>100 baris</b>, yang sangat baik untuk analisis deret waktu. Pastikan data Anda terstruktur dengan baik dan mencakup seluruh periode waktu yang relevan.</p>
+                <h4>📊 Informasi Data:</h4>
+                <p><b>Jumlah Baris:</b> {num_rows}</p>
             </div>
             """, unsafe_allow_html=True)
 
-        # Preview data
-        st.markdown("""
-        <div class="glass-box">
-            <h4>🔍 Preview Data (5 baris pertama):</h4>
-        </div>
-        """, unsafe_allow_html=True)
-        st.dataframe(data.head())
-
-        # Simpan data ke session_state untuk digunakan di menu DATA PREPROCESSING
-        st.session_state["data"] = data
-
-        # Menampilkan panduan kriteria dataset
-        st.markdown("""
-            <style>
-                .note-box {
-                    background-color: #f8f9fa;
-                    border-left: 5px solid #e74c3c;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border-radius: 0 8px 8px 0;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-                .note-title {
-                    color: #e74c3c;
-                    font-weight: 600;
-                    margin-bottom: 10px;
-                    font-size: 1.1em;
-                }
-                .note-list {
-                    padding-left: 20px;
-                }
-                .note-list li {
-                    margin-bottom: 8px;
-                }
-                .highlight {
-                    background-color: #fffde7;
-                    padding: 2px 4px;
-                    border-radius: 4px;
-                    font-weight: 500;
-                }
-            </style>
-
-            <div class="note-box">
-                <div class="note-title">📋 Panduan Kriteria Dataset</div>
-                <ul class="note-list">
-                    <li>Dataset harus berupa <span class="highlight">data deret waktu (time series)</span> dengan kolom waktu sebagai indeks</li>
-                    <li>Dataset harus bersifat <span class="highlight">univariat</span> (hanya satu variabel target)</li>
-                    <li>Disarankan dataset memiliki lebih dari <span class="highlight">100 baris</span> untuk analisis yang lebih optimal</li>
-                </ul>
+            # Preview data
+            st.markdown("""
+            <div class="glass-box">
+                <h4>🔍 Preview Data (5 baris pertama):</h4>
             </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            st.dataframe(data.head())
+
+            # Simpan data ke session_state untuk digunakan di menu DATA PREPROCESSING
+            st.session_state["data"] = data
 
 
 # ==================== DATA PREPROCESSING ====================
