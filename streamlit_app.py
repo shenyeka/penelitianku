@@ -547,8 +547,6 @@ elif menu == "DATA PREPROCESSING":
         st.warning("Data belum diunggah, silahkan kembali ke menu 'INPUT DATA'.")
 
 
-from statsmodels.tsa.stattools import adfuller, acf, pacf
-
 # ================== STASIONERITAS DATA =====================
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
@@ -649,6 +647,7 @@ elif menu == "STASIONERITAS DATA":
 
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
+    from statsmodels.tsa.stattools import adfuller, acf, pacf
     st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
 
     # Check if preprocessing data exists in session state
