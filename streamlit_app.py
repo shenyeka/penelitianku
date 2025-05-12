@@ -401,13 +401,12 @@ elif menu == "INPUT DATA":
     if uploaded_file is not None:
         data = pd.read_csv(uploaded_file)
 
-        # Informasi data
-        num_rows, num_cols = data.shape
+        # Informasi jumlah baris
+        num_rows = data.shape[0]
         st.markdown(f"""
         <div class="glass-box">
             <h4>📊 Informasi Data:</h4>
             <p><b>Jumlah Baris:</b> {num_rows}</p>
-            <p><b>Jumlah Kolom:</b> {num_cols}</p>
         </div>
         """, unsafe_allow_html=True)
 
