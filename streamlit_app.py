@@ -844,8 +844,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
             input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
 
+            # Validasi agar minimal dua input dipilih
+            if len(input_cols) < 2:
+                st.warning("⚠ Mohon pilih minimal dua input untuk dataset ANFIS.")
+            
             if st.button("Simpan Dataset ANFIS"):
-                if target_col and input_cols:
+                if target_col and len(input_cols) >= 2:  # Memastikan minimal dua input dipilih
                     X = data_anfis[input_cols].values
                     y = data_anfis[target_col].values.reshape(-1, 1)
 
@@ -857,4 +861,5 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                     st.write("Shape Target (y):", y.shape)
 
                 else:
-                    st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+                    st.warning("⚠ Mohon pilih target dan minimal dua input untuk menyimpan dataset ANFIS.")
+
