@@ -770,8 +770,8 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
-# ================== Menu ARIMA-ANFIS ===================
-def arima_anfis_modeling():
+# ========== Menu ARIMA-ANFIS ===============
+elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
 
     if 'model_arima' in st.session_state:
@@ -807,7 +807,10 @@ def arima_anfis_modeling():
 
                 jp = data_anfis['residual']
                 if len(jp) > 1:
-                    # Menghitung PACF untuk menentukan lag signifikan
+                    from statsmodels.tsa.stattools import pacf
+                    from statsmodels.graphics.tsaplots import plot_pacf
+                    import matplotlib.pyplot as plt
+
                     pacf_values = pacf(jp, nlags=12)
                     n = len(jp)
                     ci = 1.96 / np.sqrt(n)
@@ -852,6 +855,9 @@ def arima_anfis_modeling():
                         st.session_state['input2'] = input2
 
                         # -------- Inisialisasi Membership Function --------
+                        from sklearn.cluster import KMeans
+                        import numpy as np
+
                         def initialize_membership_functions(data, num_clusters=2):
                             kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
                             centers = np.sort(kmeans.cluster_centers_.flatten())
@@ -881,23 +887,3 @@ def arima_anfis_modeling():
             else:
                 st.warning("Data belum tersedia. Lakukan normalisasi residual terlebih dahulu.")
 
-        # Tombol untuk menghitung firing strength
-        if st.button("Hitung Firing Strength"):
-            if 'input1' in st.session_state and 'input2' in st.session_state:
-                lag10 = st.session_state['input1']
-                lag12 = st.session_state['input2']
-
-                # Ambil center dan sigma dari session_state
-                c_lag10 = st.session_state['c_input1']
-                sigma_lag10 = st.session_state['sigma_input1']
-                c_lag12 = st.session_state['c_input2']
-                sigma_lag12 = st.session_state['sigma_input2']
-
-                # Menghitung firing strength berdasarkan input dan parameter
-                rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
-
-                # Menampilkan hasil rules
-                st.write("Firing Strength Rules:")
-                st.write(rules)  # Tampilkan rules hasil perhitungan
-            else:
-                st.warning("Input lag10 atau lag12 tidak ditemukan.")
