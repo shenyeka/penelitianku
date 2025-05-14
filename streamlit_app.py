@@ -770,16 +770,6 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
-import numpy as np
-import pandas as pd
-import streamlit as st
-import matplotlib.pyplot as plt
-from statsmodels.tsa.stattools import pacf
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.cluster import KMeans
-from sklearn.linear_model import LinearRegression
-from scipy.optimize import minimize
-
 # ========== Menu ARIMA-ANFIS ===============
 elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
