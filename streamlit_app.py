@@ -798,68 +798,38 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             else:
                 st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
 
-        # Langkah baru: Menentukan Input ANFIS dengan PACF
-        if st.button("Tentukan Input ANFIS dari PACF"):
-            if 'data_anfis' in st.session_state:
-                data_anfis = st.session_state['data_anfis']
-                
-                # Hitung PACF dan cari lag signifikan
-                jp = data_anfis['residual']
-                if len(jp) > 1:  # Memastikan ada cukup data untuk perhitungan PACF
-                    n = len(jp)  # Jumlah data
-                    ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
-                    
-                    pacf_values = pacf(jp, nlags=33)
-
-                    # Lag signifikan
-                    significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
-                    st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
-
-                    # Menambahkan lag signifikan ke data
-                    for lag in significant_lags:
-                        data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
-                    data_anfis.dropna(inplace=True)
-
-                    st.session_state['data_anfis_with_lags'] = data_anfis
-                    st.success("Lag signifikan berhasil ditambahkan.")
-                    st.write(data_anfis.head())
-
-                    # Plot PACF
-                    st.subheader("Plot Partial Autocorrelation Function (PACF)")
-                    plt.figure(figsize=(10, 6))
-                    plot_pacf(jp, lags=12, method='ywm', alpha=0.05)
-                    plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
-                    st.pyplot(plt)
-
-                else:
-                    st.warning("Data terlalu sedikit untuk menghitung PACF. Pastikan dataset memiliki lebih dari satu data.")
-
-        # Menyimpan dataset ANFIS
-        if 'data_anfis_with_lags' in st.session_state:
-            st.subheader("Tentukan Target dan Input untuk ANFIS")
-
-            data_anfis = st.session_state['data_anfis_with_lags']
-            all_columns = list(data_anfis.columns)
-
-            target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
-            input_cols = st.multiselect("Pilih dua kolom input (lag signifikan):", [col for col in all_columns if col != target_col], max_selections=2)
-
-            # Validasi agar hanya dua input yang dipilih
-            if len(input_cols) != 2:
-                st.warning("⚠ Mohon pilih tepat dua input untuk dataset ANFIS.")
+# Langkah baru: Menentukan Input ANFIS dengan PACF
+if st.button("Tentukan Input ANFIS dari PACF"):
+    if 'data_anfis' in st.session_state:
+        data_anfis = st.session_state['data_anfis']
+        
+        # Pastikan data residual ada
+        jp = data_anfis['residual']
+        if len(jp) > 1:  # Memastikan ada cukup data untuk perhitungan PACF
+            n = len(jp)  # Jumlah data
+            ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
             
-            if st.button("Simpan Dataset ANFIS"):
-                if target_col and len(input_cols) == 2:  # Memastikan hanya dua input dipilih
-                    X = data_anfis[input_cols].values
-                    y = data_anfis[target_col].values.reshape(-1, 1)
+            pacf_values = pacf(jp, nlags=33)
 
-                    st.session_state['X_anfis'] = X
-                    st.session_state['y_anfis'] = y
+            # Lag signifikan
+            significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
+            st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
 
-                    st.success("✅ Dataset ANFIS berhasil disimpan.")
-                    st.write("Shape Input (X):", X.shape)
-                    st.write("Shape Target (y):", y.shape)
+            # Menambahkan lag signifikan ke data
+            for lag in significant_lags:
+                data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
+            data_anfis.dropna(inplace=True)
 
-                else:
-                    st.warning("⚠ Mohon pilih target dan dua input untuk menyimpan dataset ANFIS.")
+            st.session_state['data_anfis_with_lags'] = data_anfis
+            st.success("Lag signifikan berhasil ditambahkan.")
+            st.write(data_anfis.head())
 
+            # Plot PACF
+            st.subheader("Plot Partial Autocorrelation Function (PACF)")
+            plt.figure(figsize=(10, 6))
+            plot_pacf(jp, lags=12, method='ywm', alpha=0.05)
+            plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
+            st.pyplot(plt)
+
+        else:
+            st.warning("Data terlalu sedikit untuk menghitung PACF. Pastikan dataset memiliki lebih dari satu data.")
