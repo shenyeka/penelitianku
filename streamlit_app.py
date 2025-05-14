@@ -966,4 +966,4 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.session_state['actual_anfis'] = actual_denorm
             # Tampilkan hasil prediksi
             st.subheader("📈 Hasil Prediksi (Setelah Denormalisasi)")
-            st.write(predictions_denorm)
+            st.write(predictions)
