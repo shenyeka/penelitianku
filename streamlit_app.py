@@ -883,8 +883,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
             # Gabungkan input untuk layer konsekuen (X) dan target (y) 
             X = np.hstack([
-                normalized_rules * lag10[:, None],
-                normalized_rules * lag12[:, None],
+                normalized_rules * input1[:, None],
+                normalized_rules * input2[:, None],
                 normalized_rules
             ])
             y = target
