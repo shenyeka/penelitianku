@@ -805,10 +805,10 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 
                 # Hitung PACF dan cari lag signifikan
                 jp = data_anfis['residual']
-                n = len(jp)  # Jumlah data
-                ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
-                
-                if n > 1:  # Pastikan ada lebih dari satu data
+                if len(jp) > 1:  # Memastikan ada cukup data untuk perhitungan PACF
+                    n = len(jp)  # Jumlah data
+                    ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
+                    
                     pacf_values = pacf(jp, nlags=33)
 
                     # Lag signifikan
@@ -861,5 +861,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                     st.write("Shape Target (y):", y.shape)
 
                 else:
-                    st.warning("⚠ Mohon pilih target dan minimal dua input untuk menyimpan dataset ANFIS.")
+                    st.warning("⚠ Mohon pilih target dan dua input untuk menyimpan dataset ANFIS.")
+
 
