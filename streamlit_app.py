@@ -844,64 +844,45 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['anfis_input'] = data_anfis[input_lags].values
                         st.info(f"Dua input ANFIS terpilih: {input_lags}")
 
-        # ------------------------ TAHAP TRAINING ANFIS ------------------------
-        st.subheader("Training ANFIS")
-        if st.button("Train ANFIS"):
-            if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
-                anfis_input = st.session_state['anfis_input']
-                anfis_target = st.session_state['anfis_target']
+# Asumsi: Fungsi 'anfis_predict' sudah didefinisikan dengan benar
+# Misalnya, fungsi ini menerima params_anfis, lag10, lag12, dan rules sebagai input
 
-                # Ambil input lag10 dan lag12
-                lag10 = anfis_input[:, 0]
-                lag12 = anfis_input[:, 1]
+# ------------------------ TAHAP TRAINING ANFIS ------------------------
+st.subheader("Training ANFIS")
+if st.button("Train ANFIS"):
+    if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
+        anfis_input = st.session_state['anfis_input']
+        anfis_target = st.session_state['anfis_target']
 
-                # Di sini kamu masukkan kode training ANFIS dengan ABC
-                # ================== MULAI TRAINING ANFIS ==================
-                # Contoh dummy
-                model = "Model Dummy"
-                predictions = np.random.randn(len(anfis_target))  # Ganti dengan hasil prediksi asli
-                # ================== SELESAI TRAINING ANFIS ===============
+        if len(anfis_target) == 0:
+            st.error("Target ANFIS kosong! Pastikan input dan target tersedia.")
+        else:
+            # Ambil input lag10 dan lag12
+            lag10 = anfis_input[:, 0]
+            lag12 = anfis_input[:, 1]
 
-                # Simpan model dan hasil prediksi
-                st.session_state['anfis_model'] = model
-                st.session_state['anfis_predictions'] = predictions
+            # Ganti dengan kode yang benar untuk mendapatkan parameter ANFIS
+            params_anfis = st.session_state.get('params_anfis', None)  # Pastikan params_anfis sudah terdefinisi
+            rules = st.session_state.get('anfis_rules', None)  # Jika ada aturan ANFIS
 
-                # Denormalisasi hasil prediksi
-                scaler_residual = st.session_state['scaler_residual']
-                predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
-                if isinstance(predictions_denorm, np.ndarray):
-                    predictions_denorm = pd.Series(predictions_denorm)
-                elif isinstance(predictions_denorm, pd.DataFrame):
-                    predictions_denorm = predictions_denorm.iloc[:, 0]
+            if params_anfis is not None and rules is not None:
+                # Gunakan fungsi prediksi ANFIS
+                predictions = anfis_predict(params_anfis, lag10, lag12, rules)
 
-                # Nilai aktual (data train)
-                train = st.session_state['train']
-                aktual_train = train['Jumlah permintaan']
+                # Tampilkan hasil prediksi
+                st.write("Prediksi ANFIS:", predictions)
 
-                # Prediksi ARIMA terakhir
-                predictions_arima = st.session_state['predictions_arima']
-                if isinstance(predictions_arima, pd.DataFrame):
-                    predictions_arima = predictions_arima.iloc[:, 0]
-                predictions_arima_last = predictions_arima.reset_index(drop=True)
+                # Denormalisasi hasil prediksi jika perlu
+                if 'scaler_residual' in st.session_state:
+                    scaler_residual = st.session_state['scaler_residual']
+                    predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
+                    st.write("Prediksi Denormalisasi:", predictions_denorm)
 
-                # Ambil 12 baris awal dari residual ARIMA
-                model_arima = st.session_state['model_arima']
-                resid_arima_first = model_arima.resid.iloc[:12]
-
-                # Gabungkan residual
-                df_residual = pd.concat([resid_arima_first, predictions_denorm], ignore_index=True)
-                df_residual = df_residual.reset_index(drop=True)
-
-                # Hybrid prediction
-                pred_hybrid = predictions_arima_last + df_residual
-
-                # Hitung MAPE
-                mape_final = mean_absolute_percentage_error(aktual_train, pred_hybrid) * 100
-
-                # Tampilkan hasil
-                st.success("Training ANFIS selesai!")
-                st.write("Hybrid Prediction:", pred_hybrid)
+                # Hitung MAPE dan tampilkan hasilnya
+                mape_final = mean_absolute_percentage_error(anfis_target, predictions_denorm) * 100
                 st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
             else:
-                st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
+                st.error("Parameter ANFIS atau aturan tidak ditemukan!")
 
+    else:
+        st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
