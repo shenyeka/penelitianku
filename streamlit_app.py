@@ -844,9 +844,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['anfis_input'] = data_anfis[input_lags].values
                         st.info(f"Dua input ANFIS terpilih: {input_lags}")
 
-# Asumsi: Fungsi 'anfis_predict' sudah didefinisikan dengan benar
-# Misalnya, fungsi ini menerima params_anfis, lag10, lag12, dan rules sebagai input
-
 # ------------------------ TAHAP TRAINING ANFIS ------------------------
 st.subheader("Training ANFIS")
 if st.button("Train ANFIS"):
@@ -861,28 +858,28 @@ if st.button("Train ANFIS"):
             lag10 = anfis_input[:, 0]
             lag12 = anfis_input[:, 1]
 
-            # Ganti dengan kode yang benar untuk mendapatkan parameter ANFIS
-            params_anfis = st.session_state.get('params_anfis', None)  # Pastikan params_anfis sudah terdefinisi
-            rules = st.session_state.get('anfis_rules', None)  # Jika ada aturan ANFIS
+            # Inisialisasi params_anfis dan aturan
+            params_anfis, rules = initialize_params_and_rules(anfis_input, anfis_target)
 
-            if params_anfis is not None and rules is not None:
-                # Gunakan fungsi prediksi ANFIS
-                predictions = anfis_predict(params_anfis, lag10, lag12, rules)
+            # Simpan parameter ANFIS dan aturan di session_state
+            st.session_state['params_anfis'] = params_anfis
+            st.session_state['anfis_rules'] = rules
 
-                # Tampilkan hasil prediksi
-                st.write("Prediksi ANFIS:", predictions)
+            # Gunakan fungsi prediksi ANFIS
+            predictions = anfis_predict(params_anfis, lag10, lag12, rules)
 
-                # Denormalisasi hasil prediksi jika perlu
-                if 'scaler_residual' in st.session_state:
-                    scaler_residual = st.session_state['scaler_residual']
-                    predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
-                    st.write("Prediksi Denormalisasi:", predictions_denorm)
+            # Tampilkan hasil prediksi
+            st.write("Prediksi ANFIS:", predictions)
 
-                # Hitung MAPE dan tampilkan hasilnya
-                mape_final = mean_absolute_percentage_error(anfis_target, predictions_denorm) * 100
-                st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
-            else:
-                st.error("Parameter ANFIS atau aturan tidak ditemukan!")
+            # Denormalisasi hasil prediksi jika diperlukan
+            if 'scaler_residual' in st.session_state:
+                scaler_residual = st.session_state['scaler_residual']
+                predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
+                st.write("Prediksi Denormalisasi:", predictions_denorm)
 
+            # Hitung MAPE dan tampilkan hasilnya
+            mape_final = mean_absolute_percentage_error(anfis_target, predictions_denorm) * 100
+            st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
     else:
         st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
+
