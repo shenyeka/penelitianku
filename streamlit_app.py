@@ -935,11 +935,18 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.write("Normalisasi Firing Strength (Rules):", normalized_rules)
             st.write(f'Sum of Rules: {rules.sum(axis=1, keepdims=True)}')
 
-            # Menampilkan hasil dalam bentuk yang lebih mudah dipahami
+            # Menampilkan hasil rules dalam format yang mirip
             st.markdown(f"""
                 <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                    <p style="font-weight:bold;color:#2c3e50;">Normalisasi Rules:</p>
-                    <p style="font-size:18px;color:#3498db;">{normalized_rules}</p>
+                    <p style="font-weight:bold;color:#2c3e50;">Firing Strength Rules:</p>
+                    <p style="font-size:18px;color:#3498db;">{rules}</p>
                 </div>
             """, unsafe_allow_html=True)
 
+            # Menampilkan hasil normalisasi dalam format yang mirip
+            st.markdown(f"""
+                <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                    <p style="font-weight:bold;color:#2c3e50;">Normalisasi Firing Strength (Rules):</p>
+                    <p style="font-size:18px;color:#3498db;">{normalized_rules}</p>
+                </div>
+            """, unsafe_allow_html=True)
