@@ -587,6 +587,26 @@ elif menu == "STASIONERITAS DATA":
                     plot_pacf(data[col].dropna(), lags=40, ax=ax_pacf)
                     st.pyplot(fig_pacf)
 
+                    # Panduan Pembacaan ACF dan PACF
+                    st.markdown("""
+                        ### Panduan Pembacaan ACF dan PACF untuk Menentukan Orde ARIMA
+                        <br>
+                        **1. ACF (Autocorrelation Function)**: 
+                        - ACF digunakan untuk mengidentifikasi **q** (order Moving Average).
+                        - Jika pada plot ACF ada **puncak signifikan pertama** pada lag tertentu dan setelahnya semua nilai ACF lebih kecil dari batas signifikan, maka **q** adalah lag pertama yang signifikan.
+                        
+                        **2. PACF (Partial Autocorrelation Function)**:
+                        - PACF digunakan untuk mengidentifikasi **p** (order Autoregressive).
+                        - Pada plot PACF, jika terdapat **puncak signifikan pertama** pada lag tertentu, maka **p** adalah lag pertama yang signifikan.
+                        
+                        **Cara Menentukan Parameter ARIMA:**
+                        - **p (AR)**: Tentukan berdasarkan PACF. Lag pertama yang signifikan menunjukkan nilai p.
+                        - **q (MA)**: Tentukan berdasarkan ACF. Lag pertama yang signifikan menunjukkan nilai q.
+                        
+                        **Interpretasi Puncak-Puncak Signifikan:**
+                        - **ACF** menunjukkan hubungan jangka panjang yang lebih umum antara data, sedangkan **PACF** menunjukkan hubungan jangka pendek setelah mengontrol faktor sebelumnya.
+                    """, unsafe_allow_html=True)
+
                 else:
                     st.warning("⚠ Data tidak stasioner, lakukan differencing...")
 
@@ -630,9 +650,26 @@ elif menu == "STASIONERITAS DATA":
                     plot_pacf(data_diff, lags=40, ax=ax_pacf)
                     st.pyplot(fig_pacf)
 
+                    # Panduan Pembacaan ACF dan PACF
+                    st.markdown("""
+                        ### Panduan Pembacaan ACF dan PACF untuk Menentukan Orde ARIMA
+                        <br>
+                        **1. ACF (Autocorrelation Function)**: 
+                        - ACF digunakan untuk mengidentifikasi **q** (order Moving Average).
+                        - Jika pada plot ACF ada **puncak signifikan pertama** pada lag tertentu dan setelahnya semua nilai ACF lebih kecil dari batas signifikan, maka **q** adalah lag pertama yang signifikan.
+                        
+                        **2. PACF (Partial Autocorrelation Function)**:
+                        - PACF digunakan untuk mengidentifikasi **p** (order Autoregressive).
+                        - Pada plot PACF, jika terdapat **puncak signifikan pertama** pada lag tertentu, maka **p** adalah lag pertama yang signifikan.
+                        
+                        **Cara Menentukan Parameter ARIMA:**
+                        - **p (AR)**: Tentukan berdasarkan PACF. Lag pertama yang signifikan menunjukkan nilai p.
+                        - **q (MA)**: Tentukan berdasarkan ACF. Lag pertama yang signifikan menunjukkan nilai q.
+                       
+                    """, unsafe_allow_html=True)
+
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
-
         
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
