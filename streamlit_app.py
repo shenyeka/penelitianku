@@ -639,6 +639,7 @@ elif menu == "STASIONERITAS DATA":
                     sig_acf_lags = [i for i, val in enumerate(acf_vals) if abs(val) > signif_threshold and i != 0]
                     sig_pacf_lags = [i for i, val in enumerate(pacf_vals) if abs(val) > signif_threshold and i != 0]
 
+                    # Print significant ACF and PACF lags
                     st.write("📌 Lag signifikan ACF (q candidate):", sig_acf_lags)
                     st.write("📌 Lag signifikan PACF (p candidate):", sig_pacf_lags)
                     st.markdown(
@@ -649,6 +650,7 @@ elif menu == "STASIONERITAS DATA":
 
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+
         
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
