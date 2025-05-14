@@ -548,6 +548,8 @@ elif menu == "DATA PREPROCESSING":
 
 
 # ================== STASIONERITAS DATA =====================
+from statsmodels.tsa.stattools import adfuller, acf, pacf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
 
@@ -587,10 +589,14 @@ elif menu == "STASIONERITAS DATA":
 
                     # Plot hasil differencing
                     st.subheader("Plot Setelah Differencing:")
-                    fig, ax = plt.subplots()
-                    sns.lineplot(x=data_diff.index, y=data_diff.values, ax=ax)
-                    ax.set_title("Data Setelah Differencing")
-                    st.pyplot(fig)
+                    if not data_diff.empty:
+                        fig = plt.figure(figsize=(10, 4))
+                        sns.lineplot(x=data_diff.index, y=data_diff.values)
+                        plt.title("Data Setelah Differencing")
+                        plt.tight_layout()
+                        st.pyplot(fig)
+                    else:
+                        st.warning("Data differencing kosong. Periksa input datanya.")
 
                     # Uji ADF ulang setelah differencing
                     st.subheader("Uji ADF - Setelah Differencing")
@@ -634,12 +640,14 @@ elif menu == "STASIONERITAS DATA":
 
                     # Plot ACF dan PACF setelah differencing
                     st.subheader("Plot ACF dan PACF:")
-                    fig_acf, ax_acf = plt.subplots()
+                    fig_acf, ax_acf = plt.subplots(figsize=(10, 4))
                     plot_acf(data_diff, lags=40, ax=ax_acf)
+                    plt.tight_layout()
                     st.pyplot(fig_acf)
 
-                    fig_pacf, ax_pacf = plt.subplots()
+                    fig_pacf, ax_pacf = plt.subplots(figsize=(10, 4))
                     plot_pacf(data_diff, lags=40, ax=ax_pacf)
+                    plt.tight_layout()
                     st.pyplot(fig_pacf)
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
