@@ -850,6 +850,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['input1'] = input1
                         st.session_state['input2'] = input2
 
+                        # Menampilkan tombol untuk melatih model ANFIS
+                        if st.button("Latih Model ANFIS"):
+                            # Inisialisasi parameter Gaussian MF
+                            c_input1, sigma_input1 = initialize_membership_functions(input1)
+                            c_input2, sigma_input2 = initialize_membership_functions(input2)
+
                         # -------- Inisialisasi Membership Function --------
                         def initialize_membership_functions(data, num_clusters=2):
                             kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
@@ -967,7 +973,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         # ------------------ Tampilkan Hasil Parameter ------------------
 
                         with st.container():
-                            st.subheader("🧮 Hasil Optimasi Parameter ANFIS")
+                            st.subheader("🧮 Hasil Parameter ANFIS")
 
                             col1, col2, col3 = st.columns(3)
 
@@ -983,4 +989,4 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                                 st.markdown("### Parameter r")
                                 st.write(r)
 
-                            st.success("Parameter konsekuen ANFIS berhasil dioptimasi!")
+                            st.success("Parameter konsekuen ANFIS berhasil didapatkan!")
