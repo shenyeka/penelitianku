@@ -770,7 +770,7 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
-# ========== Menu ARIMA-ANFIS ===============
+# ================= Menu ARIMA-ANFIS =================
 elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
 
@@ -781,8 +781,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
         if st.button("Lihat Residual ARIMA"):
             residual = st.session_state['residual_arima']
             st.line_chart(residual)
-
-            # Simpan residual ke DataFrame
             data_anfis = pd.DataFrame({'residual': residual})
             st.session_state['data_anfis_raw'] = data_anfis
 
@@ -804,185 +802,136 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
         if st.button("Tentukan Input ANFIS dari PACF"):
             if 'data_anfis' in st.session_state:
                 data_anfis = st.session_state['data_anfis']
-
                 jp = data_anfis['residual']
                 if len(jp) > 1:
                     pacf_values = pacf(jp, nlags=12)
                     n = len(jp)
                     ci = 1.96 / np.sqrt(n)
-
-                    # Tentukan lag signifikan
                     significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
-                    st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
-
-                    # Tambahkan lag signifikan ke DataFrame
+                    st.write(f"Lag signifikan: {significant_lags}")
                     for lag in significant_lags:
                         data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
                     data_anfis.dropna(inplace=True)
-
-                    # Simpan hasilnya
                     st.session_state['data_anfis_with_lags'] = data_anfis
                     st.success("Lag signifikan berhasil ditambahkan.")
                     st.write(data_anfis.head())
 
-                    # Plot PACF
-                    st.subheader("Plot Partial Autocorrelation Function (PACF)")
+                    st.subheader("Plot PACF")
                     plt.figure(figsize=(10, 6))
                     plot_pacf(jp, lags=12, method='ywm', alpha=0.05)
-                    plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
+                    plt.title('PACF Residual ARIMA')
                     st.pyplot(plt)
 
-                    # Pilih 2 input teratas dari lag signifikan
                     if len(significant_lags) >= 2:
                         input_lags = [f'residual_lag{lag}' for lag in significant_lags[:2]]
                         st.session_state['anfis_input_lags'] = input_lags
                         st.session_state['anfis_target'] = data_anfis['residual'].values
                         st.session_state['anfis_input'] = data_anfis[input_lags].values
+                        st.session_state['target'] = data_anfis['residual'].values
+                        st.session_state['input1'] = data_anfis[input_lags[0]].values
+                        st.session_state['input2'] = data_anfis[input_lags[1]].values
                         st.info(f"Dua input ANFIS terpilih: {input_lags}")
 
-                        # Definisikan target dan dua input
-                        target = data_anfis['residual'].values
-                        input1 = data_anfis[input_lags[0]].values
-                        input2 = data_anfis[input_lags[1]].values
-
-                        # Simpan ke session_state
-                        st.session_state['target'] = target
-                        st.session_state['input1'] = input1
-                        st.session_state['input2'] = input2
-
-                        # -------- Inisialisasi Membership Function --------
                         def initialize_membership_functions(data, num_clusters=2):
                             kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
                             centers = np.sort(kmeans.cluster_centers_.flatten())
                             sigma = (centers[1] - centers[0]) / 2
                             return centers, sigma
 
-                        def gaussian_membership(x, c, sigma):
-                            return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
-
-                        def firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2):
-                            ''' Menghitung firing strength untuk setiap rule berdasarkan keanggotaan Gaussian '''
-                            input1_low = gaussian_membership(input1, c_input1[0], sigma_input1)
-                            input1_high = gaussian_membership(input1, c_input1[1], sigma_input1)
-                            input2_low = gaussian_membership(input2, c_input2[0], sigma_input2)
-                            input2_high = gaussian_membership(input2, c_input2[1], sigma_input2)
-
-                            rules = np.array([
-                                input1_low * input2_low,   # A1
-                                input1_low * input2_high,  # A2
-                                input1_high * input2_low,  # B1
-                                input1_high * input2_high, # B2
-                            ]).T
-
-                            return rules
-
-                        # Inisialisasi parameter Gaussian MF
+                        input1 = st.session_state['input1']
+                        input2 = st.session_state['input2']
                         c_input1, sigma_input1 = initialize_membership_functions(input1)
                         c_input2, sigma_input2 = initialize_membership_functions(input2)
 
-                        # Tampilkan hasil
-                        with st.container():
-                            st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
-                            col1, col2 = st.columns(2)
-
-                            with col1:
-                                st.markdown("### Parameter Input 1")
-                                st.markdown(f"""
-                                    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                                        <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-                                        <p style="font-size:18px;color:#3498db;">{c_input1}</p>
-                                        <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-                                        <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
-                                    </div>
-                                """, unsafe_allow_html=True)
-
-                            with col2:
-                                st.markdown("### Parameter Input 2")
-                                st.markdown(f"""
-                                    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                                        <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-                                        <p style="font-size:18px;color:#3498db;">{c_input2}</p>
-                                        <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-                                        <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
-                                    </div>
-                                """, unsafe_allow_html=True)
-
-                            st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
-
-                    # Menampilkan tombol untuk melatih model ANFIS
-                    if st.button("Latih Model ANFIS"):
-                        # Simpan ke session_state
                         st.session_state['c_input1'] = c_input1
                         st.session_state['sigma_input1'] = sigma_input1
                         st.session_state['c_input2'] = c_input2
                         st.session_state['sigma_input2'] = sigma_input2
 
-                        # Menghitung firing strength
-                        rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
-
-                        # Normalisasi rules
-                        normalized_rules = rules / np.sum(rules, axis=1, keepdims=True)
-
-                        # Gabungkan input untuk layer konsekuen (X) dan target (y)
-                        X = np.hstack([
-                            normalized_rules * input1[:, None],
-                            normalized_rules * input2[:, None],
-                            normalized_rules
-                        ])
-                        y = target
-
-                        # ------------------ Inisialisasi Parameter Konsekuen ------------------
-                        lin_reg = LinearRegression().fit(X, y)
-                        params_initial = lin_reg.coef_
-
-                        # ------------------ Definisi Fungsi Prediksi dan Loss ANFIS ------------------
-
-                        def anfis_predict(params, input1, input2, rules):
-                            n_rules = rules.shape[1]
-                            p = params[:n_rules]
-                            q = params[n_rules:2 * n_rules]
-                            r = params[2 * n_rules:3 * n_rules]
-
-                            rule_outputs = p * input1[:, None] + q * input2[:, None] + r
-                            normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
-
-                            return normalized_outputs
-
-                        def loss_function(params, alpha=0.001):
-                            predictions = anfis_predict(params, input1, input2, rules)
-                            mse = np.mean((y - predictions) ** 2)
-                            l2_penalty = alpha * np.sum(np.square(params))  # Regularisasi L2
-                            return mse + l2_penalty
-
-                        # ------------------ Optimasi Parameter ANFIS ------------------
-                        initial_params = np.hstack([params_initial, np.zeros(4)])  # Tambahkan dummy nilai jika perlu padding
-                        result = minimize(loss_function, x0=initial_params, method='L-BFGS-B')
-                        params_anfis = result.x
-
-                        # ------------------ Ekstraksi Parameter ------------------
-
-                        n_rules = rules.shape[1]
-                        p = params_anfis[:n_rules]
-                        q = params_anfis[n_rules:2 * n_rules]
-                        r = params_anfis[2 * n_rules:3 * n_rules]
-
-                        # ------------------ Tampilkan Hasil Parameter ------------------
-
                         with st.container():
-                            st.subheader("🧮 Hasil Parameter ANFIS")
-
-                            col1, col2, col3 = st.columns(3)
-
+                            st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
+                            col1, col2 = st.columns(2)
                             with col1:
-                                st.markdown("### Parameter p")
-                                st.write(p)
-
+                                st.markdown("### Parameter Input 1")
+                                st.markdown(f"**Center (c):** {c_input1}<br>**Sigma (σ):** {sigma_input1}", unsafe_allow_html=True)
                             with col2:
-                                st.markdown("### Parameter q")
-                                st.write(q)
+                                st.markdown("### Parameter Input 2")
+                                st.markdown(f"**Center (c):** {c_input2}<br>**Sigma (σ):** {sigma_input2}", unsafe_allow_html=True)
 
-                            with col3:
-                                st.markdown("### Parameter r")
-                                st.write(r)
+        # ======================== TOMBOL LATIH MODEL ANFIS =======================
+        if st.button("Latih Model ANFIS"):
+            input1 = st.session_state['input1']
+            input2 = st.session_state['input2']
+            target = st.session_state['target']
+            c_input1 = st.session_state['c_input1']
+            sigma_input1 = st.session_state['sigma_input1']
+            c_input2 = st.session_state['c_input2']
+            sigma_input2 = st.session_state['sigma_input2']
 
-                            st.success("Parameter konsekuen ANFIS berhasil didapatkan!")
+            def gaussian_membership(x, c, sigma):
+                return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+
+            def firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2):
+                input1_low = gaussian_membership(input1, c_input1[0], sigma_input1)
+                input1_high = gaussian_membership(input1, c_input1[1], sigma_input1)
+                input2_low = gaussian_membership(input2, c_input2[0], sigma_input2)
+                input2_high = gaussian_membership(input2, c_input2[1], sigma_input2)
+
+                rules = np.array([
+                    input1_low * input2_low,
+                    input1_low * input2_high,
+                    input1_high * input2_low,
+                    input1_high * input2_high
+                ]).T
+                return rules
+
+            rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
+            normalized_rules = rules / np.sum(rules, axis=1, keepdims=True)
+
+            X = np.hstack([
+                normalized_rules * input1[:, None],
+                normalized_rules * input2[:, None],
+                normalized_rules
+            ])
+            y = target
+
+            lin_reg = LinearRegression().fit(X, y)
+            params_initial = lin_reg.coef_
+
+            def anfis_predict(params, input1, input2, rules):
+                n_rules = rules.shape[1]
+                p = params[:n_rules]
+                q = params[n_rules:2 * n_rules]
+                r = params[2 * n_rules:3 * n_rules]
+                rule_outputs = p * input1[:, None] + q * input2[:, None] + r
+                normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
+                return normalized_outputs
+
+            def loss_function(params, alpha=0.001):
+                predictions = anfis_predict(params, input1, input2, rules)
+                mse = np.mean((y - predictions) ** 2)
+                l2_penalty = alpha * np.sum(np.square(params))
+                return mse + l2_penalty
+
+            initial_params = np.hstack([params_initial, np.zeros(4)])
+            result = minimize(loss_function, x0=initial_params, method='L-BFGS-B')
+            params_anfis = result.x
+
+            n_rules = rules.shape[1]
+            p = params_anfis[:n_rules]
+            q = params_anfis[n_rules:2 * n_rules]
+            r = params_anfis[2 * n_rules:3 * n_rules]
+
+            st.subheader("🧮 Hasil Parameter ANFIS")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("### Parameter p")
+                st.write(p)
+            with col2:
+                st.markdown("### Parameter q")
+                st.write(q)
+            with col3:
+                st.markdown("### Parameter r")
+                st.write(r)
+            st.success("Parameter konsekuen ANFIS berhasil didapatkan!")
+
