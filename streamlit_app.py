@@ -850,10 +850,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['input1'] = input1
                         st.session_state['input2'] = input2
 
-                            # Inisialisasi parameter Gaussian MF
-                            c_input1, sigma_input1 = initialize_membership_functions(input1)
-                            c_input2, sigma_input2 = initialize_membership_functions(input2)
-
                         # -------- Inisialisasi Membership Function --------
                         def initialize_membership_functions(data, num_clusters=2):
                             kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
