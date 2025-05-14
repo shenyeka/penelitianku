@@ -650,23 +650,37 @@ elif menu == "STASIONERITAS DATA":
                     plot_pacf(data_diff, lags=40, ax=ax_pacf)
                     st.pyplot(fig_pacf)
 
-                    # Panduan Pembacaan ACF dan PACF
-                    st.markdown("""
-                        ### Panduan Pembacaan ACF dan PACF untuk Menentukan Orde ARIMA
-                        <br>
-                        **1. ACF (Autocorrelation Function)**: 
-                        - ACF digunakan untuk mengidentifikasi **q** (order Moving Average).
-                        - Jika pada plot ACF ada **puncak signifikan pertama** pada lag tertentu dan setelahnya semua nilai ACF lebih kecil dari batas signifikan, maka **q** adalah lag pertama yang signifikan.
-                        
-                        **2. PACF (Partial Autocorrelation Function)**:
-                        - PACF digunakan untuk mengidentifikasi **p** (order Autoregressive).
-                        - Pada plot PACF, jika terdapat **puncak signifikan pertama** pada lag tertentu, maka **p** adalah lag pertama yang signifikan.
-                        
-                        **Cara Menentukan Parameter ARIMA:**
-                        - **p (AR)**: Tentukan berdasarkan PACF. Lag pertama yang signifikan menunjukkan nilai p.
-                        - **q (MA)**: Tentukan berdasarkan ACF. Lag pertama yang signifikan menunjukkan nilai q.
-                       
-                    """, unsafe_allow_html=True)
+# Panduan Pembacaan ACF dan PACF untuk Menentukan Orde ARIMA
+st.markdown("""
+### 📊 Panduan Membaca ACF dan PACF untuk ARIMA
+
+**🔍 Konsep Dasar:**
+- **ACF (Autocorrelation Function)**: Mengukur korelasi antara observasi dengan lag-nya
+- **PACF (Partial Autocorrelation Function)**: Mengukur korelasi antara observasi dengan lag-nya setelah menghilangkan pengaruh lag lainnya
+
+**🎯 Cara Menentukan Parameter ARIMA:**
+1. **Identifikasi Differencing (d):**
+   - Jika ACF turun perlahan (tidak cut-off tajam) → perlu differencing
+   - Setelah differencing, jika ACF cut-off tajam → data sudah stasioner
+
+2. **Identifikasi Orde AR (p) dari PACF:**
+   - Cari lag terakhir di PACF yang melebihi batas signifikan (garis biru)
+   - Contoh: Jika signifikan di lag 1 dan 2 → p=2
+
+3. **Identifikasi Orde MA (q) dari ACF:**
+   - Cari lag terakhir di ACF yang melebihi batas signifikan
+   - Contoh: Jika signifikan di lag 1 → q=1
+
+**📌 Pola Khas:**
+- **AR(p)**: PACF cut-off setelah lag p, ACF menurun secara gradual
+- **MA(q)**: ACF cut-off setelah lag q, PACF menurun secara gradual
+- **ARMA(p,q)**: Baik ACF maupun PACF menurun secara gradual
+
+**💡 Tips Interpretasi:**
+1. Fokus pada lag awal (10-15 lag pertama)
+2. Nilai di dalam area biru (confidence interval) tidak signifikan
+3. Untuk data musiman, perhatikan pola di lag kelipatan periode musiman
+""", unsafe_allow_html=True)
 
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
