@@ -26,7 +26,7 @@ st.set_page_config(
 
 # Elegant Pink-Maroon Theme with Enhanced Interactivity
 st.markdown("""
-    <style>
+    <style> 
         /* Base Styling */
         html, body, [class*="css"] {
             font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
