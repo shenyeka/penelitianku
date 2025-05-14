@@ -636,8 +636,16 @@ elif menu == "STASIONERITAS DATA":
                     pacf_vals = pacf(data_diff, nlags=20)
                     signif_threshold = 1.96 / (len(data_diff) ** 0.5)
 
+                    # Debugging: print the ACF and PACF values
+                    st.write("ACF Values:", acf_vals)
+                    st.write("PACF Values:", pacf_vals)
+
                     sig_acf_lags = [i for i, val in enumerate(acf_vals) if abs(val) > signif_threshold and i != 0]
                     sig_pacf_lags = [i for i, val in enumerate(pacf_vals) if abs(val) > signif_threshold and i != 0]
+
+                    # Debugging: print significant lags
+                    st.write("Significant ACF Lags (q candidates):", sig_acf_lags)
+                    st.write("Significant PACF Lags (p candidates):", sig_pacf_lags)
 
                     # Print significant ACF and PACF lags
                     st.write("📌 Lag signifikan ACF (q candidate):", sig_acf_lags)
