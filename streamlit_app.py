@@ -850,67 +850,7 @@ if st.button("Train ANFIS"):
     if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
         anfis_input = st.session_state['anfis_input']
         anfis_target = st.session_state['anfis_target']
-# Fungsi untuk menghitung output prediksi ANFIS
-def anfis_predict(params, lag10, lag12, rules):
-    n_rules = rules.shape[1]  # Jumlah aturan
-    p = params[:n_rules]
-    q = params[n_rules:2 * n_rules]
-    r = params[2 * n_rules:3 * n_rules]
-
-    # Layar 4 - Output aturan
-    rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
-
-    # Layar 5 - Normalisasi hasil aturan
-    normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
-
-    return normalized_outputs
-
-# Fungsi untuk menginisialisasi fungsi keanggotaan Gaussian (c dan sigma)
-def initialize_membership_functions(data_anfis, num_clusters=2):
-    kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data_anfis.reshape(-1, 1))
-    centers = np.sort(kmeans.cluster_centers_.flatten())
-    sigma = (centers[1] - centers[0]) / 2
-    return centers, sigma
-
-# Fungsi untuk menghitung firing strength berdasarkan input dan parameter
-def firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12):
-    '''Layar 1 - Menghitung firing strength berdasarkan input lag10 dan lag12'''
-
-    lag10_low = np.exp(-((lag10 - c_lag10[0]) ** 2) / (2 * sigma_lag10 ** 2))
-    lag10_high = np.exp(-((lag10 - c_lag10[1]) ** 2) / (2 * sigma_lag10 ** 2))
-    lag12_low = np.exp(-((lag12 - c_lag12[0]) ** 2) / (2 * sigma_lag12 ** 2))
-    lag12_high = np.exp(-((lag12 - c_lag12[1]) ** 2) / (2 * sigma_lag12 ** 2))
-
-    '''Layar 2 - Definisikan aturan ANFIS'''
-    rules = np.array([
-        lag10_low * lag12_low,   # A1
-        lag10_low * lag12_high,  # A2
-        lag10_high * lag12_low,  # B1
-        lag10_high * lag12_high, # B2
-    ]).T  # Transpose agar shape sesuai (n_samples, n_rules)
-
-    return rules
-
-# Fungsi untuk inisialisasi parameter ANFIS
-def initialize_params_and_rules(input_data, target_data):
-    lag10 = input_data[:, 0]
-    lag12 = input_data[:, 1]
-
-    # Inisialisasi parameter ANFIS
-    c_lag10, sigma_lag10 = initialize_membership_functions(lag10)
-    c_lag12, sigma_lag12 = initialize_membership_functions(lag12)
-
-    # Hitung firing strength dan aturan
-    rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
-
-    # Inisialisasi parameter awal menggunakan regresi linear
-    X = np.hstack([rules * lag10[:, None], rules])  # Gabungkan input dan aturan
-    y = target_data
-    lin_reg = LinearRegression().fit(X, y)
-    params_initial = lin_reg.coef_
-
-    return params_initial, rules
-
+\
 
         if len(anfis_target) == 0:
             st.error("Target ANFIS kosong! Pastikan input dan target tersedia.")
