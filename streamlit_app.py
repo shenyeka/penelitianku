@@ -850,37 +850,82 @@ if st.button("Train ANFIS"):
     if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
         anfis_input = st.session_state['anfis_input']
         anfis_target = st.session_state['anfis_target']
-\
 
         if len(anfis_target) == 0:
             st.error("Target ANFIS kosong! Pastikan input dan target tersedia.")
         else:
-            # Ambil input lag10 dan lag12
             lag10 = anfis_input[:, 0]
             lag12 = anfis_input[:, 1]
 
-            # Inisialisasi params_anfis dan aturan
-            params_anfis, rules = initialize_params_and_rules(anfis_input, anfis_target)
+            # Inisialisasi fungsi keanggotaan
+            def initialize_membership_functions(data, num_clusters=2):
+                kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
+                centers = np.sort(kmeans.cluster_centers_.flatten())
+                sigma = (centers[1] - centers[0]) / 2
+                return centers, sigma
 
-            # Simpan parameter ANFIS dan aturan di session_state
+            c_lag10, sigma_lag10 = initialize_membership_functions(lag10)
+            c_lag12, sigma_lag12 = initialize_membership_functions(lag12)
+
+            def gaussian_membership(x, c, sigma):
+                return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+
+            def firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12):
+                lag10_low = gaussian_membership(lag10, c_lag10[0], sigma_lag10)
+                lag10_high = gaussian_membership(lag10, c_lag10[1], sigma_lag10)
+                lag12_low = gaussian_membership(lag12, c_lag12[0], sigma_lag12)
+                lag12_high = gaussian_membership(lag12, c_lag12[1], sigma_lag12)
+
+                rules = np.array([
+                    lag10_low * lag12_low,
+                    lag10_low * lag12_high,
+                    lag10_high * lag12_low,
+                    lag10_high * lag12_high,
+                ]).T
+                return rules
+
+            rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
+            normalized_rules = rules / rules.sum(axis=1, keepdims=True)
+
+            # Layer 4: Linear regression untuk inisialisasi parameter awal
+            X = np.hstack([normalized_rules * lag10[:, None], normalized_rules * lag12[:, None], normalized_rules])
+            y = anfis_target
+            lin_reg = LinearRegression().fit(X, y)
+            params_initial = lin_reg.coef_
+
+            def anfis_predict(params, lag10, lag12, rules):
+                n_rules = rules.shape[1]
+                p = params[:n_rules]
+                q = params[n_rules:2 * n_rules]
+                r = params[2 * n_rules:3 * n_rules]
+                rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
+                output = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
+                return output
+
+            def loss_function(params, alpha=0.001):
+                predictions = anfis_predict(params, lag10, lag12, rules)
+                mse = np.mean((anfis_target - predictions) ** 2)
+                l2_penalty = alpha * np.sum(np.square(params))
+                return mse + l2_penalty
+
+            result = minimize(loss_function, x0=np.hstack([params_initial]), method='L-BFGS-B')
+            params_anfis = result.x
+
+            # Simpan parameter akhir dan rules
             st.session_state['params_anfis'] = params_anfis
             st.session_state['anfis_rules'] = rules
 
-            # Gunakan fungsi prediksi ANFIS
+            # Prediksi dan evaluasi
             predictions = anfis_predict(params_anfis, lag10, lag12, rules)
-
-            # Tampilkan hasil prediksi
-            st.write("Prediksi ANFIS:", predictions)
-
-            # Denormalisasi hasil prediksi jika diperlukan
             if 'scaler_residual' in st.session_state:
-                scaler_residual = st.session_state['scaler_residual']
-                predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
+                predictions_denorm = st.session_state['scaler_residual'].inverse_transform(predictions.reshape(-1, 1)).flatten()
+                target_denorm = st.session_state['scaler_residual'].inverse_transform(anfis_target.reshape(-1, 1)).flatten()
+                mape_final = mean_absolute_percentage_error(target_denorm, predictions_denorm) * 100
                 st.write("Prediksi Denormalisasi:", predictions_denorm)
+            else:
+                mape_final = mean_absolute_percentage_error(anfis_target, predictions) * 100
+                st.write("Prediksi:", predictions)
 
-            # Hitung MAPE dan tampilkan hasilnya
-            mape_final = mean_absolute_percentage_error(anfis_target, predictions_denorm) * 100
             st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
     else:
         st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
-
