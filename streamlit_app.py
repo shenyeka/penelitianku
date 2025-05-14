@@ -1542,6 +1542,7 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
+
 # ========== Menu ARIMA-ANFIS ===============
 elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
@@ -1639,7 +1640,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                             input2_low = gaussian_membership(input2, c_input2[0], sigma_input2)
                             input2_high = gaussian_membership(input2, c_input2[1], sigma_input2)
 
-                            rules = np.array([
+                            rules = np.array([ 
                                 input1_low * input2_low,   # A1
                                 input1_low * input2_high,  # A2
                                 input1_high * input2_low,  # B1
@@ -1648,44 +1649,44 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                             return rules
 
-            # Inisialisasi parameter Gaussian MF
-            c_input1, sigma_input1 = initialize_membership_functions(input1)
-            c_input2, sigma_input2 = initialize_membership_functions(input2)
+                        # Inisialisasi parameter Gaussian MF
+                        c_input1, sigma_input1 = initialize_membership_functions(input1)
+                        c_input2, sigma_input2 = initialize_membership_functions(input2)
 
-            # Tampilkan hasil
-            with st.container():
-                st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
-                col1, col2 = st.columns(2)
+                        # Tampilkan hasil
+                        with st.container():
+                            st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
+                            col1, col2 = st.columns(2)
 
-                with col1:
-                    st.markdown("### Parameter Input 1")
-                    st.markdown(f"""
-                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-                            <p style="font-size:18px;color:#3498db;">{c_input1}</p>
-                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-                            <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                            with col1:
+                                st.markdown("### Parameter Input 1")
+                                st.markdown(f"""
+                                    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                                        <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                                        <p style="font-size:18px;color:#3498db;">{c_input1}</p>
+                                        <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                                        <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
+                                    </div>
+                                """, unsafe_allow_html=True)
 
-                with col2:
-                    st.markdown("### Parameter Input 2")
-                    st.markdown(f"""
-                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-                            <p style="font-size:18px;color:#3498db;">{c_input2}</p>
-                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-                            <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                            with col2:
+                                st.markdown("### Parameter Input 2")
+                                st.markdown(f"""
+                                    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                                        <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                                        <p style="font-size:18px;color:#3498db;">{c_input2}</p>
+                                        <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                                        <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
+                                    </div>
+                                """, unsafe_allow_html=True)
 
-                st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
+                            st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
 
-            # Simpan ke session_state
-            st.session_state['c_input1'] = c_input1
-            st.session_state['sigma_input1'] = sigma_input1
-            st.session_state['c_input2'] = c_input2
-            st.session_state['sigma_input2'] = sigma_input2
+                        # Simpan ke session_state
+                        st.session_state['c_input1'] = c_input1
+                        st.session_state['sigma_input1'] = sigma_input1
+                        st.session_state['c_input2'] = c_input2
+                        st.session_state['sigma_input2'] = sigma_input2
 
                         # Menghitung firing strength
                         rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
@@ -1694,9 +1695,9 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         normalized_rules = rules / np.sum(rules, axis=1, keepdims=True)
 
                         # Gabungkan input untuk layer konsekuen (X) dan target (y)
-                        X = np.hstack([
-                            normalized_rules * input1[:, None],
-                            normalized_rules * input2[:, None],
+                        X = np.hstack([ 
+                            normalized_rules * input1[:, None], 
+                            normalized_rules * input2[:, None], 
                             normalized_rules
                         ])
                         y = target
@@ -1756,4 +1757,3 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                                 st.write(r)
 
                             st.success("Parameter konsekuen ANFIS berhasil dioptimasi!")
-
