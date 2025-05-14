@@ -901,7 +901,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 q = params[n_rules:2 * n_rules]
                 r = params[2 * n_rules:3 * n_rules]
 
-                rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
+                rule_outputs = p * input1[:, None] + q * input2[:, None] + r
                 normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
 
                 return normalized_outputs
