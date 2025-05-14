@@ -864,51 +864,48 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                             sigma = (centers[1] - centers[0]) / 2
                             return centers, sigma
 
-# Inisialisasi parameter fungsi keanggotaan Gaussian
-c_input1, sigma_input1 = initialize_membership_functions(input1)
-c_input2, sigma_input2 = initialize_membership_functions(input2)
+            # Inisialisasi parameter Gaussian MF
+            c_input1, sigma_input1 = initialize_membership_functions(input1)
+            c_input2, sigma_input2 = initialize_membership_functions(input2)
 
-# Tampilkan hasil dengan styling yang menarik
-with st.container():
-    st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
-    
-    # Create columns for better layout
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### Parameter Input 1")
-        st.markdown(f"""
-        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-            <p style="font-size:18px;color:#3498db;">{c_input1}</p>
-            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-            <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("### Parameter Input 2")
-        st.markdown(f"""
-        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-            <p style="font-size:18px;color:#3498db;">{c_input2}</p>
-            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-            <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Success message
-    st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
+            # Tampilkan hasil
+            with st.container():
+                st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
+                col1, col2 = st.columns(2)
 
-# Simpan ke session_state
-st.session_state['c_input1'] = c_input1
-st.session_state['sigma_input1'] = sigma_input1
-st.session_state['c_input2'] = c_input2
-st.session_state['sigma_input2'] = sigma_input2
-                    else:
-                        st.warning("Tidak ditemukan minimal 2 lag signifikan.")
-                else:
-                    st.warning("Data residual terlalu sedikit.")
-            else:
-                st.warning("Data belum tersedia. Lakukan normalisasi residual terlebih dahulu.")
+                with col1:
+                    st.markdown("### Parameter Input 1")
+                    st.markdown(f"""
+                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                            <p style="font-size:18px;color:#3498db;">{c_input1}</p>
+                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                            <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
 
+                with col2:
+                    st.markdown("### Parameter Input 2")
+                    st.markdown(f"""
+                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                            <p style="font-size:18px;color:#3498db;">{c_input2}</p>
+                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                            <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
+
+            # Simpan ke session_state
+            st.session_state['c_input1'] = c_input1
+            st.session_state['sigma_input1'] = sigma_input1
+            st.session_state['c_input2'] = c_input2
+            st.session_state['sigma_input2'] = sigma_input2
+
+        else:
+            st.warning("Data residual terlalu sedikit.")
+    else:
+        st.warning("Tidak ditemukan minimal 2 lag signifikan.")
+else:
+    st.warning("Data belum tersedia. Lakukan normalisasi residual terlebih dahulu.")
