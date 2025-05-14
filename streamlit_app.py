@@ -851,37 +851,45 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['input2'] = input2
 
                         # -------- Inisialisasi Membership Function --------
-                        def initialize_membership_functions(data, num_clusters=2):
-                            kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
-                            centers = np.sort(kmeans.cluster_centers_.flatten())
-                            sigma = (centers[1] - centers[0]) / 2
-                            return centers, sigma
-
-                        def gaussian_membership(x, c, sigma):
-                            return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
-
-                        def firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2):
-                            ''' Menghitung firing strength untuk setiap rule berdasarkan keanggotaan Gaussian '''
-                            input1_low = gaussian_membership(input1, c_input1[0], sigma_input1)
-                            input1_high = gaussian_membership(input1, c_input1[1], sigma_input1)
-                            input2_low = gaussian_membership(input2, c_input2[0], sigma_input2)
-                            input2_high = gaussian_membership(input2, c_input2[1], sigma_input2)
-
-                            rules = np.array([
-                                input1_low * input2_low,   # A1
-                                input1_low * input2_high,  # A2
-                                input1_high * input2_low,  # B1
-                                input1_high * input2_high, # B2
-                            ]).T
-
-                            return rules
-
-                        # Inisialisasi parameter Gaussian MF
                         c_input1, sigma_input1 = initialize_membership_functions(input1)
                         c_input2, sigma_input2 = initialize_membership_functions(input2)
 
-                        # Menghitung firing strength
-                        rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
+                        # ------------------ Tampilkan Hasil Inisialisasi ------------------
+                        with st.container():
+                            st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
+                            col1, col2 = st.columns(2)
+
+                            with col1:
+                                st.markdown("### Parameter Input 1")
+                                st.markdown(f"""
+                                    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                                        <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                                        <p style="font-size:18px;color:#3498db;">{c_input1}</p>
+                                        <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                                        <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
+                                    </div>
+                                """, unsafe_allow_html=True)
+
+                            with col2:
+                                st.markdown("### Parameter Input 2")
+                                st.markdown(f"""
+                                    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                                        <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                                        <p style="font-size:18px;color:#3498db;">{c_input2}</p>
+                                        <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                                        <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
+                                    </div>
+                                """, unsafe_allow_html=True)
+
+                            st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
+
+                        # ------------------ Optimasi Parameter ANFIS ------------------
+                        # Latih Model ANFIS
+                        if st.button("Latih Model ANFIS"):
+                            st.info("Memulai pelatihan model ANFIS...")
+
+                            # Menghitung firing strength
+                            rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
 
                         # Normalisasi rules
                         normalized_rules = rules / np.sum(rules, axis=1, keepdims=True)
