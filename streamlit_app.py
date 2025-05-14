@@ -844,90 +844,100 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['anfis_input'] = data_anfis[input_lags].values
                         st.info(f"Dua input ANFIS terpilih: {input_lags}")
 
+# Tombol untuk Training ANFIS
+if st.button("Latih Model ANFIS"):
+    lag10 = st.session_state['anfis_input'][:, 0]
+    lag12 = st.session_state['anfis_input'][:, 1]
+    target = st.session_state['anfis_target']
 
-                # Ambil nilai
-                target = data_anfis.iloc[:, 0].values  # residual
-                lag10 = data_anfis[input_lags[0]].values
-                lag12 = data_anfis[input_lags[1]].values
+    def initialize_membership_functions(data_anfis, num_clusters=2):
+        kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data_anfis.reshape(-1, 1))
+        centers = np.sort(kmeans.cluster_centers_.flatten())
+        sigma = (centers[1] - centers[0]) / 2
+        return centers, sigma
 
-                # Membership function
-                def initialize_membership_functions(data_anfis, num_clusters=2):
-                    kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data_anfis.reshape(-1, 1))
-                    centers = np.sort(kmeans.cluster_centers_.flatten())
-                    sigma = max((centers[1] - centers[0]) / 2, 1e-3)
-                    return centers, sigma
+    c_lag10, sigma_lag10 = initialize_membership_functions(lag10)
+    c_lag12, sigma_lag12 = initialize_membership_functions(lag12)
 
-                c_lag10, sigma_lag10 = initialize_membership_functions(lag10)
-                c_lag12, sigma_lag12 = initialize_membership_functions(lag12)
+    def gaussian_membership(x, c, sigma):
+        return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
 
-                # Membership gaussian
-                def gaussian_membership(x, c, sigma):
-                    return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+    def firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12):
+        lag10_low = gaussian_membership(lag10, c_lag10[0], sigma_lag10)
+        lag10_high = gaussian_membership(lag10, c_lag10[1], sigma_lag10)
+        lag12_low = gaussian_membership(lag12, c_lag12[0], sigma_lag12)
+        lag12_high = gaussian_membership(lag12, c_lag12[1], sigma_lag12)
 
-                # Layer 1 & 2
-                def firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12):
-                    lag10_low = gaussian_membership(lag10, c_lag10[0], sigma_lag10)
-                    lag10_high = gaussian_membership(lag10, c_lag10[1], sigma_lag10)
-                    lag12_low = gaussian_membership(lag12, c_lag12[0], sigma_lag12)
-                    lag12_high = gaussian_membership(lag12, c_lag12[1], sigma_lag12)
+        rules = np.array([
+            lag10_low * lag12_low,
+            lag10_low * lag12_high,
+            lag10_high * lag12_low,
+            lag10_high * lag12_high,
+        ]).T
 
-                    rules = np.array([
-                        lag10_low * lag12_low,
-                        lag10_low * lag12_high,
-                        lag10_high * lag12_low,
-                        lag10_high * lag12_high
-                    ]).T
+        return rules
 
-                    return rules
+    rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
+    normalized_rules = rules / rules.sum(axis=1, keepdims=True)
+    X = np.hstack([normalized_rules * lag10[:, None], normalized_rules])
+    y = target
 
-                rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
-                normalized_rules = rules / rules.sum(axis=1, keepdims=True)
+    lin_reg = LinearRegression().fit(X, y)
+    params_initial = lin_reg.coef_
 
-                X = np.hstack([normalized_rules * lag10[:, None], normalized_rules])
-                y = target
+    def anfis_predict(params, lag10, lag12, rules):
+        n_rules = rules.shape[1]
+        p = params[:n_rules]
+        q = params[n_rules:2 * n_rules]
+        r = params[2 * n_rules:3 * n_rules]
 
-                lin_reg = LinearRegression().fit(X, y)
-                params_initial = lin_reg.coef_
+        rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
+        normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
+        return normalized_outputs
 
-                def anfis_predict(params, lag10, lag12, rules):
-                    n_rules = rules.shape[1]
-                    p = params[:n_rules]
-                    q = params[n_rules:2 * n_rules]
-                    r = params[2 * n_rules:3 * n_rules]
-                    rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
-                    normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
-                    return normalized_outputs
+    def loss_function(params, alpha=0.001):
+        predictions = anfis_predict(params, lag10, lag12, rules)
+        mse = np.mean((target - predictions) ** 2)
+        l2_penalty = alpha * np.sum(np.square(params))
+        return mse + l2_penalty
 
-                def loss_function(params, alpha=0.001):
-                    predictions = anfis_predict(params, lag10, lag12, rules)
-                    mse = np.mean((target - predictions) ** 2)
-                    l2_penalty = alpha * np.sum(np.square(params))
-                    return mse + l2_penalty
+    result = minimize(loss_function, x0=np.hstack([params_initial, np.zeros(4)]), method='L-BFGS-B')
+    params_anfis = result.x
 
-                result = minimize(loss_function, x0=np.hstack([params_initial, np.zeros(4)]), method='L-BFGS-B')
-                params_anfis = result.x
+    predictions = anfis_predict(params_anfis, lag10, lag12, rules)
+    st.session_state['predictions_anfis'] = predictions
+    st.success("Model ANFIS berhasil dilatih.")
 
-                n_rules = rules.shape[1]
-                p = params_anfis[:n_rules]
-                q = params_anfis[n_rules:2 * n_rules]
-                r = params_anfis[2 * n_rules:3 * n_rules]
+# Tombol Denormalisasi dan Hybrid
+if st.button("Lanjutkan ke Prediksi Hybrid"):
+    predictions = st.session_state['predictions_anfis']
+    scaler_residual = st.session_state['scaler_residual']
+    train = st.session_state['train']
+    predictions_arima = st.session_state['predictions_arima']
+    model_arima = st.session_state['model_arima']
 
-                st.write("Parameter p:", p)
-                st.write("Parameter q:", q)
-                st.write("Parameter r:", r)
+    predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
 
-                predictions = anfis_predict(params_anfis, lag10, lag12, rules)
+    if isinstance(predictions_denorm, np.ndarray):
+        predictions_denorm = pd.Series(predictions_denorm)
+    elif isinstance(predictions_denorm, pd.DataFrame):
+        predictions_denorm = predictions_denorm.iloc[:, 0]
 
-                from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
-                mape = mean_absolute_percentage_error(target, predictions)
-                rmse = np.sqrt(mean_squared_error(target, predictions))
+    resid_arima_first = model_arima.resid.iloc[:12]
+    df_residual = pd.concat([resid_arima_first, predictions_denorm], ignore_index=True)
 
-                st.line_chart(pd.DataFrame({"Actual": target, "Predicted": predictions}))
-                st.write(f"MAPE: {mape:.4f}")
-                st.write(f"RMSE: {rmse:.4f}")
-            else:
-                st.warning("Jumlah lag signifikan kurang dari 2. Tidak cukup untuk input ANFIS.")
-        else:
-            st.warning("Data terlalu sedikit untuk menghitung PACF. Pastikan dataset memiliki lebih dari satu data.")
-    else:
-        st.warning("Data residual belum dinormalisasi. Klik 'Lanjutkan ke Normalisasi Residual' terlebih dahulu.")
+    if isinstance(predictions_arima, pd.DataFrame):
+        predictions_arima = predictions_arima.iloc[:, 0]
+
+    predictions_arima = predictions_arima.reset_index(drop=True)
+    df_residual = df_residual.reset_index(drop=True)
+
+    pred_hybrid = predictions_arima + df_residual
+
+    aktual_train = train['Jumlah permintaan']
+    mape_final = mean_absolute_percentage_error(aktual_train, pred_hybrid) * 100
+    rmse_final = np.sqrt(mean_squared_error(aktual_train, pred_hybrid))
+
+    st.write("Hasil Prediksi Hybrid:", pred_hybrid)
+    st.write(f"MAPE Hybrid Model: {mape_final:.2f}%")
+    st.write(f"RMSE Hybrid Model: {rmse_final:.2f}")
