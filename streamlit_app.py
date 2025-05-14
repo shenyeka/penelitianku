@@ -844,56 +844,64 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['anfis_input'] = data_anfis[input_lags].values
                         st.info(f"Dua input ANFIS terpilih: {input_lags}")
 
-# ------------------------ TAHAP TRAINING ANFIS ------------------------
-st.subheader("Training ANFIS")
-if st.button("Train ANFIS"):
-    if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
-        anfis_input = st.session_state['anfis_input']
-        anfis_target = st.session_state['anfis_target']
+        # ------------------------ TAHAP TRAINING ANFIS ------------------------
+        st.subheader("Training ANFIS")
+        if st.button("Train ANFIS"):
+            if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
+                anfis_input = st.session_state['anfis_input']
+                anfis_target = st.session_state['anfis_target']
 
-        # Ambil input lag10 dan lag12
-        lag10 = anfis_input[:, 0]
-        lag12 = anfis_input[:, 1]
+                # Ambil input lag10 dan lag12
+                lag10 = anfis_input[:, 0]
+                lag12 = anfis_input[:, 1]
 
-        # Training ANFIS dengan ABC
-        # ... kode training ANFIS di sini ...
+                # Di sini kamu masukkan kode training ANFIS dengan ABC
+                # ================== MULAI TRAINING ANFIS ==================
+                # Contoh dummy
+                model = "Model Dummy"
+                predictions = np.random.randn(len(anfis_target))  # Ganti dengan hasil prediksi asli
+                # ================== SELESAI TRAINING ANFIS ===============
 
-        # Simpan model dan hasil prediksi
-        st.session_state['anfis_model'] = model
-        st.session_state['anfis_predictions'] = predictions
+                # Simpan model dan hasil prediksi
+                st.session_state['anfis_model'] = model
+                st.session_state['anfis_predictions'] = predictions
 
-        # Denormalisasi hasil prediksi
-        predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
-        if isinstance(predictions_denorm, np.ndarray):
-            predictions_denorm = pd.Series(predictions_denorm)
-        elif isinstance(predictions_denorm, pd.DataFrame):
-            predictions_denorm = predictions_denorm.iloc[:, 0]
+                # Denormalisasi hasil prediksi
+                scaler_residual = st.session_state['scaler_residual']
+                predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
+                if isinstance(predictions_denorm, np.ndarray):
+                    predictions_denorm = pd.Series(predictions_denorm)
+                elif isinstance(predictions_denorm, pd.DataFrame):
+                    predictions_denorm = predictions_denorm.iloc[:, 0]
 
-        # Nilai aktual (data train)
-        aktual_train = train['Jumlah permintaan']
+                # Nilai aktual (data train)
+                train = st.session_state['train']
+                aktual_train = train['Jumlah permintaan']
 
-        # Prediksi ARIMA terakhir
-        predictions_arima_last = predictions_arima
-        if isinstance(predictions_arima_last, pd.DataFrame):
-            predictions_arima_last = predictions_arima_last.iloc[:, 0]
+                # Prediksi ARIMA terakhir
+                predictions_arima = st.session_state['predictions_arima']
+                if isinstance(predictions_arima, pd.DataFrame):
+                    predictions_arima = predictions_arima.iloc[:, 0]
+                predictions_arima_last = predictions_arima.reset_index(drop=True)
 
-        # Ambil 12 baris awal dari residual ARIMA
-        resid_arima_first = model_arima.resid.iloc[:12]
+                # Ambil 12 baris awal dari residual ARIMA
+                model_arima = st.session_state['model_arima']
+                resid_arima_first = model_arima.resid.iloc[:12]
 
-        # Gabungkan residual
-        df_residual = pd.concat([resid_arima_first, predictions_denorm], ignore_index=True)
-        predictions_arima_last = predictions_arima_last.reset_index(drop=True)
-        df_residual = df_residual.reset_index(drop=True)
+                # Gabungkan residual
+                df_residual = pd.concat([resid_arima_first, predictions_denorm], ignore_index=True)
+                df_residual = df_residual.reset_index(drop=True)
 
-        # Hybrid prediction
-        pred_hybrid = predictions_arima_last + df_residual
+                # Hybrid prediction
+                pred_hybrid = predictions_arima_last + df_residual
 
-        # Hitung MAPE
-        mape_final = mean_absolute_percentage_error(aktual_train, pred_hybrid) * 100
+                # Hitung MAPE
+                mape_final = mean_absolute_percentage_error(aktual_train, pred_hybrid) * 100
 
-        # Tampilkan hasil
-        st.success("Training ANFIS selesai!")
-        st.write("Hybrid Prediction:", pred_hybrid)
-        st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
-    else:
-        st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
+                # Tampilkan hasil
+                st.success("Training ANFIS selesai!")
+                st.write("Hybrid Prediction:", pred_hybrid)
+                st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
+            else:
+                st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
+
