@@ -952,3 +952,15 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 st.markdown("### Parameter r")
                 st.write(r)
             st.success("Parameter konsekuen ANFIS berhasil didapatkan!")
+
+            # Prediksi menggunakan parameter hasil training
+            predictions = anfis_predict(params_anfis, input1, input2, rules)
+
+            # Denormalisasi hasil prediksi
+            scaler_residual = st.session_state['scaler_residual']
+            predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
+            actual_denorm = scaler_residual.inverse_transform(target.reshape(-1, 1)).flatten()
+
+            # Simpan hasil prediksi ke session state
+            st.session_state['predictions_anfis'] = predictions_denorm
+            st.session_state['actual_anfis'] = actual_denorm
