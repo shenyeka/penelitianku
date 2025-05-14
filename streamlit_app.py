@@ -858,7 +858,7 @@ if st.button("Train ANFIS"):
             lag10 = anfis_input[:, 0]
             lag12 = anfis_input[:, 1]
 
-            # Inisialisasi fungsi keanggotaan
+            # Inisialisasi fungsi keanggotaan Gaussian dengan KMeans
             def initialize_membership_functions(data, num_clusters=2):
                 kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
                 centers = np.sort(kmeans.cluster_centers_.flatten())
@@ -888,14 +888,23 @@ if st.button("Train ANFIS"):
             rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
             normalized_rules = rules / rules.sum(axis=1, keepdims=True)
 
-            # Layer 4: Linear regression untuk inisialisasi parameter awal
-            X = np.hstack([normalized_rules * lag10[:, None], normalized_rules * lag12[:, None], normalized_rules])
+            # Layer 4: Inisialisasi parameter p, q, r untuk setiap rule
+            n_rules = rules.shape[1]
+            X = np.hstack([
+                normalized_rules * lag10[:, None],
+                normalized_rules * lag12[:, None],
+                normalized_rules
+            ])
             y = anfis_target
             lin_reg = LinearRegression().fit(X, y)
             params_initial = lin_reg.coef_
 
+            # Pastikan panjang params sesuai (3 * n_rules)
+            if len(params_initial) != 3 * n_rules:
+                st.warning("Panjang parameter tidak sesuai, akan ditambahkan nilai nol.")
+                params_initial = np.pad(params_initial, (0, 3 * n_rules - len(params_initial)))
+
             def anfis_predict(params, lag10, lag12, rules):
-                n_rules = rules.shape[1]
                 p = params[:n_rules]
                 q = params[n_rules:2 * n_rules]
                 r = params[2 * n_rules:3 * n_rules]
@@ -909,15 +918,16 @@ if st.button("Train ANFIS"):
                 l2_penalty = alpha * np.sum(np.square(params))
                 return mse + l2_penalty
 
-            result = minimize(loss_function, x0=np.hstack([params_initial]), method='L-BFGS-B')
+            result = minimize(loss_function, x0=params_initial, method='L-BFGS-B')
             params_anfis = result.x
 
-            # Simpan parameter akhir dan rules
+            # Simpan ke session state
             st.session_state['params_anfis'] = params_anfis
             st.session_state['anfis_rules'] = rules
 
             # Prediksi dan evaluasi
             predictions = anfis_predict(params_anfis, lag10, lag12, rules)
+
             if 'scaler_residual' in st.session_state:
                 predictions_denorm = st.session_state['scaler_residual'].inverse_transform(predictions.reshape(-1, 1)).flatten()
                 target_denorm = st.session_state['scaler_residual'].inverse_transform(anfis_target.reshape(-1, 1)).flatten()
