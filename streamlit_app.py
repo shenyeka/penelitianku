@@ -850,14 +850,31 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.session_state['sigma_input2'] = sigma_input2
 
             with st.container():
-                st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
+                st.subheader("Inisialisasi Gaussian Membership Functions")
                 col1, col2 = st.columns(2)
+                
                 with col1:
                     st.markdown("### Parameter Input 1")
-                    st.markdown(f"**Center (c):** {c_input1}<br>**Sigma (σ):** {sigma_input1}", unsafe_allow_html=True)
+                    st.markdown(f"""
+                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                            <p style="font-size:18px;color:#3498db;">{c_input1}</p>
+                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                            <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
                 with col2:
                     st.markdown("### Parameter Input 2")
-                    st.markdown(f"**Center (c):** {c_input2}<br>**Sigma (σ):** {sigma_input2}", unsafe_allow_html=True)
+                    st.markdown(f"""
+                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
+                            <p style="font-size:18px;color:#3498db;">{c_input2}</p>
+                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
+                            <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
 
         # Tombol untuk melatih model ANFIS
         if st.button("Latih Model ANFIS"):
