@@ -550,6 +550,7 @@ elif menu == "DATA PREPROCESSING":
 
 
 # ================== STASIONERITAS DATA =====================
+
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
 
@@ -562,7 +563,7 @@ elif menu == "STASIONERITAS DATA":
         if st.button("Uji Stasioneritas"):
             if col:
                 # Uji ADF awal
-                st.subheader("Uji ADF awal")
+                st.subheader("Uji ADF Awal")
                 adf_result = adfuller(data[col])
                 st.write(f"ADF Statistic: {adf_result[0]:.4f}")
                 st.write(f"P-Value: {adf_result[1]:.4f}")
@@ -572,33 +573,34 @@ elif menu == "STASIONERITAS DATA":
                 if adf_result[1] < 0.05:
                     st.success("✅ Data sudah stasioner.")
                     st.markdown(
-                        "- **P-Value < 0.05**: Menolak hipotesis nol (data memiliki akar unit) → **data stasioner**.\n"
-                        "- ADF Statistic lebih kecil dari nilai kritis → memperkuat bukti bahwa data stasioner.\n"
+                        "- **P-Value < 0.05** → menolak H0 → **data stasioner**\n"
                         "- ✅ **d = 0** (tidak perlu differencing)."
                     )
+
+                    # ACF & PACF langsung jika data stasioner
+                    st.subheader("Plot ACF dan PACF:")
+                    fig_acf, ax_acf = plt.subplots()
+                    plot_acf(data[col].dropna(), lags=40, ax=ax_acf)
+                    st.pyplot(fig_acf)
+
+                    fig_pacf, ax_pacf = plt.subplots()
+                    plot_pacf(data[col].dropna(), lags=40, ax=ax_pacf)
+                    st.pyplot(fig_pacf)
+
                 else:
                     st.warning("⚠ Data tidak stasioner, lakukan differencing...")
-                    st.markdown(
-                        "- **P-Value ≥ 0.05**: Gagal menolak hipotesis nol → **data tidak stasioner**.\n"
-                        "- ADF Statistic lebih besar dari beberapa nilai kritis → indikasi bahwa data tidak stasioner."
-                    )
 
                     # Differencing
                     data_diff = data[col].diff().dropna()
                     st.session_state["data_diff"] = data_diff
 
-                    # Plot hasil differencing
                     st.subheader("Plot Setelah Differencing:")
-                    if not data_diff.empty:
-                        fig = plt.figure(figsize=(10, 4))
-                        sns.lineplot(x=data_diff.index, y=data_diff.values)
-                        plt.title("Data Setelah Differencing")
-                        plt.tight_layout()
-                        st.pyplot(fig)
-                    else:
-                        st.warning("Data differencing kosong. Periksa input datanya.")
+                    fig, ax = plt.subplots()
+                    sns.lineplot(x=data_diff.index, y=data_diff.values, ax=ax)
+                    ax.set_title("Data Setelah Differencing")
+                    st.pyplot(fig)
 
-                    # Uji ADF ulang setelah differencing
+                    # Uji ADF ulang
                     st.subheader("Uji ADF - Setelah Differencing")
                     adf_diff_result = adfuller(data_diff)
                     st.write(f"ADF Statistic: {adf_diff_result[0]:.4f}")
@@ -609,19 +611,26 @@ elif menu == "STASIONERITAS DATA":
                     if adf_diff_result[1] < 0.05:
                         st.success("✅ Data sudah stasioner setelah differencing.")
                         st.markdown(
-                            "- **P-Value < 0.05**: Menolak hipotesis nol → **data sudah stasioner setelah differencing**.\n"
-                            "- ADF Statistic lebih kecil dari nilai kritis → memperkuat bukti bahwa data sudah stasioner.\n"
+                            "- **P-Value < 0.05** → menolak H0 → **data stasioner** setelah differencing\n"
                             "- ✅ **d = 1** (butuh 1x differencing)."
                         )
                     else:
                         st.error("❌ Data masih belum stasioner setelah differencing.")
                         st.markdown(
-                            "- **P-Value ≥ 0.05**: Gagal menolak hipotesis nol → **data masih belum stasioner**.\n"
-                            "- ADF Statistic belum lebih kecil dari nilai kritis.\n"
-                            "- 🚨 Pertimbangkan untuk mencoba **differencing ke-2 (d = 2)**."
+                            "- Pertimbangkan melakukan differencing ke-2 (**d = 2**)."
                         )
 
-                    # Perhitungan ACF dan PACF secara numerik
+                    # ACF dan PACF untuk data differencing
+                    st.subheader("Plot ACF dan PACF:")
+                    fig_acf, ax_acf = plt.subplots()
+                    plot_acf(data_diff, lags=40, ax=ax_acf)
+                    st.pyplot(fig_acf)
+
+                    fig_pacf, ax_pacf = plt.subplots()
+                    plot_pacf(data_diff, lags=40, ax=ax_pacf)
+                    st.pyplot(fig_pacf)
+
+                    # Hitung kandidat p dan q
                     st.subheader("Kandidat Parameter ARIMA (p dan q):")
                     acf_vals = acf(data_diff, nlags=20)
                     pacf_vals = pacf(data_diff, nlags=20)
@@ -633,26 +642,14 @@ elif menu == "STASIONERITAS DATA":
                     st.write("📌 Lag signifikan ACF (q candidate):", sig_acf_lags)
                     st.write("📌 Lag signifikan PACF (p candidate):", sig_pacf_lags)
                     st.markdown(
-                        "- **PACF** digunakan untuk menentukan nilai `p` (autoregressive).\n"
-                        "- **ACF** digunakan untuk menentukan nilai `q` (moving average).\n"
-                        "- Lag pertama yang signifikan biasanya dijadikan kandidat awal."
+                        "- **PACF** → p (autoregressive)\n"
+                        "- **ACF** → q (moving average)\n"
+                        "- Lag pertama yang signifikan → kandidat awal."
                     )
 
-                    # Plot ACF dan PACF setelah differencing
-                    st.subheader("Plot ACF dan PACF:")
-                    fig_acf, ax_acf = plt.subplots(figsize=(10, 4))
-                    plot_acf(data_diff, lags=40, ax=ax_acf)
-                    plt.tight_layout()
-                    st.pyplot(fig_acf)
-
-                    fig_pacf, ax_pacf = plt.subplots(figsize=(10, 4))
-                    plot_pacf(data_diff, lags=40, ax=ax_pacf)
-                    plt.tight_layout()
-                    st.pyplot(fig_pacf)
     else:
         st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
-
-
+        
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
     from statsmodels.tsa.stattools import adfuller, acf, pacf
