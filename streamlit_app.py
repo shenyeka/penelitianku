@@ -925,20 +925,21 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.session_state['c_input2'] = c_input2
             st.session_state['sigma_input2'] = sigma_input2
 
-# ------------------ Perhitungan Rules ------------------
+            # ------------------ Perhitungan Rules ------------------
             rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
 
-# ------------------ Normalisasi Rules ------------------
+            # ------------------ Normalisasi Rules ------------------
             normalized_rules = rules / rules.sum(axis=1, keepdims=True)
 
-# Menampilkan hasil normalisasi dan jumlah rules
-st.write("Normalisasi Firing Strength (Rules):", normalized_rules)
-st.write(f'Sum of Rules: {rules.sum(axis=1, keepdims=True)}')
+            # Menampilkan hasil normalisasi dan jumlah rules
+            st.write("Normalisasi Firing Strength (Rules):", normalized_rules)
+            st.write(f'Sum of Rules: {rules.sum(axis=1, keepdims=True)}')
 
-# Menampilkan hasil dalam bentuk yang lebih mudah dipahami
-st.markdown(f"""
-    <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-        <p style="font-weight:bold;color:#2c3e50;">Normalisasi Rules:</p>
-        <p style="font-size:18px;color:#3498db;">{normalized_rules}</p>
-    </div>
-""", unsafe_allow_html=True)
+            # Menampilkan hasil dalam bentuk yang lebih mudah dipahami
+            st.markdown(f"""
+                <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
+                    <p style="font-weight:bold;color:#2c3e50;">Normalisasi Rules:</p>
+                    <p style="font-size:18px;color:#3498db;">{normalized_rules}</p>
+                </div>
+            """, unsafe_allow_html=True)
+
