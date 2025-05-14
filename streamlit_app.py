@@ -811,7 +811,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                     import numpy as np
                     import matplotlib.pyplot as plt
 
-                    pacf_values = pacf(jp, nlags=33)
+                    pacf_values = pacf(jp, nlags=12)
                     n = len(jp)
                     ci = 1.96 / np.sqrt(n)
 
