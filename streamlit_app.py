@@ -770,6 +770,7 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
+
 # ========== Menu ARIMA-ANFIS ===============
 elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
@@ -807,10 +808,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                 jp = data_anfis['residual']
                 if len(jp) > 1:
-                    from statsmodels.tsa.stattools import pacf
-                    from statsmodels.graphics.tsaplots import plot_pacf
-                    import matplotlib.pyplot as plt
-
                     pacf_values = pacf(jp, nlags=12)
                     n = len(jp)
                     ci = 1.96 / np.sqrt(n)
@@ -855,9 +852,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['input2'] = input2
 
                         # -------- Inisialisasi Membership Function --------
-                        from sklearn.cluster import KMeans
-                        import numpy as np
-
                         def initialize_membership_functions(data, num_clusters=2):
                             kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
                             centers = np.sort(kmeans.cluster_centers_.flatten())
@@ -869,20 +863,17 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                         def firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2):
                             ''' Menghitung firing strength untuk setiap rule berdasarkan keanggotaan Gaussian '''
-
-                            # Keanggotaan untuk input1 dan input2
                             input1_low = gaussian_membership(input1, c_input1[0], sigma_input1)
                             input1_high = gaussian_membership(input1, c_input1[1], sigma_input1)
                             input2_low = gaussian_membership(input2, c_input2[0], sigma_input2)
                             input2_high = gaussian_membership(input2, c_input2[1], sigma_input2)
 
-                            # Firing strength untuk setiap aturan
                             rules = np.array([
                                 input1_low * input2_low,   # A1
                                 input1_low * input2_high,  # A2
                                 input1_high * input2_low,  # B1
                                 input1_high * input2_high, # B2
-                            ]).T  # Transpose agar shape sesuai (n_samples, n_rules)
+                            ]).T
 
                             return rules
 
@@ -890,63 +881,67 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             c_input1, sigma_input1 = initialize_membership_functions(input1)
             c_input2, sigma_input2 = initialize_membership_functions(input2)
 
-            # Tampilkan hasil
+            # Gabungkan input untuk layer konsekuen (X) dan target (y) 
+            X = np.hstack([
+                normalized_rules * lag10[:, None],
+                normalized_rules * lag12[:, None],
+                normalized_rules
+            ])
+            y = target
+
+            # ------------------ Inisialisasi Parameter Konsekuen ------------------
+            lin_reg = LinearRegression().fit(X, y)
+            params_initial = lin_reg.coef_
+
+            # ------------------ Definisi Fungsi Prediksi dan Loss ANFIS ------------------
+
+            def anfis_predict(params, lag10, lag12, rules):
+                n_rules = rules.shape[1]
+                p = params[:n_rules]
+                q = params[n_rules:2 * n_rules]
+                r = params[2 * n_rules:3 * n_rules]
+
+                rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
+                normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
+
+                return normalized_outputs
+
+            def loss_function(params, alpha=0.001):
+                predictions = anfis_predict(params, lag10, lag12, rules)
+                mse = np.mean((target - predictions) ** 2)
+                l2_penalty = alpha * np.sum(np.square(params))  # Regularisasi L2
+                return mse + l2_penalty
+
+            # ------------------ Optimasi Parameter ANFIS ------------------
+
+            initial_params = np.hstack([params_initial, np.zeros(4)])  # Tambahkan dummy nilai jika perlu padding
+            result = minimize(loss_function, x0=initial_params, method='L-BFGS-B')
+            params_anfis = result.x
+
+            # ------------------ Ekstraksi Parameter ------------------
+
+            n_rules = rules.shape[1]
+            p = params_anfis[:n_rules]
+            q = params_anfis[n_rules:2 * n_rules]
+            r = params_anfis[2 * n_rules:3 * n_rules]
+
+            # ------------------ Tampilkan Hasil Parameter ------------------
+
             with st.container():
-                st.subheader("🔮 Inisialisasi Gaussian Membership Functions")
-                col1, col2 = st.columns(2)
+                st.subheader("🧮 Hasil Optimasi Parameter ANFIS")
+
+                col1, col2, col3 = st.columns(3)
 
                 with col1:
-                    st.markdown("### Parameter Input 1")
-                    st.markdown(f"""
-                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-                            <p style="font-size:18px;color:#3498db;">{c_input1}</p>
-                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-                            <p style="font-size:18px;color:#3498db;">{sigma_input1}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown("### Parameter p")
+                    st.code(p)
 
                 with col2:
-                    st.markdown("### Parameter Input 2")
-                    st.markdown(f"""
-                        <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                            <p style="font-weight:bold;color:#2c3e50;">Center (c):</p>
-                            <p style="font-size:18px;color:#3498db;">{c_input2}</p>
-                            <p style="font-weight:bold;color:#2c3e50;">Standard Deviasi (σ):</p>
-                            <p style="font-size:18px;color:#3498db;">{sigma_input2}</p>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown("### Parameter q")
+                    st.code(q)
 
-                st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
+                with col3:
+                    st.markdown("### Parameter r")
+                    st.code(r)
 
-            # Simpan ke session_state
-            st.session_state['c_input1'] = c_input1
-            st.session_state['sigma_input1'] = sigma_input1
-            st.session_state['c_input2'] = c_input2
-            st.session_state['sigma_input2'] = sigma_input2
-
-            # ------------------ Perhitungan Rules ------------------
-            rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
-
-            # ------------------ Normalisasi Rules ------------------
-            normalized_rules = rules / rules.sum(axis=1, keepdims=True)
-
-            # Menampilkan hasil normalisasi dan jumlah rules
-            st.write("Normalisasi Firing Strength (Rules):", normalized_rules)
-            st.write(f'Sum of Rules: {rules.sum(axis=1, keepdims=True)}')
-
-            # Menampilkan hasil rules dalam format yang mirip
-            st.markdown(f"""
-                <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                    <p style="font-weight:bold;color:#2c3e50;">Firing Strength Rules:</p>
-                    <p style="font-size:18px;color:#3498db;">{rules}</p>
-                </div>
-            """, unsafe_allow_html=True)
-
-            # Menampilkan hasil normalisasi dalam format yang mirip
-            st.markdown(f"""
-                <div style="background-color:#f0f2f6;padding:15px;border-radius:10px;margin-bottom:15px;">
-                    <p style="font-weight:bold;color:#2c3e50;">Normalisasi Firing Strength (Rules):</p>
-                    <p style="font-size:18px;color:#3498db;">{normalized_rules}</p>
-                </div>
-            """, unsafe_allow_html=True)
+                st.success("Parameter konsekuen ANFIS berhasil dioptimasi!")
