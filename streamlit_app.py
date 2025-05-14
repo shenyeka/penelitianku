@@ -333,7 +333,7 @@ with st.sidebar:
         <h2 style='color: #c04070; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);' class='floating'>🩸 MENU NAVIGASI</h2>
     </div>
     """, unsafe_allow_html=True)
-    menu = st.radio("", ["HOME", "INPUT DATA", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PREDIKSI"],
+    menu = st.radio("", ["HOME", "INPUT DATA", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PEMODELAN ARIMA", "PEMODELAN ARIMA-ANFIS", "PREDIKSI"],
                 label_visibility="collapsed")
 
 
@@ -719,8 +719,8 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
-# ========PREDIKSI=====
-elif menu == "PREDIKSI":
+# ========PEMODELAN ARIMA=====
+elif menu == "PEMODELAN ARIMA":
     from statsmodels.tsa.arima.model import ARIMA
     from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
     import numpy as np
@@ -757,14 +757,10 @@ elif menu == "PREDIKSI":
 
             # Hitung MAPE dan RMSE untuk training dan testing
             mape_train = mean_absolute_percentage_error(train, pred_train) * 100
-            rmse_train = np.sqrt(mean_squared_error(train, pred_train))
             mape_test = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
-            rmse_test = np.sqrt(mean_squared_error(test.iloc[:, 0], test['prediksi']))
 
             st.write(f"MAPE Training: {mape_train:.2f}%")
-            st.write(f"RMSE Training: {rmse_train:.2f}")
             st.write(f"MAPE Testing: {mape_test:.2f}%")
-            st.write(f"RMSE Testing: {rmse_test:.2f}")
 
             st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
 
