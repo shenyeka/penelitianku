@@ -770,6 +770,15 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
+import numpy as np
+import pandas as pd
+import streamlit as st
+import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import pacf
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LinearRegression
+from scipy.optimize import minimize
 
 # ========== Menu ARIMA-ANFIS ===============
 elif menu == "PEMODELAN ARIMA-ANFIS":
@@ -877,71 +886,77 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                             return rules
 
-            # Inisialisasi parameter Gaussian MF
-            c_input1, sigma_input1 = initialize_membership_functions(input1)
-            c_input2, sigma_input2 = initialize_membership_functions(input2)
+                        # Inisialisasi parameter Gaussian MF
+                        c_input1, sigma_input1 = initialize_membership_functions(input1)
+                        c_input2, sigma_input2 = initialize_membership_functions(input2)
 
-            # Gabungkan input untuk layer konsekuen (X) dan target (y) 
-            X = np.hstack([
-                normalized_rules * input1[:, None],
-                normalized_rules * input2[:, None],
-                normalized_rules
-            ])
-            y = target
+                        # Menghitung firing strength
+                        rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
 
-            # ------------------ Inisialisasi Parameter Konsekuen ------------------
-            lin_reg = LinearRegression().fit(X, y)
-            params_initial = lin_reg.coef_
+                        # Normalisasi rules
+                        normalized_rules = rules / np.sum(rules, axis=1, keepdims=True)
 
-            # ------------------ Definisi Fungsi Prediksi dan Loss ANFIS ------------------
+                        # Gabungkan input untuk layer konsekuen (X) dan target (y)
+                        X = np.hstack([
+                            normalized_rules * input1[:, None],
+                            normalized_rules * input2[:, None],
+                            normalized_rules
+                        ])
+                        y = target
 
-            def anfis_predict(params, lag10, lag12, rules):
-                n_rules = rules.shape[1]
-                p = params[:n_rules]
-                q = params[n_rules:2 * n_rules]
-                r = params[2 * n_rules:3 * n_rules]
+                        # ------------------ Inisialisasi Parameter Konsekuen ------------------
+                        lin_reg = LinearRegression().fit(X, y)
+                        params_initial = lin_reg.coef_
 
-                rule_outputs = p * input1[:, None] + q * input2[:, None] + r
-                normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
+                        # ------------------ Definisi Fungsi Prediksi dan Loss ANFIS ------------------
 
-                return normalized_outputs
+                        def anfis_predict(params, input1, input2, rules):
+                            n_rules = rules.shape[1]
+                            p = params[:n_rules]
+                            q = params[n_rules:2 * n_rules]
+                            r = params[2 * n_rules:3 * n_rules]
 
-            def loss_function(params, alpha=0.001):
-                predictions = anfis_predict(params, lag10, lag12, rules)
-                mse = np.mean((target - predictions) ** 2)
-                l2_penalty = alpha * np.sum(np.square(params))  # Regularisasi L2
-                return mse + l2_penalty
+                            rule_outputs = p * input1[:, None] + q * input2[:, None] + r
+                            normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
 
-            # ------------------ Optimasi Parameter ANFIS ------------------
+                            return normalized_outputs
 
-            initial_params = np.hstack([params_initial, np.zeros(4)])  # Tambahkan dummy nilai jika perlu padding
-            result = minimize(loss_function, x0=initial_params, method='L-BFGS-B')
-            params_anfis = result.x
+                        def loss_function(params, alpha=0.001):
+                            predictions = anfis_predict(params, input1, input2, rules)
+                            mse = np.mean((y - predictions) ** 2)
+                            l2_penalty = alpha * np.sum(np.square(params))  # Regularisasi L2
+                            return mse + l2_penalty
 
-            # ------------------ Ekstraksi Parameter ------------------
+                        # ------------------ Optimasi Parameter ANFIS ------------------
+                        initial_params = np.hstack([params_initial, np.zeros(4)])  # Tambahkan dummy nilai jika perlu padding
+                        result = minimize(loss_function, x0=initial_params, method='L-BFGS-B')
+                        params_anfis = result.x
 
-            n_rules = rules.shape[1]
-            p = params_anfis[:n_rules]
-            q = params_anfis[n_rules:2 * n_rules]
-            r = params_anfis[2 * n_rules:3 * n_rules]
+                        # ------------------ Ekstraksi Parameter ------------------
 
-            # ------------------ Tampilkan Hasil Parameter ------------------
+                        n_rules = rules.shape[1]
+                        p = params_anfis[:n_rules]
+                        q = params_anfis[n_rules:2 * n_rules]
+                        r = params_anfis[2 * n_rules:3 * n_rules]
 
-            with st.container():
-                st.subheader("🧮 Hasil Optimasi Parameter ANFIS")
+                        # ------------------ Tampilkan Hasil Parameter ------------------
 
-                col1, col2, col3 = st.columns(3)
+                        with st.container():
+                            st.subheader("🧮 Hasil Optimasi Parameter ANFIS")
 
-                with col1:
-                    st.markdown("### Parameter p")
-                    st.write(p)
+                            col1, col2, col3 = st.columns(3)
 
-                with col2:
-                    st.markdown("### Parameter q")
-                    st.write(q)
+                            with col1:
+                                st.markdown("### Parameter p")
+                                st.write(p)
 
-                with col3:
-                    st.markdown("### Parameter r")
-                    st.write(r)
+                            with col2:
+                                st.markdown("### Parameter q")
+                                st.write(q)
 
-                st.success("Parameter konsekuen ANFIS berhasil dioptimasi!")
+                            with col3:
+                                st.markdown("### Parameter r")
+                                st.write(r)
+
+                            st.success("Parameter konsekuen ANFIS berhasil dioptimasi!")
+
