@@ -864,6 +864,28 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                             sigma = (centers[1] - centers[0]) / 2
                             return centers, sigma
 
+                        def gaussian_membership(x, c, sigma):
+                            return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+
+                        def firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2):
+                            ''' Menghitung firing strength untuk setiap rule berdasarkan keanggotaan Gaussian '''
+
+                            # Keanggotaan untuk input1 dan input2
+                            input1_low = gaussian_membership(input1, c_input1[0], sigma_input1)
+                            input1_high = gaussian_membership(input1, c_input1[1], sigma_input1)
+                            input2_low = gaussian_membership(input2, c_input2[0], sigma_input2)
+                            input2_high = gaussian_membership(input2, c_input2[1], sigma_input2)
+
+                            # Firing strength untuk setiap aturan
+                            rules = np.array([
+                                input1_low * input2_low,   # A1
+                                input1_low * input2_high,  # A2
+                                input1_high * input2_low,  # B1
+                                input1_high * input2_high, # B2
+                            ]).T  # Transpose agar shape sesuai (n_samples, n_rules)
+
+                            return rules
+
             # Inisialisasi parameter Gaussian MF
             c_input1, sigma_input1 = initialize_membership_functions(input1)
             c_input2, sigma_input2 = initialize_membership_functions(input2)
@@ -902,6 +924,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.session_state['sigma_input1'] = sigma_input1
             st.session_state['c_input2'] = c_input2
             st.session_state['sigma_input2'] = sigma_input2
+
+# ------------------ Perhitungan Rules ------------------
+            rules = firing_strength(input1, input2, c_input1, sigma_input1, c_input2, sigma_input2)
+
+# Tampilkan hasil rules
+            st.write("Firing Strength (Rules):", rules)
 
         else:
             st.warning("Data residual terlalu sedikit.")
