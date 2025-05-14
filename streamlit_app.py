@@ -769,81 +769,96 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
-        # Jika model sudah ada, tampilkan tombol lanjutan
-        if 'model_arima' in st.session_state:
-            st.subheader("Input ANFIS")
+       import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from statsmodels.tsa.stattools import pacf
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_pacf
 
-            if st.button("Lihat Residual ARIMA"):
-                residual = st.session_state['residual_arima']
-                st.line_chart(residual)
+# Menu ARIMA-ANFIS
+elif menu == "PEMODELAN ARIMA-ANFIS":
+    st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
 
-                # Simpan ke DataFrame untuk normalisasi
-                data_anfis = pd.DataFrame({'residual': residual})
-                st.session_state['data_anfis_raw'] = data_anfis
+    if 'model_arima' in st.session_state:
+        st.subheader("Input ANFIS")
 
-            if st.button("Lanjutkan ke Normalisasi Residual"):
-                if 'data_anfis_raw' in st.session_state:
-                    data_anfis = st.session_state['data_anfis_raw']
-                    scaler_residual = MinMaxScaler()
-                    data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
-                    st.session_state['data_anfis'] = data_anfis
-                    st.session_state['scaler_residual'] = scaler_residual
-                    st.success("Residual berhasil dinormalisasi.")
-                    st.write(data_anfis.head())
-                    st.info("Silakan lanjut ke menu ANFIS.")
+        # Jika sudah ada model ARIMA, tampilkan tombol untuk melanjutkan
+        if st.button("Lihat Residual ARIMA"):
+            residual = st.session_state['residual_arima']
+            st.line_chart(residual)
+
+            # Simpan ke DataFrame untuk normalisasi
+            data_anfis = pd.DataFrame({'residual': residual})
+            st.session_state['data_anfis_raw'] = data_anfis
+
+        if st.button("Lanjutkan ke Normalisasi Residual"):
+            if 'data_anfis_raw' in st.session_state:
+                data_anfis = st.session_state['data_anfis_raw']
+                scaler_residual = MinMaxScaler()
+                data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
+                st.session_state['data_anfis'] = data_anfis
+                st.session_state['scaler_residual'] = scaler_residual
+                st.success("Residual berhasil dinormalisasi.")
+                st.write(data_anfis.head())
+                st.info("Silakan lanjut ke menu ANFIS.")
+            else:
+                st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
+
+        # Langkah baru: Menentukan Input ANFIS dengan PACF
+        if st.button("Tentukan Input ANFIS dari PACF"):
+            if 'data_anfis' in st.session_state:
+                data_anfis = st.session_state['data_anfis']
+                
+                # Hitung PACF dan cari lag signifikan
+                jp = data_anfis['residual']
+                pacf_values = pacf(jp, nlags=33)
+                n = len(jp)  # jumlah data
+                ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
+                significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
+                st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
+
+                # Menambahkan lag signifikan ke data
+                for lag in significant_lags:
+                    data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
+                data_anfis.dropna(inplace=True)
+
+                st.session_state['data_anfis_with_lags'] = data_anfis
+                st.success("Lag signifikan berhasil ditambahkan.")
+                st.write(data_anfis.head())
+
+                # Plot PACF
+                st.subheader("Plot Partial Autocorrelation Function (PACF)")
+                plt.figure(figsize=(10, 6))
+                plot_pacf(jp, lags=33, method='ywm', alpha=0.05)
+                plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
+                st.pyplot(plt)
+
+        # Pemilihan Target dan Input untuk ANFIS
+        if 'data_anfis_with_lags' in st.session_state:
+            st.subheader("6. Tentukan Target dan Input untuk ANFIS")
+
+            data_anfis = st.session_state['data_anfis_with_lags']
+            all_columns = list(data_anfis.columns)
+
+            target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
+            input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
+
+            if st.button("Simpan Dataset ANFIS"):
+                if target_col and input_cols:
+                    X = data_anfis[input_cols].values
+                    y = data_anfis[target_col].values.reshape(-1, 1)
+
+                    st.session_state['X_anfis'] = X
+                    st.session_state['y_anfis'] = y
+
+                    st.success("✅ Dataset ANFIS berhasil disimpan.")
+                    st.write("Shape Input (X):", X.shape)
+                    st.write("Shape Target (y):", y.shape)
+
                 else:
-                    st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
-
-            # Langkah baru: Menentukan Input ANFIS dengan PACF
-            if st.button("Tentukan Input ANFIS dari PACF"):
-                if 'data_anfis' in st.session_state:
-                    data_anfis = st.session_state['data_anfis']
-                    
-                    # Hitung PACF dan cari lag signifikan
-                    jp = data_anfis['residual']
-                    pacf_values = pacf(jp, nlags=33)
-                    n = len(jp)  # jumlah data
-                    ci = 1.96 / np.sqrt(n)  # Batas interval kepercayaan 95% untuk PACF
-                    significant_lags = [i for i, val in enumerate(pacf_values) if abs(val) > ci and i != 0]
-                    st.write(f"Lag signifikan (berdasarkan interval kepercayaan): {significant_lags}")
-
-                    # Menambahkan lag signifikan ke data
-                    for lag in significant_lags:
-                        data_anfis[f'residual_lag{lag}'] = data_anfis['residual'].shift(lag)
-                    data_anfis.dropna(inplace=True)
-
-                    st.session_state['data_anfis_with_lags'] = data_anfis
-                    st.success("Lag signifikan berhasil ditambahkan.")
-                    st.write(data_anfis.head())
-
-                    # Plot PACF
-                    st.subheader("Plot Partial Autocorrelation Function (PACF)")
-                    plt.figure(figsize=(10, 6))
-                    plot_pacf(jp, lags=33, method='ywm', alpha=0.05)
-                    plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
-                    st.pyplot(plt)
-
-# Tambahan: Memilih Target dan Input ANFIS
-if 'data_anfis_with_lags' in st.session_state:
-    st.subheader("6. Tentukan Target dan Input untuk ANFIS")
-
-    data_anfis = st.session_state['data_anfis_with_lags']
-    all_columns = list(data_anfis.columns)
-
-    target_col = st.selectbox("Pilih kolom target:", all_columns, index=0)
-    input_cols = st.multiselect("Pilih kolom input (lag signifikan):", [col for col in all_columns if col != target_col])
-
-    if st.button("Simpan Dataset ANFIS"):
-        if target_col and input_cols:
-            X = data_anfis[input_cols].values
-            y = data_anfis[target_col].values.reshape(-1, 1)
-
-            st.session_state['X_anfis'] = X
-            st.session_state['y_anfis'] = y
-
-            st.success("✅ Dataset ANFIS berhasil disimpan.")
-            st.write("Shape Input (X):", X.shape)
-            st.write("Shape Target (y):", y.shape)
-
-        else:
-            st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+                    st.warning("⚠ Mohon pilih target dan minimal satu input untuk menyimpan dataset ANFIS.")
+    
+    else:
+        st.warning("Model ARIMA belum tersedia. Silakan lakukan pemodelan ARIMA terlebih dahulu.")
