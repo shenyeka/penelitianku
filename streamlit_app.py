@@ -854,3 +854,30 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['target'] = target
                         st.session_state['input1'] = input1
                         st.session_state['input2'] = input2
+
+    # -------- Inisialisasi Membership Function --------
+    import numpy as np
+    from sklearn.cluster import KMeans
+
+    def initialize_membership_functions(data, num_clusters=2):
+        kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data.reshape(-1, 1))
+        centers = np.sort(kmeans.cluster_centers_.flatten())
+        sigma = (centers[1] - centers[0]) / 2
+        return centers, sigma
+
+    # Inisialisasi parameter fungsi keanggotaan Gaussian untuk input1 dan input2
+    c_input1, sigma_input1 = initialize_membership_functions(input1)
+    c_input2, sigma_input2 = initialize_membership_functions(input2)
+
+    # Tampilkan hasil inisialisasi
+    st.subheader("Inisialisasi Gaussian Membership Functions")
+    st.write(f"**c_input1 (center input1)** = {c_input1}")
+    st.write(f"**sigma_input1 (std. deviasi input1)** = {sigma_input1}")
+    st.write(f"**c_input2 (center input2)** = {c_input2}")
+    st.write(f"**sigma_input2 (std. deviasi input2)** = {sigma_input2}")
+
+    # Simpan ke session_state
+    st.session_state['c_input1'] = c_input1
+    st.session_state['sigma_input1'] = sigma_input1
+    st.session_state['c_input2'] = c_input2
+    st.session_state['sigma_input2'] = sigma_input2
