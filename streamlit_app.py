@@ -768,13 +768,6 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['model_arima'] = model_arima
             st.session_state['residual_arima'] = model_arima.resid
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from statsmodels.tsa.stattools import pacf
-from statsmodels.graphics.tsaplots import plot_pacf
-import matplotlib.pyplot as plt
 
 # ==========Menu ARIMA-ANFIS===============
 elif menu == "PEMODELAN ARIMA-ANFIS":
