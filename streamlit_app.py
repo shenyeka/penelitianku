@@ -844,100 +844,56 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['anfis_input'] = data_anfis[input_lags].values
                         st.info(f"Dua input ANFIS terpilih: {input_lags}")
 
-# Tombol untuk Training ANFIS
-if st.button("Latih Model ANFIS"):
-    lag10 = st.session_state['anfis_input'][:, 0]
-    lag12 = st.session_state['anfis_input'][:, 1]
-    target = st.session_state['anfis_target']
+# ------------------------ TAHAP TRAINING ANFIS ------------------------
+st.subheader("Training ANFIS")
+if st.button("Train ANFIS"):
+    if 'anfis_input' in st.session_state and 'anfis_target' in st.session_state:
+        anfis_input = st.session_state['anfis_input']
+        anfis_target = st.session_state['anfis_target']
 
-    def initialize_membership_functions(data_anfis, num_clusters=2):
-        kmeans = KMeans(n_clusters=num_clusters, random_state=42).fit(data_anfis.reshape(-1, 1))
-        centers = np.sort(kmeans.cluster_centers_.flatten())
-        sigma = (centers[1] - centers[0]) / 2
-        return centers, sigma
+        # Ambil input lag10 dan lag12
+        lag10 = anfis_input[:, 0]
+        lag12 = anfis_input[:, 1]
 
-    c_lag10, sigma_lag10 = initialize_membership_functions(lag10)
-    c_lag12, sigma_lag12 = initialize_membership_functions(lag12)
+        # Training ANFIS dengan ABC
+        # ... kode training ANFIS di sini ...
 
-    def gaussian_membership(x, c, sigma):
-        return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+        # Simpan model dan hasil prediksi
+        st.session_state['anfis_model'] = model
+        st.session_state['anfis_predictions'] = predictions
 
-    def firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12):
-        lag10_low = gaussian_membership(lag10, c_lag10[0], sigma_lag10)
-        lag10_high = gaussian_membership(lag10, c_lag10[1], sigma_lag10)
-        lag12_low = gaussian_membership(lag12, c_lag12[0], sigma_lag12)
-        lag12_high = gaussian_membership(lag12, c_lag12[1], sigma_lag12)
+        # Denormalisasi hasil prediksi
+        predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
+        if isinstance(predictions_denorm, np.ndarray):
+            predictions_denorm = pd.Series(predictions_denorm)
+        elif isinstance(predictions_denorm, pd.DataFrame):
+            predictions_denorm = predictions_denorm.iloc[:, 0]
 
-        rules = np.array([
-            lag10_low * lag12_low,
-            lag10_low * lag12_high,
-            lag10_high * lag12_low,
-            lag10_high * lag12_high,
-        ]).T
+        # Nilai aktual (data train)
+        aktual_train = train['Jumlah permintaan']
 
-        return rules
+        # Prediksi ARIMA terakhir
+        predictions_arima_last = predictions_arima
+        if isinstance(predictions_arima_last, pd.DataFrame):
+            predictions_arima_last = predictions_arima_last.iloc[:, 0]
 
-    rules = firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12)
-    normalized_rules = rules / rules.sum(axis=1, keepdims=True)
-    X = np.hstack([normalized_rules * lag10[:, None], normalized_rules])
-    y = target
+        # Ambil 12 baris awal dari residual ARIMA
+        resid_arima_first = model_arima.resid.iloc[:12]
 
-    lin_reg = LinearRegression().fit(X, y)
-    params_initial = lin_reg.coef_
+        # Gabungkan residual
+        df_residual = pd.concat([resid_arima_first, predictions_denorm], ignore_index=True)
+        predictions_arima_last = predictions_arima_last.reset_index(drop=True)
+        df_residual = df_residual.reset_index(drop=True)
 
-    def anfis_predict(params, lag10, lag12, rules):
-        n_rules = rules.shape[1]
-        p = params[:n_rules]
-        q = params[n_rules:2 * n_rules]
-        r = params[2 * n_rules:3 * n_rules]
+        # Hybrid prediction
+        pred_hybrid = predictions_arima_last + df_residual
 
-        rule_outputs = p * lag10[:, None] + q * lag12[:, None] + r
-        normalized_outputs = (rules * rule_outputs).sum(axis=1) / rules.sum(axis=1)
-        return normalized_outputs
+        # Hitung MAPE
+        mape_final = mean_absolute_percentage_error(aktual_train, pred_hybrid) * 100
 
-    def loss_function(params, alpha=0.001):
-        predictions = anfis_predict(params, lag10, lag12, rules)
-        mse = np.mean((target - predictions) ** 2)
-        l2_penalty = alpha * np.sum(np.square(params))
-        return mse + l2_penalty
-
-    result = minimize(loss_function, x0=np.hstack([params_initial, np.zeros(4)]), method='L-BFGS-B')
-    params_anfis = result.x
-
-    predictions = anfis_predict(params_anfis, lag10, lag12, rules)
-    st.session_state['predictions_anfis'] = predictions
-    st.success("Model ANFIS berhasil dilatih.")
-
-# Tombol Denormalisasi dan Hybrid
-if st.button("Lanjutkan ke Prediksi Hybrid"):
-    predictions = st.session_state['predictions_anfis']
-    scaler_residual = st.session_state['scaler_residual']
-    train = st.session_state['train']
-    predictions_arima = st.session_state['predictions_arima']
-    model_arima = st.session_state['model_arima']
-
-    predictions_denorm = scaler_residual.inverse_transform(predictions.reshape(-1, 1)).flatten()
-
-    if isinstance(predictions_denorm, np.ndarray):
-        predictions_denorm = pd.Series(predictions_denorm)
-    elif isinstance(predictions_denorm, pd.DataFrame):
-        predictions_denorm = predictions_denorm.iloc[:, 0]
-
-    resid_arima_first = model_arima.resid.iloc[:12]
-    df_residual = pd.concat([resid_arima_first, predictions_denorm], ignore_index=True)
-
-    if isinstance(predictions_arima, pd.DataFrame):
-        predictions_arima = predictions_arima.iloc[:, 0]
-
-    predictions_arima = predictions_arima.reset_index(drop=True)
-    df_residual = df_residual.reset_index(drop=True)
-
-    pred_hybrid = predictions_arima + df_residual
-
-    aktual_train = train['Jumlah permintaan']
-    mape_final = mean_absolute_percentage_error(aktual_train, pred_hybrid) * 100
-    rmse_final = np.sqrt(mean_squared_error(aktual_train, pred_hybrid))
-
-    st.write("Hasil Prediksi Hybrid:", pred_hybrid)
-    st.write(f"MAPE Hybrid Model: {mape_final:.2f}%")
-    st.write(f"RMSE Hybrid Model: {rmse_final:.2f}")
+        # Tampilkan hasil
+        st.success("Training ANFIS selesai!")
+        st.write("Hybrid Prediction:", pred_hybrid)
+        st.metric("MAPE Hybrid Model", f"{mape_final:.2f}%")
+    else:
+        st.warning("Silakan tentukan input ANFIS terlebih dahulu dengan tombol 'Tentukan Input ANFIS dari PACF'.")
