@@ -768,6 +768,14 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['model_arima'] = model_arima
             st.session_state['residual_arima'] = model_arima.resid
 
+import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from statsmodels.tsa.stattools import pacf
+from statsmodels.graphics.tsaplots import plot_pacf
+import matplotlib.pyplot as plt
+
 # ==========Menu ARIMA-ANFIS===============
 elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
@@ -793,7 +801,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 st.session_state['scaler_residual'] = scaler_residual
                 st.success("Residual berhasil dinormalisasi.")
                 st.write(data_anfis.head())
-                st.info("Silakan lanjut ke menu ANFIS.")
+                st.info("Silakan tentukan input ANFIS dari PACF.")
             else:
                 st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
 
@@ -861,3 +869,4 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                 else:
                     st.warning("⚠ Mohon pilih target dan dua input untuk menyimpan dataset ANFIS.")
+
