@@ -12,6 +12,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.cluster import KMeans
 from scipy.optimize import minimize
 from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.stattools import adfuller, acf, pacf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from numba import jit
 import io
 
@@ -548,8 +550,6 @@ elif menu == "DATA PREPROCESSING":
 
 
 # ================== STASIONERITAS DATA =====================
-from statsmodels.tsa.stattools import adfuller, acf, pacf
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
 
