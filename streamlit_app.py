@@ -850,8 +850,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         st.session_state['input1'] = input1
                         st.session_state['input2'] = input2
 
-                        # Menampilkan tombol untuk melatih model ANFIS
-                        if st.button("Latih Model ANFIS"):
                             # Inisialisasi parameter Gaussian MF
                             c_input1, sigma_input1 = initialize_membership_functions(input1)
                             c_input2, sigma_input2 = initialize_membership_functions(input2)
@@ -915,6 +913,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                             st.success("Parameter fungsi keanggotaan berhasil diinisialisasi!")
 
+                    # Menampilkan tombol untuk melatih model ANFIS
+                    if st.button("Latih Model ANFIS"):
                         # Simpan ke session_state
                         st.session_state['c_input1'] = c_input1
                         st.session_state['sigma_input1'] = sigma_input1
