@@ -934,14 +934,14 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
                 with col1:
                     st.markdown("### Parameter p")
-                    st.code(p)
+                    st.write(p)
 
                 with col2:
                     st.markdown("### Parameter q")
-                    st.code(q)
+                    st.write(q)
 
                 with col3:
                     st.markdown("### Parameter r")
-                    st.code(r)
+                    st.write(r)
 
                 st.success("Parameter konsekuen ANFIS berhasil dioptimasi!")
