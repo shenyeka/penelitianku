@@ -770,33 +770,6 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
-# Fungsi untuk menghitung keanggotaan Gaussian
-def gaussian_membership(x, c, sigma):
-    return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
-
-# Fungsi untuk menghitung strength rule
-def firing_strength(lag10, lag12, c_lag10, sigma_lag10, c_lag12, sigma_lag12):
-    ''' Menghitung firing strength berdasarkan lag10 dan lag12 menggunakan fungsi keanggotaan Gaussian '''
-    
-    # Fungsi keanggotaan untuk lag10
-    lag10_low = gaussian_membership(lag10, c_lag10[0], sigma_lag10)
-    lag10_high = gaussian_membership(lag10, c_lag10[1], sigma_lag10)
-
-    # Fungsi keanggotaan untuk lag12
-    lag12_low = gaussian_membership(lag12, c_lag12[0], sigma_lag12)
-    lag12_high = gaussian_membership(lag12, c_lag12[1], sigma_lag12)
-
-    ''' Aturan Fuzzy '''
-    # Aturan berdasarkan kombinasi low dan high keanggotaan untuk lag10 dan lag12
-    rules = np.array([
-        lag10_low * lag12_low,   # A1
-        lag10_low * lag12_high,  # A2
-        lag10_high * lag12_low,  # B1
-        lag10_high * lag12_high, # B2
-    ]).T  # Transpose agar shape sesuai (n_samples, n_rules)
-
-    return rules
-
 # ================== Menu ARIMA-ANFIS ===================
 def arima_anfis_modeling():
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
