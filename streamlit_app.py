@@ -827,7 +827,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                     # Plot PACF
                     st.subheader("Plot Partial Autocorrelation Function (PACF)")
                     plt.figure(figsize=(10, 6))
-                    plot_pacf(jp, lags=33, method='ywm', alpha=0.05)
+                    plot_pacf(jp, lags=12, method='ywm', alpha=0.05)
                     plt.title('Partial Autocorrelation Function (PACF) residual ARIMA')
                     st.pyplot(plt)
 
