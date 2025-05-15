@@ -1097,3 +1097,17 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 c_lag12_abc, sigma_lag12_abc
             )
             st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
+
+        # ===  Prediksi menggunakan parameter hasil optimasi ===
+
+        # Anda perlu definisikan params_anfis_abc yang isinya parameter lengkap untuk fungsi anfis_predict
+        params_anfis_abc = best_params
+
+        predictions_abc = anfis_predict(lag10, lag12, params_anfis_abc)
+
+        # Denormalisasi hasil prediksi
+        predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
+
+        # Tampilkan hasil prediksi denormalisasi di Streamlit
+        st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
+        st.write(predictions_denorm2)
