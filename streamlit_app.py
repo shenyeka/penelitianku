@@ -1007,7 +1007,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 pred = anfis_predict(rules, params, input1, input2)
                 return np.mean((target - pred) ** 2)
 
-            def abc_optimize(fitness_func, dim, lb, ub, n_bees=150, n_onlookers=150, limit=150, max_iter=1000):
+            def abc_optimize(fitness_func, dim, lb, ub, n_bees=150, n_onlookers=150, limit=30, max_iter=1000):
                 food_sources = np.random.uniform(lb, ub, size=(n_bees, dim))
                 fitness_vals = np.array([fitness_func(ind) for ind in food_sources])
                 trial = np.zeros(n_bees)
