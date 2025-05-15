@@ -334,7 +334,7 @@ with st.sidebar:
         <h2 style='color: #c04070; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);' class='floating'>🩸 MENU NAVIGASI</h2>
     </div>
     """, unsafe_allow_html=True)
-    menu = st.radio("", ["HOME", "INPUT DATA", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PEMODELAN ARIMA", "PEMODELAN ANFIS ABC", "PEMODELAN ARIMA-ANFIS ABC" "PREDIKSI"],
+    menu = st.radio("", ["HOME", "INPUT DATA", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PEMODELAN ARIMA", "PEMODELAN ANFIS ABC", "PEMODELAN ARIMA-ANFIS ABC", "PREDIKSI"],
                 label_visibility="collapsed")
 
 
