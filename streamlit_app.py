@@ -970,9 +970,14 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.write(predictions_denorm)
 
         if st.button("Optimasi ABC Model ANFIS"):
+            import random
+            from sklearn.cluster import KMeans
+
             input1 = st.session_state['input1']
             input2 = st.session_state['input2']
             target = st.session_state['target']
+            data_min = min(np.min(input1), np.min(input2))
+            data_max = max(np.max(input1), np.max(input2))
 
             def gaussian_mf(x, c, sigma):
                 x = x[:, np.newaxis]
@@ -1002,11 +1007,22 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 s1 = ind[2:4]
                 c2 = ind[4:6]
                 s2 = ind[6:8]
-                params = ind[8:]  # p, q, r = 12 values
+                params = ind[8:]
                 rules = compute_firing_strength(input1, input2, c1, s1, c2, s2)
                 pred = anfis_predict(rules, params, input1, input2)
                 mse = np.mean((target - pred) ** 2)
                 return mse
+
+            def init_mf_centers_sigma(data, n_mf=2, data_min=None, data_max=None):
+                kmeans = KMeans(n_clusters=n_mf, n_init=10)
+                kmeans.fit(data.reshape(-1, 1))
+                centers = np.sort(kmeans.cluster_centers_.flatten())
+                if data_min is not None and data_max is not None:
+                    centers = np.clip(centers, data_min, data_max)
+                diffs = np.diff(centers)
+                sigma = np.array([diffs[0]] * n_mf) if len(diffs) > 0 else np.full(n_mf, 0.1)
+                sigma = np.clip(sigma, 1e-2, 1.0)
+                return centers, sigma
 
             def generate_individual(c1_init, s1_init, c2_init, s2_init, n_rules):
                 anfis_params = np.random.uniform(0, 1, 3 * n_rules)
@@ -1055,11 +1071,16 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 best_idx = np.argmin(fitness_vals)
                 return food_sources[best_idx], fitness_vals[best_idx]
 
-            dim = 8 + 12  # 8 parameter MF + 12 parameter p,q,r
-            lb = np.array([0, 0, 0.01, 0.01, 0, 0, 0.01, 0.01] + [-1] * 12)
-            ub = np.array([1, 1, 1, 1, 1, 1, 1, 1] + [1] * 12)
-
             with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony..."):
+                n_mf = 2
+                n_rules = n_mf * n_mf
+
+                c1_init, s1_init = init_mf_centers_sigma(input1, n_mf, data_min, data_max)
+                c2_init, s2_init = init_mf_centers_sigma(input2, n_mf, data_min, data_max)
+                dim = 8 + 3 * n_rules
+                lb = np.array([0, 0, 0.01, 0.01, 0, 0, 0.01, 0.01] + [-1] * (3 * n_rules))
+                ub = np.array([1, 1, 1, 1, 1, 1, 1, 1] + [1] * (3 * n_rules))
+
                 best_params, best_mse = abc_optimize(fitness, dim, lb, ub)
 
             c1 = best_params[:2]
@@ -1067,9 +1088,9 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             c2 = best_params[4:6]
             s2 = best_params[6:8]
             consequents = best_params[8:]
-            p = consequents[:4]
-            q = consequents[4:8]
-            r = consequents[8:12]
+            p = consequents[:n_rules]
+            q = consequents[n_rules:2 * n_rules]
+            r = consequents[2 * n_rules:3 * n_rules]
 
             st.subheader("Hasil Optimasi ANFIS (ABC)")
             st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
@@ -1094,15 +1115,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 st.write(r)
             st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
 
-    # === Membentuk rules baru dengan parameter hasil optimasi ===
+            # Membentuk rules dan melakukan prediksi
             st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
             rules_abc = compute_firing_strength(input1, input2, c1, s1, c2, s2)
             st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
-    # === Prediksi menggunakan parameter hasil optimasi ===
             predictions_abc = anfis_predict(rules_abc, consequents, input1, input2)
-
-    # Denormalisasi hasil prediksi
             predictions_denorm2 = st.session_state['scaler_residual'].inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
             st.session_state['predictions_abc'] = predictions_denorm2
 
