@@ -725,15 +725,16 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
-# ========PEMODELAN ARIMA=====
 elif menu == "PEMODELAN ARIMA":
     from statsmodels.tsa.arima.model import ARIMA
-    from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
+    from sklearn.metrics import mean_absolute_percentage_error
     import numpy as np
-    import matplotlib.pyplot as plt
     import streamlit as st
+    import statsmodels.api as sm
+    from scipy import stats
+    from statsmodels.stats.diagnostic import acorr_ljungbox, het_white
 
-    st.title("PREDIKSI PERMINTAAN DARAH MENGGUNAKAN ARIMA")
+    st.title("PREDIKSI DATA MENGGUNAKAN MODEL ARIMA")
 
     train = st.session_state.get('train_data')
     test = st.session_state.get('test_data')
@@ -746,42 +747,122 @@ elif menu == "PEMODELAN ARIMA":
         d = st.number_input("Masukkan nilai d (differencing)", min_value=0, value=0, step=1)
         q = st.number_input("Masukkan nilai q (moving average term)", min_value=0, value=1, step=1)
 
+        model_arima = None
+
         if st.button("Latih Model ARIMA"):
-            model_arima = ARIMA(train, order=(p, d, q))
-            model_arima = model_arima.fit()
+            model_arima = ARIMA(train, order=(p, d, q)).fit()
             st.success("Model ARIMA berhasil dilatih.")
             st.write(model_arima.summary())
+            st.session_state['model_arima'] = model_arima
+        
+        model_arima = st.session_state.get('model_arima')
 
+        alpha = 0.05  # tingkat signifikansi
+
+        # Tombol uji signifikansi koefisien (uji t)
+        if model_arima is not None and st.button("Uji Signifikansi Koefisien (uji t)"):
+            st.subheader("Uji Signifikansi Koefisien (uji t)")
+            params = model_arima.params
+            std_err = model_arima.bse
+            t_values = params / std_err
+            # t-table untuk alpha=0.05 dua sisi, df besar kira2 1.96, tapi kita ambil t hitung > 2 sebagai signifikansi kasar
+            t_critical = 2
+            
+            for i in range(len(params)):
+                st.write(f"Koefisien: {params.index[i]}")
+                st.write(f" - Estimasi: {params[i]:.4f}")
+                st.write(f" - Std. Error: {std_err[i]:.4f}")
+                st.write(f" - t-statistik: {t_values[i]:.4f}")
+                if abs(t_values[i]) > t_critical:
+                    st.write(f" - :white_check_mark: Signifikan pada alpha={alpha} karena |t| > {t_critical}")
+                else:
+                    st.write(f" - :x: Tidak signifikan pada alpha={alpha} karena |t| ≤ {t_critical}")
+                st.write("---")
+        
+        # Tombol uji asumsi residual
+        if model_arima is not None and st.button("Uji Asumsi Residual"):
+            st.subheader("Uji Asumsi Residual")
+            residuals = model_arima.resid
+            predicted = model_arima.fittedvalues
+
+            # 1. Uji White Noise (Ljung-Box)
+            st.write("### 1. Uji White Noise (Ljung-Box)")
+            ljung_box = acorr_ljungbox(residuals, lags=[10], return_df=True)
+            p_ljung = ljung_box["lb_pvalue"].iloc[-1]
+            st.write(f"- p-value = {p_ljung:.5f}")
+            if p_ljung > alpha:
+                st.write(":white_check_mark: Residual **adalah white noise** (gagal menolak H0).")
+                st.write(f"Karena p-value ({p_ljung:.5f}) > alpha ({alpha}), artinya tidak ada bukti autokorelasi residual, model sudah baik.")
+            else:
+                st.write(":x: Residual **bukan white noise** (menolak H0).")
+                st.write(f"Karena p-value ({p_ljung:.5f}) ≤ alpha ({alpha}), artinya residual mengandung autokorelasi, model mungkin belum optimal.")
+            st.write("---")
+
+            # 2. Uji Normalitas (Kolmogorov-Smirnov)
+            st.write("### 2. Uji Normalitas (Kolmogorov-Smirnov)")
+            ks_stat, ks_p = stats.kstest(residuals, 'norm', args=(0, np.std(residuals)))
+            st.write(f"- Statistik KS = {ks_stat:.3f}")
+            st.write(f"- p-value = {ks_p:.5f}")
+            if ks_p > alpha:
+                st.write(":white_check_mark: Residual **terdistribusi normal** (gagal menolak H0).")
+                st.write(f"Karena p-value ({ks_p:.5f}) > alpha ({alpha}), residual mengikuti distribusi normal, memenuhi asumsi.")
+            else:
+                st.write(":x: Residual **tidak terdistribusi normal** (menolak H0).")
+                st.write(f"Karena p-value ({ks_p:.5f}) ≤ alpha ({alpha}), residual tidak normal, pertimbangkan transformasi.")
+            st.write("---")
+
+            # 3. Uji Heteroskedastisitas (White Test)
+            st.write("### 3. Uji Heteroskedastisitas (White Test)")
+            white_test = het_white(residuals, sm.add_constant(predicted))
+            white_stat, white_p = white_test[0], white_test[1]
+            st.write(f"- Statistik = {white_stat:.3f}")
+            st.write(f"- p-value = {white_p:.5f}")
+            if white_p > alpha:
+                st.write(":white_check_mark: Tidak ada heteroskedastisitas (gagal menolak H0).")
+                st.write(f"Karena p-value ({white_p:.5f}) > alpha ({alpha}), varians residual konstan, asumsi terpenuhi.")
+            else:
+                st.write(":x: Ada heteroskedastisitas (menolak H0).")
+                st.write(f"Karena p-value ({white_p:.5f}) ≤ alpha ({alpha}), varians residual tidak konstan, perlu diperbaiki.")
+            st.write("---")
+
+        # Tombol Prediksi dan Evaluasi
+        if model_arima is not None and st.button("Prediksi dan Evaluasi"):
             start_test = len(train)
             pred_train = model_arima.predict(start=0, end=start_test-1)
             pred_test = model_arima.forecast(steps=len(test))
 
-            # Tampilkan hasil prediksi training
+            # Hasil Prediksi Training
             st.subheader("Hasil Prediksi Training")
             hasil_train = train.copy()
-            hasil_train.columns=["Aktual"]
+            if hasattr(hasil_train, 'columns'):
+                hasil_train.columns = ["Aktual"]
+            else:
+                hasil_train = hasil_train.to_frame(name="Aktual")
             hasil_train["Prediksi"] = pred_train
             st.dataframe(hasil_train)
 
-            # Tampilkan hasil prediksi testing
+            # Hasil Prediksi Testing
             st.subheader("Hasil Prediksi Testing")
-            hasil_test = test.iloc[:, 0].to_frame(name="Aktual")
+            hasil_test = test.copy()
+            if hasattr(hasil_test, 'columns'):
+                hasil_test.columns = ["Aktual"]
+            else:
+                hasil_test = hasil_test.to_frame(name="Aktual")
             hasil_test["Prediksi"] = pred_test
             st.dataframe(hasil_test)
 
-            st.subheader("Evaluasi Model dengan MAPE dan RMSE")
-            mape_train = mean_absolute_percentage_error(train, pred_train) * 100
+            # Evaluasi Model
+            st.subheader("Evaluasi Model dengan MAPE")
+            mape_train = mean_absolute_percentage_error(hasil_train["Aktual"], hasil_train["Prediksi"]) * 100
             mape_test = mean_absolute_percentage_error(hasil_test["Aktual"], hasil_test["Prediksi"]) * 100
-
             st.write(f"MAPE Training: {mape_train:.2f}%")
             st.write(f"MAPE Testing: {mape_test:.2f}%")
-    
+
             # Visualisasi
             st.line_chart(hasil_train, use_container_width=True)
             st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
 
             # Simpan ke session_state
-            st.session_state['model_arima'] = model_arima
             st.session_state['residual_arima'] = model_arima.resid
             st.session_state['pred_train_arima'] = hasil_train
             st.session_state['pred_test_arima'] = hasil_test
