@@ -980,18 +980,18 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 sigma = np.clip(np.array(sigma)[np.newaxis, :], 1e-3, None)
                 return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
             
-            def compute_firing_strength(lag1, lag2, c1, s1, c2, s2):
+            def compute_firing_strength(input, input2, c1, s1, c2, s2):
                 mf1 = gaussian_mf(lag1, c1, s1)
                 mf2 = gaussian_mf(lag2, c2, s2)
                 rules = np.array([mf1[:, i] * mf2[:, j] for i in range(len(c1)) for j in range(len(c2))]).T
                 return rules
                 
-            def anfis_predict(rules, params, lag1, lag2):
+            def anfis_predict(rules, params, input1, input2):
                 n_rules = rules.shape[1]
                 p = params[:n_rules]
                 q = params[n_rules:2 * n_rules]
                 r = params[2 * n_rules:3 * n_rules]
-                rule_outputs = p * lag1[:, None] + q * lag2[:, None] + r
+                rule_outputs = p * input1[:, None] + q * input2[:, None] + r
                 denom = np.sum(rules, axis=1)
                 denom = np.where(denom == 0, 1e-6, denom)
                 output = np.sum(rules * rule_outputs, axis=1) / denom
@@ -1005,68 +1005,112 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 params = ind[8:]  # p, q, r = 4 x 3 = 12
                 rules = compute_firing_strength(input1, input2, c1, s1, c2, s2)
                 pred = anfis_predict(rules, params, input1, input2)
-                return np.mean((target - pred) ** 2)
+                mse = np.mean((target - pred) ** 2)
+                return mse
 
-            def abc_optimize(fitness_func, dim, lb, ub, n_bees=200, n_onlookers=200, limit=150, max_iter=1500):
-                food_sources = np.random.uniform(lb, ub, size=(n_bees, dim))
-                fitness_vals = np.array([fitness_func(ind) for ind in food_sources])
-                trial = np.zeros(n_bees)
+            data_min = np.min(target)
+            data_max = np.max(target)
+            # KMeans initialization with clipping
+            def init_mf_centers_sigma(data, n_mf=2, data_min=None, data_max=None):
+                kmeans = KMeans(n_clusters=n_mf, n_init=10)
+                kmeans.fit(data.reshape(-1, 1))
+                centers = np.sort(kmeans.cluster_centers_.flatten())
 
-                for _ in range(max_iter):
-                    for i in range(n_bees):
-                        k = np.random.choice([j for j in range(n_bees) if j != i])
-                        phi = np.random.uniform(-1, 1, size=dim)
-                        new_sol = food_sources[i] + phi * (food_sources[i] - food_sources[k])
-                        new_sol = np.clip(new_sol, lb, ub)
-                        new_fit = fitness_func(new_sol)
-                        if new_fit < fitness_vals[i]:
-                            food_sources[i] = new_sol
-                            fitness_vals[i] = new_fit
-                            trial[i] = 0
+                if data_min is not None and data_max is not None:
+                    centers = np.clip(centers, data_min, data_max)
+
+                diffs = np.diff(centers)
+                sigma = np.array([diffs[0]] * n_mf) if len(diffs) > 0 else np.full(n_mf, 0.1)
+                sigma = np.clip(sigma, 1e-2, 1.0)
+                return centers, sigma
+
+            # Inisialisasi individu
+            def generate_individual(c1_init, s1_init, c2_init, s2_init, n_rules):
+                anfis_params = np.random.uniform(0, 1, 3 * n_rules)
+                return np.concatenate([c1_init, s1_init, c2_init, s2_init, anfis_params])
+
+            # Pelatihan ANFIS dengan ABC
+            def train_anfis_with_abc(lag10, lag12, target, n_mf=2, n_individuals=150, max_iter=1000, limit=30):
+                c1_init, s1_init = init_mf_centers_sigma(input1, n_mf, data_min, data_max)
+                c2_init, s2_init = init_mf_centers_sigma(input2, n_mf, data_min, data_max)
+
+                n_rules = n_mf ** 2
+                param_size = 8 + 3 * n_rules
+
+                population = np.array([generate_individual(c1_init, s1_init, c2_init, s2_init, n_rules) for _ in range(n_individuals)])
+                fitness_values = np.array([fitness(ind) for ind in population])
+                no_improve = np.zeros(n_individuals)
+                best_fit_history = []
+                
+                for it in range(max_iter):
+                    # Employed bees
+                    for i in range(n_individuals):
+                        d = random.randint(0, param_size - 1)
+                        phi = (random.random() - 0.5) * 0.2
+                        partner = random.choice([j for j in range(n_individuals) if j != i])
+                        mutant = np.copy(population[i])
+                        mutant[d] += phi * (population[i][d] - population[partner][d])
+                        mutant = np.clip(mutant, 0, None)
+                        fit_mutant = fitness(mutant)
+
+                        if fit_mutant < fitness_values[i]:
+                            population[i] = mutant
+                            fitness_values[i] = fit_mutant
+                            no_improve[i] = 0
                         else:
-                            trial[i] += 1
+                            no_improve[i] += 1
 
-                    prob = (1 / (1 + fitness_vals)) / np.sum(1 / (1 + fitness_vals))
-                    for i in range(n_onlookers):
-                        selected = np.random.choice(n_bees, p=prob)
-                        k = np.random.choice([j for j in range(n_bees) if j != selected])
-                        phi = np.random.uniform(-1, 1, size=dim)
-                        new_sol = food_sources[selected] + phi * (food_sources[selected] - food_sources[k])
-                        new_sol = np.clip(new_sol, lb, ub)
-                        new_fit = fitness_func(new_sol)
-                        if new_fit < fitness_vals[selected]:
-                            food_sources[selected] = new_sol
-                            fitness_vals[selected] = new_fit
-                            trial[selected] = 0
+                    # Onlooker bees
+                    prob = np.exp(-fitness_values)
+                    prob /= np.sum(prob)
+                    for _ in range(n_individuals):
+                        i = np.random.choice(n_individuals, p=prob)
+                        d = random.randint(0, param_size - 1)
+                        phi = (random.random() - 0.5) * 0.2
+                        partner = random.choice([j for j in range(n_individuals) if j != i])
+                        mutant = np.copy(population[i])
+                        mutant[d] += phi * (population[i][d] - population[partner][d])
+                        mutant = np.clip(mutant, 0, None)
+                        fit_mutant = fitness(mutant)
+
+                        if fit_mutant < fitness_values[i]:
+                            population[i] = mutant
+                            fitness_values[i] = fit_mutant
+                            no_improve[i] = 0
                         else:
-                            trial[selected] += 1
+                            no_improve[i] += 1
 
-                    for i in range(n_bees):
-                        if trial[i] > limit:
-                            food_sources[i] = np.random.uniform(lb, ub)
-                            fitness_vals[i] = fitness_func(food_sources[i])
-                            trial[i] = 0
+                    # Scout bees
+                    for i in range(n_individuals):
+                        if no_improve[i] > limit:
+                            population[i] = generate_individual(c10_init, s10_init, c12_init, s12_init, n_rules)
+                            fitness_values[i] = fitness(population[i])
+                            no_improve[i] = 0
 
-                best_idx = np.argmin(fitness_vals)
-                return food_sources[best_idx], fitness_vals[best_idx]
+                    best_fit = np.min(fitness_values)
+                    best_fit_history.append(best_fit)
+                    if it % 50 == 0 or it == max_iter - 1:
+                        print(f"Iter {it+1}, Best MSE: {best_fit:.6f}")
 
-            dim = 8 + 12  # 2c + 2s + 2c + 2s + 4p + 4q + 4r
-            lb = np.array([0, 0, 0.01, 0.01, 0, 0, 0.01, 0.01] + [-1] * 12)
-            ub = np.array([1, 1, 1, 1, 1, 1, 1, 1] + [1] * 12)
+                best_idx = np.argmin(fitness_values)
+                best_params = population[best_idx]
+
+                return best_params, best_fit_history
 
             with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony..."):
-                best_params, best_mse = abc_optimize(fitness, dim, lb, ub)
         # Jalankan optimasi ABC (pastikan ini sudah ada datanya sebelum pakai best_params)
-    best_params, best_mse = run_abc_optimization(input1, input2)
+ best_params, fit_history = train_anfis_with_abc(input1, input2, target)
 
-            c1 = best_params[:2]
-            s1 = best_params[2:4]
-            c2 = best_params[4:6]
-            s2 = best_params[6:8]
-           params_anfis_abc = best_params[8:]
-           p = params_anfis_abc[:4]
-           q = params_anfis_abc[4:8]
-           r = params_anfis_abc[8:12]
+# Ekstrak parameter terbaik
+n_rules = 4
+c_lag10_abc = best_params[:2]
+sigma_lag10_abc = best_params[2:4]
+c_lag12_abc = best_params[4:6]
+sigma_lag12_abc = best_params[6:8]
+params_anfis_abc = best_params[8:]
+p_params = params_anfis_abc[:n_rules]
+q_params = params_anfis_abc[n_rules:2 * n_rules]
+r_params = params_anfis_abc[2 * n_rules:3 * n_rules]
 
            st.subheader("Hasil Optimasi ANFIS (ABC)")
            st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
