@@ -1096,9 +1096,10 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
     # === Prediksi menggunakan parameter hasil optimasi ===
             predictions_abc = anfis_predict(rules_abc, consequents, input1, input2)
-
+            
     # Denormalisasi hasil prediksi
-            predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
-
+            predictions_denorm2 = st.session_state['scaler_residual'].inverse_transform(final_pred.reshape(-1, 1)).flatten()
+            st.session_state['predictions_abc'] = final_pred_denorm
+            
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
