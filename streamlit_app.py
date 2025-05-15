@@ -753,7 +753,8 @@ elif menu == "PEMODELAN ARIMA":
 
             # Tampilkan hasil prediksi training
             st.subheader("Hasil Prediksi Training")
-            hasil_train = train.copy().to_frame(name="Aktual")
+            hasil_train = train.copy()
+            hasil_train.columns=["Aktual"]
             hasil_train["Prediksi"] = pred_train
             st.dataframe(hasil_train)
 
