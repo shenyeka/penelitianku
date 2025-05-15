@@ -1224,7 +1224,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         bulan_series = pd.date_range(start=tanggal_mulai, periods=panjang_data, freq='MS')
 
         # Hybrid prediksi
-        hybrid_prediction = arima_series + anfis_full_series
+        arima_anfis_abc = arima_series + anfis_full_series
 
         # Tabel hasil
         df_hasil = pd.DataFrame({
@@ -1232,7 +1232,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             "Residual Aktual": anfis_full_series,
             "Prediksi ARIMA": arima_series,
             "Prediksi ANFIS ABC": anfis_full_series,
-            "Prediksi Hybrid": hybrid_prediction
+            "Prediksi ARIMA-ANFIS ABC": arima_anfis_abc
         })
 
         if target_series is not None:
@@ -1242,7 +1242,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         st.dataframe(df_hasil)
 
         st.write("📈 **Visualisasi Prediksi**")
-        st.line_chart(df_hasil.set_index("Bulan")[["Prediksi ARIMA", "Prediksi ANFIS ABC", "Prediksi Hybrid"]])
+        st.line_chart(df_hasil.set_index("Bulan")[["Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
