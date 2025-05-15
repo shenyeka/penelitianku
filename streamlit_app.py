@@ -1066,7 +1066,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             q = consequents[4:8]
             r = consequents[8:12]
 
-            st.subheader("🧮 Hasil Optimasi ANFIS (ABC)")
+            st.subheader("Hasil Optimasi ANFIS (ABC)")
             st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
             col1, col2 = st.columns(2)
             with col1:
@@ -1088,3 +1088,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 st.markdown("### r")
                 st.write(r)
             st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
+
+            # === Membentuk rules baru dengan hasil optimasi ===
+            st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
+            rules_abc = compute_firing_strength(
+                lag10, lag12,
+                c_lag10_abc, sigma_lag10_abc,
+                c_lag12_abc, sigma_lag12_abc
+            )
+            st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
