@@ -1248,3 +1248,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         if target_series is not None:
             mape = np.mean(np.abs((target_series - arima_anfis_abc) / target_series)) * 100
             st.success(f"📉 MAPE ARIMA-ANFIS (ABC): {mape:.2f}%")
+            
+    except Exception as e:
+        st.error(f"Terjadi kesalahan: {e}")
