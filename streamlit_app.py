@@ -1056,56 +1056,59 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
             with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony..."):
                 best_params, best_mse = abc_optimize(fitness, dim, lb, ub)
-    
+        # Jalankan optimasi ABC (pastikan ini sudah ada datanya sebelum pakai best_params)
+    best_params, best_mse = run_abc_optimization(input1, input2)
+
+            # Pastikan best_params valid
+        if best_params is not None:
             c1 = best_params[:2]
             s1 = best_params[2:4]
             c2 = best_params[4:6]
             s2 = best_params[6:8]
-            params_anfis_abc = best_params[8:]
-            p =params_anfis_abc[:4]
-            q = params_anfis_abc[4:8]
-            r = params_anfis_abc[8:12]
+           params_anfis_abc = best_params[8:]
+           p = params_anfis_abc[:4]
+           q = params_anfis_abc[4:8]
+           r = params_anfis_abc[8:12]
 
-            st.subheader("Hasil Optimasi ANFIS (ABC)")
-            st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("### Parameter Input 1")
-                st.write(f"Center: {c1}")
-                st.write(f"Sigma: {s1}")
-            with col2:
-                st.markdown("### Parameter Input 2")
-                st.write(f"Center: {c2}")
-                st.write(f"Sigma: {s2}")
-            col3, col4, col5 = st.columns(3)
-            with col3:
-                st.markdown("### p")
-                st.write(p)
-            with col4:
-                st.markdown("### q")
-                st.write(q)
-            with col5:
-                st.markdown("### r")
-                st.write(r)
-            st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
+           st.subheader("Hasil Optimasi ANFIS (ABC)")
+           st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
+           col1, col2 = st.columns(2)
+           with col1:
+              st.markdown("### Parameter Input 1")
+              st.write(f"Center: {c1}")
+              st.write(f"Sigma: {s1}")
+           with col2:
+              st.markdown("### Parameter Input 2")
+              st.write(f"Center: {c2}")
+              st.write(f"Sigma: {s2}")
+           col3, col4, col5 = st.columns(3)
+           with col3:
+              st.markdown("### p")
+              st.write(p)
+           with col4:
+              st.markdown("### q")
+              st.write(q)
+           with col5:
+              st.markdown("### r")
+              st.write(r)
+           st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
 
-            # === Membentuk rules baru dengan hasil optimasi ===
-            st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
-            rules_abc = compute_firing_strength(
-                input1, input2,
-                c1, s1,
-                c2, s2
-            )
-            st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
+        # Membentuk rules baru dengan parameter hasil optimasi
+           st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
+           rules_abc = compute_firing_strength(input1, input2, c1, s1, c2, s2)
+           st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
-        # ===  Prediksi menggunakan parameter hasil optimasi ===
-        params_anfis_abc = best_params[8:]
-
-        predictions_abc = anfis_predict(input1, input2, params_anfis_abc)
+        # Prediksi menggunakan parameter hasil optimasi
+           predictions_abc = anfis_predict(input1, input2, params_anfis_abc)
 
         # Denormalisasi hasil prediksi
-        predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
+           predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
 
         # Tampilkan hasil prediksi denormalisasi di Streamlit
-        st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
-        st.write(predictions_denorm2)
+           st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
+           st.write(predictions_denorm2)
+       else:
+           st.error("Optimasi belum dilakukan, best_params tidak tersedia.")
+
+if __name__ == "__main__":
+    main()
