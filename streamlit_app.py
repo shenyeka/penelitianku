@@ -986,12 +986,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 rules = np.array([mf1[:, i] * mf2[:, j] for i in range(len(c1)) for j in range(len(c2))]).T
                 return rules
         
-            def anfis_predict(rules, params, lag1, lag2):
+            def anfis_predict(rules, params, input1, input2):
                 n_rules = rules.shape[1]
                 p = params[:n_rules]
                 q = params[n_rules:2 * n_rules]
                 r = params[2 * n_rules:3 * n_rules]
-                rule_outputs = p * lag1[:, None] + q * lag2[:, None] + r
+                rule_outputs = p * input1[:, None] + q * input2[:, None] + r
                 denom = np.sum(rules, axis=1)
                 denom = np.where(denom == 0, 1e-6, denom)
                 output = np.sum(rules * rule_outputs, axis=1) / denom
@@ -1005,7 +1005,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 params = ind[8:]  # p, q, r = 12 values
                 rules = compute_firing_strength(input1, input2, c1, s1, c2, s2)
                 pred = anfis_predict(rules, params, input1, input2)
-                return np.mean((target - pred) ** 2)
+                mse = np.mean((target - pred) ** 2)
+                return mse
 
             def abc_optimize(fitness_func, dim, lb, ub, n_bees=150, n_onlookers=150, limit=30, max_iter=1000):
                 food_sources = np.random.uniform(lb, ub, size=(n_bees, dim))
