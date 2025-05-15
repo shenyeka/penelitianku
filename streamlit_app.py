@@ -1110,6 +1110,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 ub = np.array([1, 1, 1, 1, 1, 1, 1, 1] + [1] * (3 * n_rules))
 
                 best_params, fit_history = train_anfis_with_abc(input1, input2, target)
+                best_mse = fit_history[-1]
 
             n_rules = 4
             c1 = best_params[:2]
