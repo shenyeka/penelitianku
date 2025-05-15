@@ -1182,24 +1182,35 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
-
+#==========ARIMA-ANFIS ABC====
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
     try:
+        # Pastikan pred_train dan hasil_train sudah ada atau buat jika belum
         if 'hasil_train' not in st.session_state:
-            st.error("Data hasil_train belum tersedia. Jalankan proses ARIMA terlebih dahulu.")
-            st.stop()
+            # Contoh: hasil_train dan pred_train harus sudah tersedia di session_state atau di load ulang
+            if 'hasil_train_raw' in st.session_state and 'pred_train' in st.session_state:
+                hasil_train = st.session_state['hasil_train_raw']  # dataframe asli ARIMA tanpa kolom Prediksi
+                pred_train = st.session_state['pred_train']       # array prediksi ARIMA di train
+                hasil_train["Prediksi"] = pred_train
+                st.session_state['hasil_train'] = hasil_train
+            else:
+                st.error("Data hasil_train atau pred_train belum tersedia. Jalankan proses ARIMA terlebih dahulu.")
+                st.stop()
+        else:
+            hasil_train = st.session_state['hasil_train']
+
         if 'target' not in st.session_state:
             st.error("Data target asli belum tersedia.")
             st.stop()
+
         if 'predictions_abc' not in st.session_state or 'scaler_residual' not in st.session_state:
             st.error("Data prediksi ANFIS (predictions_abc) atau scaler_residual belum tersedia.")
             st.stop()
 
-        hasil_train = st.session_state['hasil_train']  # dataframe hasil ARIMA (dengan kolom Prediksi)
-        target_train = st.session_state['target']      # target asli
-        predictions_abc_scaled = st.session_state['predictions_abc']  # prediksi ANFIS skala normalisasi
+        target_train = st.session_state['target']
+        predictions_abc_scaled = st.session_state['predictions_abc']
         scaler_residual = st.session_state['scaler_residual']
 
         # Denormalisasi prediksi ANFIS
