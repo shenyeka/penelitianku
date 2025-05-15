@@ -1208,21 +1208,20 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         if 'predictions_abc' not in st.session_state:
             st.error("Data prediksi ANFIS (predictions_abc) belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
             st.stop()
-        predictions_denorm2 = st.session_state['predictions_abc']  # panjang 110 misalnya
+        predictions_denorm2 = st.session_state['predictions_abc']  # panjang biasanya 110
 
         # Gabungkan 12 residual awal + prediksi_abc
         anfis_full = list(actual_residual[:12]) + list(predictions_denorm2)
-
-        if len(anfis_full) != len(arima_series):
-            st.error(f"Panjang ANFIS gabungan ({len(anfis_full)}) tidak sama dengan panjang ARIMA ({len(arima_series)}).")
-            st.stop()
-
         anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
-        hybrid_prediction = arima_series + anfis_full_series
 
-        # Ambil bulan & target (jika ada)
-        bulan_series = hasil_train['Bulan'].reset_index(drop=True) if 'Bulan' in hasil_train.columns else pd.Series(range(1, len(arima_series)+1), name='Bulan')
-        target_series = hasil_train['Aktual'].reset_index(drop=True) if 'Aktual' in hasil_train.columns else None
+        # Pastikan panjang sama
+        panjang_data = len(anfis_full_series)
+        arima_series = arima_series[:panjang_data]
+        bulan_series = hasil_train['Bulan'].reset_index(drop=True)[:panjang_data] if 'Bulan' in hasil_train.columns else pd.Series(range(1, panjang_data+1), name='Bulan')
+        target_series = hasil_train['Aktual'].reset_index(drop=True)[:panjang_data] if 'Aktual' in hasil_train.columns else None
+
+        # Hybrid prediksi
+        hybrid_prediction = arima_series + anfis_full_series
 
         # Buat tabel hasil
         df_hasil = pd.DataFrame({
