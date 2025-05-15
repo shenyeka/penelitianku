@@ -770,6 +770,7 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
 
 
+#===========MENU ARIMA-ANFIS========
 elif menu == "PEMODELAN ARIMA-ANFIS":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
 
@@ -875,7 +876,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                         </div>
                     """, unsafe_allow_html=True)
 
-
+    
         # Tombol untuk melatih model ANFIS
         if st.button("Latih Model ANFIS"):
             input1 = st.session_state['input1']
@@ -885,7 +886,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             sigma_input1 = st.session_state['sigma_input1']
             c_input2 = st.session_state['c_input2']
             sigma_input2 = st.session_state['sigma_input2']
-
+            
             def gaussian_membership(x, c, sigma):
                 return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
 
@@ -967,3 +968,123 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             # Tampilkan hasil prediksi
             st.subheader("📈 Hasil Prediksi (Setelah Denormalisasi)")
             st.write(predictions_denorm)
+
+        if st.button("Optimasi ABC Model ANFIS"):
+            input1 = st.session_state['input1']
+            input2 = st.session_state['input2']
+            target = st.session_state['target']
+
+            def gaussian_mf(x, c, sigma):
+                x = x[:, np.newaxis]
+                c = np.array(c)[np.newaxis, :]
+                sigma = np.clip(np.array(sigma)[np.newaxis, :], 1e-3, None)
+                return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+            
+            def compute_firing_strength(lag1, lag2, c1, s1, c2, s2):
+                mf1 = gaussian_mf(lag1, c1, s1)
+                mf2 = gaussian_mf(lag2, c2, s2)
+                rules = np.array([mf1[:, i] * mf2[:, j] for i in range(len(c1)) for j in range(len(c2))]).T
+                return rules
+                
+            def anfis_predict(rules, params, lag1, lag2):
+                n_rules = rules.shape[1]
+                p = params[:n_rules]
+                q = params[n_rules:2 * n_rules]
+                r = params[2 * n_rules:3 * n_rules]
+                rule_outputs = p * lag1[:, None] + q * lag2[:, None] + r
+                denom = np.sum(rules, axis=1)
+                denom = np.where(denom == 0, 1e-6, denom)
+                output = np.sum(rules * rule_outputs, axis=1) / denom
+                return output
+
+            def fitness(ind):
+                c1 = ind[:2]
+                s1 = ind[2:4]
+                c2 = ind[4:6]
+                s2 = ind[6:8]
+                params = ind[8:]  # p, q, r = 4 x 3 = 12
+                rules = compute_firing_strength(input1, input2, c1, s1, c2, s2)
+                pred = anfis_predict(rules, params, input1, input2)
+                return np.mean((target - pred) ** 2)
+
+            def abc_optimize(fitness_func, dim, lb, ub, n_bees=200, n_onlookers=200, limit=150, max_iter=1500):
+                food_sources = np.random.uniform(lb, ub, size=(n_bees, dim))
+                fitness_vals = np.array([fitness_func(ind) for ind in food_sources])
+                trial = np.zeros(n_bees)
+
+                for _ in range(max_iter):
+                    for i in range(n_bees):
+                        k = np.random.choice([j for j in range(n_bees) if j != i])
+                        phi = np.random.uniform(-1, 1, size=dim)
+                        new_sol = food_sources[i] + phi * (food_sources[i] - food_sources[k])
+                        new_sol = np.clip(new_sol, lb, ub)
+                        new_fit = fitness_func(new_sol)
+                        if new_fit < fitness_vals[i]:
+                            food_sources[i] = new_sol
+                            fitness_vals[i] = new_fit
+                            trial[i] = 0
+                        else:
+                            trial[i] += 1
+
+                    prob = (1 / (1 + fitness_vals)) / np.sum(1 / (1 + fitness_vals))
+                    for i in range(n_onlookers):
+                        selected = np.random.choice(n_bees, p=prob)
+                        k = np.random.choice([j for j in range(n_bees) if j != selected])
+                        phi = np.random.uniform(-1, 1, size=dim)
+                        new_sol = food_sources[selected] + phi * (food_sources[selected] - food_sources[k])
+                        new_sol = np.clip(new_sol, lb, ub)
+                        new_fit = fitness_func(new_sol)
+                        if new_fit < fitness_vals[selected]:
+                            food_sources[selected] = new_sol
+                            fitness_vals[selected] = new_fit
+                            trial[selected] = 0
+                        else:
+                            trial[selected] += 1
+
+                    for i in range(n_bees):
+                        if trial[i] > limit:
+                            food_sources[i] = np.random.uniform(lb, ub)
+                            fitness_vals[i] = fitness_func(food_sources[i])
+                            trial[i] = 0
+
+                best_idx = np.argmin(fitness_vals)
+                return food_sources[best_idx], fitness_vals[best_idx]
+
+            dim = 8 + 12  # 2c + 2s + 2c + 2s + 4p + 4q + 4r
+            lb = np.array([0, 0, 0.01, 0.01, 0, 0, 0.01, 0.01] + [-1] * 12)
+            ub = np.array([1, 1, 1, 1, 1, 1, 1, 1] + [1] * 12)
+
+            with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony..."):
+                best_params, best_mse = abc_optimize(fitness, dim, lb, ub)
+    
+            c1 = best_params[:2]
+            s1 = best_params[2:4]
+            c2 = best_params[4:6]
+            s2 = best_params[6:8]
+            consequents = best_params[8:]
+            p = consequents[:4]
+            q = consequents[4:8]
+            r = consequents[8:12]
+
+            st.subheader("🧮 Hasil Optimasi ANFIS (ABC)")
+            st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("### Parameter Input 1")
+                st.write(f"Center: {c1}")
+                st.write(f"Sigma: {s1}")
+            with col2:
+                st.markdown("### Parameter Input 2")
+                st.write(f"Center: {c2}")
+                st.write(f"Sigma: {s2}")
+            col3, col4, col5 = st.columns(3)
+            with col3:
+                st.markdown("### p")
+                st.write(p)
+            with col4:
+                st.markdown("### q")
+                st.write(q)
+            with col5:
+                st.markdown("### r")
+                st.write(r)
+            st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
