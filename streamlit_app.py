@@ -1103,7 +1103,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
         # Anda perlu definisikan params_anfis_abc yang isinya parameter lengkap untuk fungsi anfis_predict
         params_anfis_abc = best_params
 
-        predictions_abc = anfis_predict(input1, input12, params_anfis_abc)
+        predictions_abc = anfis_predict(input1, input2, params_anfis_abc)
 
         # Denormalisasi hasil prediksi
         predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
