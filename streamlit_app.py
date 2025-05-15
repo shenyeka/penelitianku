@@ -1208,22 +1208,25 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         if 'predictions_abc' not in st.session_state:
             st.error("Data prediksi ANFIS (predictions_abc) belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
             st.stop()
-        predictions_denorm2 = st.session_state['predictions_abc']  # panjang biasanya 110
+        predictions_denorm2 = st.session_state['predictions_abc']  # biasanya panjang 110
 
         # Gabungkan 12 residual awal + prediksi_abc
         anfis_full = list(actual_residual[:12]) + list(predictions_denorm2)
         anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
 
-        # Pastikan panjang sama
+        # Panjang data harus disamakan
         panjang_data = len(anfis_full_series)
         arima_series = arima_series[:panjang_data]
-        bulan_series = hasil_train['Bulan'].reset_index(drop=True)[:panjang_data] if 'Bulan' in hasil_train.columns else pd.Series(range(1, panjang_data+1), name='Bulan')
         target_series = hasil_train['Aktual'].reset_index(drop=True)[:panjang_data] if 'Aktual' in hasil_train.columns else None
+
+        # Buat tanggal bulanan dari Jan 2011 sampai Feb 2022
+        tanggal_mulai = pd.to_datetime("2011-01-01")
+        bulan_series = pd.date_range(start=tanggal_mulai, periods=panjang_data, freq='MS')
 
         # Hybrid prediksi
         hybrid_prediction = arima_series + anfis_full_series
 
-        # Buat tabel hasil
+        # Tabel hasil
         df_hasil = pd.DataFrame({
             "Bulan": bulan_series,
             "Residual Aktual": anfis_full_series,
