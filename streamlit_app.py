@@ -1206,14 +1206,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         predictions_denorm2 = st.session_state['predictions_abc']  
         scaler_residual = st.session_state['scaler_residual']
 
-        # Tampilkan hasil prediksi ARIMA (Train)
-        st.write("Hasil Prediksi ARIMA (Train):")
-        st.dataframe(hasil_train)
-
-        # Tampilkan hasil prediksi ANFIS (Optimasi ABC)
-        st.write("Hasil Prediksi ANFIS (Optimasi ABC):")
-        st.dataframe(predictions_denorm2)
-
         # Gabungkan: 12 baris pertama dari target + prediksi ANFIS (sisanya)
         anfis_full = list(target[:12]) + list(predictions_denorm2)
 
@@ -1221,19 +1213,32 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         if len(anfis_full) != len(hasil_train):
             st.error(f"Panjang hasil ANFIS gabungan ({len(anfis_full)}) tidak sama dengan ARIMA ({len(hasil_train)}).")
         else:
+            # Buat series
             anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
             arima_series = hasil_train["Prediksi"].reset_index(drop=True)
-
+            aktual_series = pd.Series(target[:len(arima_series)]).reset_index(drop=True)
             hybrid_prediction = arima_series + anfis_full_series
 
-            st.write("Hasil Prediksi Gabungan ARIMA + ANFIS (Optimasi ABC):")
-            st.dataframe(hybrid_prediction)
+            # Ambil kolom bulan jika ada
+            if 'Bulan' in hasil_train.columns:
+                bulan_series = hasil_train['Bulan'].reset_index(drop=True)
+            else:
+                bulan_series = pd.Series(range(1, len(arima_series)+1), name="Bulan")
 
-            st.line_chart({
-                "ARIMA": arima_series,
-                "ANFIS ABC (Gabungan)": anfis_full_series,
-                "Hybrid ARIMA+ANFIS ABC": hybrid_prediction
+            # Gabungkan semua ke dalam DataFrame
+            df_hasil = pd.DataFrame({
+                "Bulan": bulan_series,
+                "Aktual": aktual_series,
+                "Prediksi ARIMA": arima_series,
+                "Prediksi ANFIS ABC": anfis_full_series,
+                "Prediksi Hybrid": hybrid_prediction
             })
+
+            st.write("📊 **Tabel Hasil Prediksi Gabungan**")
+            st.dataframe(df_hasil)
+
+            st.write("📈 **Visualisasi Prediksi**")
+            st.line_chart(df_hasil.set_index("Bulan"))
 
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
