@@ -1099,7 +1099,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
         # ===  Prediksi menggunakan parameter hasil optimasi ===
-
+        params_anfis_abc = best_params[8:]
 
         predictions_abc = anfis_predict(input1, input2, params_anfis_abc)
 
