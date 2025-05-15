@@ -1182,7 +1182,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
-elif selected_menu == "PEMODELAN ARIMA-ANFIS ABC":
+elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
     # Simpan hasil prediksi ARIMA (train)
