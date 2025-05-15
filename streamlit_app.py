@@ -1183,27 +1183,51 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.write(predictions_denorm2)
 
 
-#==========ARIMA-ANFIS ABC========
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
     try:
+        # Cek dan ambil hasil_train dan pred_train dari session_state
+        if 'pred_train_arima' not in st.session_state:
+            st.error("Data hasil_train (pred_train_arima) belum tersedia. Jalankan proses ARIMA terlebih dahulu.")
+            st.stop()
+        hasil_train = st.session_state['pred_train_arima']
+
+        # Cek dan ambil predictions_abc dan scaler_residual dari session_state
+        if 'predictions_abc' not in st.session_state or 'scaler_residual' not in st.session_state:
+            st.error("Data prediksi ANFIS (predictions_abc) atau scaler_residual belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
+            st.stop()
+
+        # Lakukan inverse transform ulang pada predictions_abc (jika prediksi masih dalam skala normalisasi)
+        # Jika di session_state sudah tersimpan predictions_denorm2, bisa langsung pakai juga
+        predictions_abc_scaled = st.session_state.get('predictions_abc_scaled', None)  # jika kamu simpan prediksi belum denorm
+        scaler_residual = st.session_state['scaler_residual']
+
+        # Kalau prediksi ANFIS disimpan dalam bentuk yang sudah denorm di session_state
+        predictions_denorm2 = st.session_state['predictions_abc']  
+        # Jika kamu perlu denorm lagi dari scaled data, bisa pakai:
+        # predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc_scaled.reshape(-1,1)).flatten()
+
+        # Tampilkan hasil prediksi ARIMA (Train)
         st.write("Hasil Prediksi ARIMA (Train):")
         st.dataframe(hasil_train)
 
+        # Tampilkan hasil prediksi ANFIS (Optimasi ABC)
         st.write("Hasil Prediksi ANFIS (Optimasi ABC):")
         st.dataframe(predictions_denorm2)
 
-        # Gabungkan 12 baris pertama ARIMA + 122 baris ANFIS (asumsi)
+        # Gabungkan: 12 baris pertama dari ARIMA + prediksi ANFIS (122 baris)
         anfis_full = list(hasil_train["Prediksi"][:12]) + list(predictions_denorm2)
         
+        # Pastikan panjang hasil gabungan sama dengan data asli
         if len(anfis_full) != len(hasil_train):
-            st.error(f"Panjang hasil gabungan ({len(anfis_full)}) tidak sama dengan data ARIMA ({len(hasil_train)}).")
+            st.error(f"Panjang hasil ANFIS gabungan ({len(anfis_full)}) tidak sama dengan ARIMA ({len(hasil_train)}).")
         else:
+            # Buat pandas Series untuk kemudahan operasi
             anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
             arima_series = hasil_train["Prediksi"].reset_index(drop=True)
 
-            # Jumlahkan elemen per elemen
+            # Penjumlahan element-wise
             hybrid_prediction = arima_series + anfis_full_series
 
             st.write("Hasil Prediksi Gabungan ARIMA + ANFIS (Optimasi ABC):")
@@ -1216,5 +1240,5 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
                 "Hybrid ARIMA+ANFIS ABC": hybrid_prediction
             })
 
-    except NameError:
-        st.error("Variabel `hasil_train` atau `predictions_denorm2` belum tersedia. Jalankan proses sebelumnya terlebih dahulu.")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan: {e}")
