@@ -883,7 +883,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.session_state['data_anfis_raw'] = data_anfis
 
         # Tombol normalisasi residual
-        if st.button("Lanjutkan ke Normalisasi Residual"):
+        if st.button("Normalisasi Residual"):
             if 'data_anfis_raw' in st.session_state:
                 data_anfis = st.session_state['data_anfis_raw']
                 scaler_residual = MinMaxScaler()
@@ -1067,7 +1067,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi (Setelah Denormalisasi)")
             st.write(predictions_denorm)
 
-        if st.button("Optimasi ABC Model ANFIS"):
+        if st.button("Optimasi ABC"):
             import random
             from sklearn.cluster import KMeans
 
