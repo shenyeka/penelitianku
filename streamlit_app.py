@@ -873,7 +873,7 @@ elif menu == "PEMODELAN ANFIS ABC":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
 
     if 'model_arima' in st.session_state:
-        st.subheader("Input ANFIS")
+        st.subheader("Pemodelan ANFIS dengan residual ARIMA")
 
         # Tombol untuk menampilkan residual ARIMA
         if st.button("Lihat Residual ARIMA"):
