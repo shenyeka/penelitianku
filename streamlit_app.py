@@ -1059,8 +1059,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
         # Jalankan optimasi ABC (pastikan ini sudah ada datanya sebelum pakai best_params)
     best_params, best_mse = run_abc_optimization(input1, input2)
 
-            # Pastikan best_params valid
-        if best_params is not None:
             c1 = best_params[:2]
             s1 = best_params[2:4]
             c2 = best_params[4:6]
