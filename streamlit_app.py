@@ -1185,11 +1185,15 @@ elif menu == "PEMODELAN ANFIS ABC":
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
-    # DEFINISI ULANG TARGET dari session_state
-    if 'target' not in st.session_state:
-        st.error("Data target belum tersedia. Pastikan data target sudah disiapkan sebelumnya.")
+    # Cek apakah target dan scaler_residual tersedia
+    if 'target' not in st.session_state or 'scaler_residual' not in st.session_state:
+        st.error("Data target atau scaler_residual belum tersedia. Pastikan sudah melalui proses sebelumnya.")
         st.stop()
+
+    # Denormalisasi target
     target = st.session_state['target']
+    scaler_residual = st.session_state['scaler_residual']
+    actual_denorm = scaler_residual.inverse_transform(target.reshape(-1, 1)).flatten()
 
     try:
         # Cek dan ambil hasil_train dari session_state
@@ -1198,16 +1202,15 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             st.stop()
         hasil_train = st.session_state['pred_train_arima']
 
-        # Cek dan ambil predictions_abc dan scaler_residual dari session_state
-        if 'predictions_abc' not in st.session_state or 'scaler_residual' not in st.session_state:
-            st.error("Data prediksi ANFIS (predictions_abc) atau scaler_residual belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
+        # Cek dan ambil predictions_abc dari session_state
+        if 'predictions_abc' not in st.session_state:
+            st.error("Data prediksi ANFIS (predictions_abc) belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
             st.stop()
 
-        predictions_denorm2 = st.session_state['predictions_abc']  
-        scaler_residual = st.session_state['scaler_residual']
+        predictions_denorm2 = st.session_state['predictions_abc']
 
-        # Gabungkan: 12 baris pertama dari target + prediksi ANFIS (sisanya)
-        anfis_full = list(target[:12]) + list(predictions_denorm2)
+        # Gabungkan: 12 baris pertama dari actual_denorm + prediksi ANFIS (sisanya)
+        anfis_full = list(actual_denorm[:12]) + list(predictions_denorm2)
 
         # Pastikan panjang gabungan sama dengan hasil_train
         if len(anfis_full) != len(hasil_train):
@@ -1216,16 +1219,16 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             # Buat series
             anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
             arima_series = hasil_train["Prediksi"].reset_index(drop=True)
-            aktual_series = pd.Series(target[:len(arima_series)]).reset_index(drop=True)
+            aktual_series = pd.Series(actual_denorm[:len(arima_series)]).reset_index(drop=True)
             hybrid_prediction = arima_series + anfis_full_series
 
-            # Ambil kolom bulan jika ada
+            # Ambil kolom bulan jika tersedia
             if 'Bulan' in hasil_train.columns:
                 bulan_series = hasil_train['Bulan'].reset_index(drop=True)
             else:
                 bulan_series = pd.Series(range(1, len(arima_series)+1), name="Bulan")
 
-            # Gabungkan semua ke dalam DataFrame
+            # Gabungkan ke DataFrame
             df_hasil = pd.DataFrame({
                 "Bulan": bulan_series,
                 "Aktual": aktual_series,
