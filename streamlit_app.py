@@ -979,13 +979,13 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 c = np.array(c)[np.newaxis, :]
                 sigma = np.clip(np.array(sigma)[np.newaxis, :], 1e-3, None)
                 return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
-    
-            def compute_firing_strength(lag1, lag2, c1, s1, c2, s2):
-                mf1 = gaussian_mf(lag1, c1, s1)
-                mf2 = gaussian_mf(lag2, c2, s2)
+
+            def compute_firing_strength(input1, input2, c1, s1, c2, s2):
+                mf1 = gaussian_mf(input1, c1, s1)
+                mf2 = gaussian_mf(input2, c2, s2)
                 rules = np.array([mf1[:, i] * mf2[:, j] for i in range(len(c1)) for j in range(len(c2))]).T
                 return rules
-        
+
             def anfis_predict(rules, params, input1, input2):
                 n_rules = rules.shape[1]
                 p = params[:n_rules]
@@ -1007,6 +1007,10 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 pred = anfis_predict(rules, params, input1, input2)
                 mse = np.mean((target - pred) ** 2)
                 return mse
+
+            def generate_individual(c1_init, s1_init, c2_init, s2_init, n_rules):
+                anfis_params = np.random.uniform(0, 1, 3 * n_rules)
+                return np.concatenate([c1_init, s1_init, c2_init, s2_init, anfis_params])
 
             def abc_optimize(fitness_func, dim, lb, ub, n_bees=150, n_onlookers=150, limit=30, max_iter=1000):
                 food_sources = np.random.uniform(lb, ub, size=(n_bees, dim))
@@ -1104,4 +1108,3 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
-    
