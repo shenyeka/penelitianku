@@ -1185,59 +1185,48 @@ elif menu == "PEMODELAN ANFIS ABC":
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
-    # Pastikan data sudah ada
     if 'data_anfis' not in st.session_state or 'scaler_residual' not in st.session_state:
         st.error("Data residual atau scaler_residual belum tersedia. Pastikan residual telah disiapkan sebelumnya.")
         st.stop()
 
     try:
-        # Ambil data residual asli dan scaler
         data_anfis = st.session_state['data_anfis']
         scaler_residual = st.session_state['scaler_residual']
 
-        # Denormalisasi residual asli
+        # Denormalisasi residual
         residual_norm = data_anfis['residual'].values.reshape(-1, 1)
         actual_residual = scaler_residual.inverse_transform(residual_norm).flatten()
 
-        # Ambil prediksi ARIMA hasil train
+        # Ambil prediksi ARIMA
         if 'pred_train_arima' not in st.session_state:
             st.error("Data hasil_train (pred_train_arima) belum tersedia. Jalankan proses ARIMA terlebih dahulu.")
             st.stop()
         hasil_train = st.session_state['pred_train_arima']
         arima_series = hasil_train["Prediksi"].reset_index(drop=True)
 
-        # Ambil prediksi residual ANFIS (dalam bentuk normalisasi), lalu denormalisasi
+        # Ambil prediksi ANFIS (ABC)
         if 'predictions_abc' not in st.session_state:
             st.error("Data prediksi ANFIS (predictions_abc) belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
             st.stop()
-        predictions_norm = st.session_state['predictions_abc']
-        # Pastikan bentuk array 2D untuk inverse_transform
-        if len(predictions_norm.shape) == 1:
-            predictions_norm = predictions_norm.reshape(-1, 1)
-        predictions_denorm = scaler_residual.inverse_transform(predictions_norm).flatten()
+        predictions_denorm2 = st.session_state['predictions_abc']  # biasanya panjang 110
 
-        # Gabungkan 12 residual asli awal + prediksi residual ANFIS
-        anfis_full = list(actual_residual[:12]) + list(predictions_denorm)
+        # Gabungkan 12 residual awal + prediksi_abc
+        anfis_full = list(actual_residual[:12]) + list(predictions_denorm2)
         anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
 
-        # Samakan panjang data
+        # Panjang data harus disamakan
         panjang_data = len(anfis_full_series)
         arima_series = arima_series[:panjang_data]
+        target_series = hasil_train['Aktual'].reset_index(drop=True)[:panjang_data] if 'Aktual' in hasil_train.columns else None
 
-        # Ambil data aktual jika tersedia
-        if 'Aktual' in hasil_train.columns:
-            target_series = hasil_train['Aktual'].reset_index(drop=True)[:panjang_data]
-        else:
-            target_series = None
-
-        # Buat tanggal bulanan dari Jan 2011 sesuai panjang data
+        # Buat tanggal bulanan dari Jan 2011 sampai Feb 2022
         tanggal_mulai = pd.to_datetime("2011-01-01")
         bulan_series = pd.date_range(start=tanggal_mulai, periods=panjang_data, freq='MS')
 
-        # Hitung prediksi hybrid = prediksi ARIMA + prediksi residual ANFIS
+        # Hybrid prediksi
         arima_anfis_abc = arima_series + anfis_full_series
 
-        # Buat DataFrame hasil
+        # Tabel hasil
         df_hasil = pd.DataFrame({
             "Bulan": bulan_series,
             "Residual Aktual": anfis_full_series,
@@ -1249,18 +1238,16 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         if target_series is not None:
             df_hasil["Aktual"] = target_series
 
-        # Tampilkan tabel
         st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC)**")
         st.dataframe(df_hasil)
 
-        # Tampilkan grafik
         st.write("📈 **Visualisasi Prediksi**")
         st.line_chart(df_hasil.set_index("Bulan")[["Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
-        # Hitung MAPE jika data aktual tersedia
+        # Hitung MAPE jika tersedia data aktual
         if target_series is not None:
             mape = np.mean(np.abs((target_series - arima_anfis_abc) / target_series)) * 100
             st.success(f"📉 MAPE ARIMA-ANFIS (ABC): {mape:.2f}%")
-
+            
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
