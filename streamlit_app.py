@@ -772,8 +772,8 @@ elif menu == "PEMODELAN ARIMA":
             st.write(f"MAPE Testing: {mape_test:.2f}%")
     
             # Visualisasi
-            st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
             st.line_chart(hasil_train, use_container_width=True)
+            st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
 
             # Simpan ke session_state
             st.session_state['model_arima'] = model_arima
