@@ -343,8 +343,9 @@ if menu == "HOME":
     st.markdown("""
     <div class='header-container pulse'>
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-            <span style="font-size: 24px; font-weight: bold; color: white;">
-                PREDIKSI PERMINTAAN DARAH<br>ARIMA-ANFIS OPTIMASI ABC
+            <span style="font-size: 22px; font-weight: bold; color: white; text-align: center;">
+                Prediksi Data Time Series Univariat<br>
+                Menggunakan Model ARIMA-ANFIS dengan Optimasi ABC
             </span>
         </div>
     </div>
@@ -360,9 +361,9 @@ if menu == "HOME":
             </svg>
         </div>
         <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
-        Sistem ini menggunakan metode <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> dengan optimasi 
-        <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony</span> (ABC) untuk memprediksi permintaan darah 
-        pada Unit Transfusi Darah (UTD).
+        Sistem ini menggunakan metode <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> 
+        dengan optimasi <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony (ABC)</span> 
+        untuk memprediksi data time series univariat.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -373,14 +374,19 @@ if menu == "HOME":
         <h3 style="color: #c04070; text-align: center; font-weight: bold;">📘 Panduan Penggunaan Sistem</h3>
         <ul style="font-size: 1.05rem; line-height: 1.8; color: #5a2a3a;">
             <li><strong>HOME</strong>: Halaman utama yang menjelaskan tujuan dan metode prediksi sistem.</li>
-            <li><strong>DATA PREPROCESSING</strong>: Lakukan pembersihan dan normalisasi data untuk memastikan kualitas input model.</li>
-            <li><strong>STASIONERITAS DATA</strong>: Uji stasioneritas data menggunakan metode statistik sebelum diterapkan pada ARIMA.</li>
-            <li><strong>DATA SPLITTING</strong>: Pisahkan data menjadi data latih dan data uji agar proses prediksi lebih akurat.</li>
-            <li><strong>PREDIKSI</strong>: Lakukan prediksi permintaan darah menggunakan model ARIMA-ANFIS dengan optimasi ABC.</li>
+            <li><strong>INPUT DATA</strong>: Unggah data time series yang akan digunakan dalam pemodelan.</li>
+            <li><strong>DATA PREPROCESSING</strong>: Lakukan pembersihan data.</li>
+            <li><strong>STASIONERITAS DATA</strong>: Uji stasioneritas sebelum model ARIMA dibentuk.</li>
+            <li><strong>DATA SPLITTING</strong>: Pisahkan data menjadi latih dan uji.</li>
+            <li><strong>PEMODELAN ARIMA</strong>: Lakukan pemodelan ARIMA terhadap data.</li>
+            <li><strong>PEMODELAN ANFIS ABC</strong>: Bangun model ANFIS dan optimalkan dengan algoritma ABC.</li>
+            <li><strong>PEMODELAN ARIMA-ANFIS ABC</strong>: Gabungkan model ARIMA dan ANFIS-ABC untuk prediksi.</li>
+            <li><strong>PREDIKSI</strong>: Lakukan prediksi berdasarkan model yang telah dibentuk.</li>
         </ul>
-        <p style="text-align: center; color: #5a2a3a;"><em>Pastikan untuk mengikuti alur dari atas ke bawah agar proses prediksi berjalan optimal.</em></p>
+        <p style="text-align: center; color: #5a2a3a;"><em>Ikuti urutan menu dari atas ke bawah untuk hasil prediksi yang optimal.</em></p>
     </div>
     """, unsafe_allow_html=True)
+
     
 # ==================== INPUT DATA ====================
 elif menu == "INPUT DATA":
