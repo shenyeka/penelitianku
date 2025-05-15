@@ -1184,7 +1184,7 @@ elif menu == "PEMODELAN ANFIS ABC":
 
 
 #==========ARIMA-ANFIS ABC========
-elif selected_menu == "PEMODELAN ARIMA-ANFIS ABC":
+elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
     try:
