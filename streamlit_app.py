@@ -1185,18 +1185,18 @@ elif menu == "PEMODELAN ANFIS ABC":
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
-    # Cek ketersediaan semua data
+    # Cek ketersediaan semua data penting
     if 'data_anfis' not in st.session_state or 'scaler_residual' not in st.session_state:
         st.error("Data residual atau scaler_residual belum tersedia. Pastikan residual telah disiapkan sebelumnya.")
         st.stop()
 
-    data_anfis = st.session_state['data_anfis']
-    scaler_residual = st.session_state['scaler_residual']
-
     try:
+        data_anfis = st.session_state['data_anfis']
+        scaler_residual = st.session_state['scaler_residual']
+
         # Denormalisasi residual
         residual_norm = data_anfis['residual'].values.reshape(-1, 1)
-        target_residual = scaler_residual.inverse_transform(residual_norm).flatten()
+        actual_residual = scaler_residual.inverse_transform(residual_norm).flatten()
 
         # Ambil prediksi ARIMA
         if 'pred_train_arima' not in st.session_state:
@@ -1211,22 +1211,20 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             st.stop()
         predictions_denorm2 = st.session_state['predictions_abc']
 
-        # Gabungkan: 12 awal residual aktual + prediksi ANFIS (122)
-        anfis_full = list(target_residual[:12]) + list(predictions_denorm2)
+        # Gabungkan 12 residual aktual + prediksi ANFIS
+        anfis_full = list(actual_residual[:12]) + list(predictions_denorm2)
 
-        # Cek kesesuaian panjang
+        # Cek panjang data
         if len(anfis_full) != len(arima_series):
             st.error(f"Panjang ANFIS ({len(anfis_full)}) tidak sama dengan ARIMA ({len(arima_series)}).")
             st.stop()
 
-        # Hybrid = ARIMA + ANFIS
         anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
         hybrid_prediction = arima_series + anfis_full_series
 
-        # Bulan
-        bulan_series = hasil_train['Bulan'].reset_index(drop=True) if 'Bulan' in hasil_train.columns else pd.Series(range(1, len(arima_series) + 1), name="Bulan")
+        bulan_series = hasil_train['Bulan'].reset_index(drop=True) if 'Bulan' in hasil_train.columns else pd.Series(range(1, len(arima_series)+1), name='Bulan')
 
-        # DataFrame hasil
+        # Buat tabel hasil
         df_hasil = pd.DataFrame({
             "Bulan": bulan_series,
             "Residual Aktual": actual_residual[:len(arima_series)],
@@ -1235,6 +1233,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             "Prediksi Hybrid": hybrid_prediction
         })
 
+        # Tampilkan hasil
         st.write("📊 **Tabel Hasil Prediksi Gabungan**")
         st.dataframe(df_hasil)
 
