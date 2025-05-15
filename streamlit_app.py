@@ -1092,9 +1092,9 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             # === Membentuk rules baru dengan hasil optimasi ===
             st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
             rules_abc = compute_firing_strength(
-                lag10, lag12,
-                c_lag10_abc, sigma_lag10_abc,
-                c_lag12_abc, sigma_lag12_abc
+                input1, input2,
+                c_input1_abc, sigma_input1_abc,
+                c_input2_abc, sigma_input2_abc
             )
             st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
@@ -1103,7 +1103,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
         # Anda perlu definisikan params_anfis_abc yang isinya parameter lengkap untuk fungsi anfis_predict
         params_anfis_abc = best_params
 
-        predictions_abc = anfis_predict(lag10, lag12, params_anfis_abc)
+        predictions_abc = anfis_predict(input1, input12, params_anfis_abc)
 
         # Denormalisasi hasil prediksi
         predictions_denorm2 = scaler_residual.inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
