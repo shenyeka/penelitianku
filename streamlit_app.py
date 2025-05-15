@@ -1047,7 +1047,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                     for i in range(n_individuals):
                         d = random.randint(0, param_size - 1)
                         phi = (random.random() - 0.5) * 0.2
-                         partner = random.choice([j for j in range(n_individuals) if j != i])
+                        partner = random.choice([j for j in range(n_individuals) if j != i])  # <<< PERBAIKAN DI SINI
                         mutant = np.copy(population[i])
                         mutant[d] += phi * (population[i][d] - population[partner][d])
                         mutant = np.clip(mutant, 0, None)
@@ -1059,6 +1059,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                             no_improve[i] = 0
                         else:
                             no_improve[i] += 1
+
 
                     # Onlooker bees
                     prob = np.exp(-fitness_values)
