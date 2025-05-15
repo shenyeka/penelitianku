@@ -751,23 +751,34 @@ elif menu == "PEMODELAN ARIMA":
             pred_train = model_arima.predict(start=0, end=start_test-1)
             pred_test = model_arima.forecast(steps=len(test))
 
-            # Tambahkan prediksi ke data
-            test['prediksi'] = pred_test
+            # Tampilkan hasil prediksi training
+            st.subheader("Hasil Prediksi Training")
+            hasil_train = train.copy().to_frame(name="Aktual")
+            hasil_train["Prediksi"] = pred_train
+            st.dataframe(hasil_train)
 
-            st.subheader("4. Evaluasi Model dengan MAPE dan RMSE")
+            # Tampilkan hasil prediksi testing
+            st.subheader("Hasil Prediksi Testing")
+            hasil_test = test.copy()
+            hasil_test.columns = ["Aktual"]  # jika test hanya 1 kolom
+            hasil_test["Prediksi"] = pred_test
+            st.dataframe(hasil_test)
 
-            # Hitung MAPE dan RMSE untuk training dan testing
+            st.subheader("Evaluasi Model dengan MAPE dan RMSE")
             mape_train = mean_absolute_percentage_error(train, pred_train) * 100
-            mape_test = mean_absolute_percentage_error(test.iloc[:, 0], test['prediksi']) * 100
+            mape_test = mean_absolute_percentage_error(hasil_test["Aktual"], hasil_test["Prediksi"]) * 100
 
             st.write(f"MAPE Training: {mape_train:.2f}%")
             st.write(f"MAPE Testing: {mape_test:.2f}%")
+    
+            # Visualisasi
+            st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
 
-            st.line_chart({"Data Aktual": test.iloc[:, 0], "Prediksi ARIMA": test['prediksi']})
-
-            # Simpan model & residual ke session_state
+            # Simpan ke session_state
             st.session_state['model_arima'] = model_arima
             st.session_state['residual_arima'] = model_arima.resid
+            st.session_state['pred_train_arima'] = hasil_train
+            st.session_state['pred_test_arima'] = hasil_test
 
 
 #===========MENU ARIMA-ANFIS========
