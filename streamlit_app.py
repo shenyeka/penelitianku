@@ -1029,10 +1029,10 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 return np.concatenate([c1_init, s1_init, c2_init, s2_init, anfis_params])
 
          # Pelatihan ANFIS dengan ABC
-            def train_anfis_with_abc(lag10, lag12, target, n_mf=2, n_individuals=150, max_iter=1000, limit=30):
+            def train_anfis_with_abc(input1, input2, target, n_mf=2, n_individuals=150, max_iter=1000, limit=30):
 
-                c10_init, s10_init = init_mf_centers_sigma(lag10, n_mf, data_min, data_max)
-                c12_init, s12_init = init_mf_centers_sigma(lag12, n_mf, data_min, data_max)
+                c10_init, s10_init = init_mf_centers_sigma(input1, n_mf, data_min, data_max)
+                c12_init, s12_init = init_mf_centers_sigma(input2, n_mf, data_min, data_max)
 
                 n_rules = n_mf ** 2
                 param_size = 8 + 3 * n_rules
@@ -1109,7 +1109,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
                 lb = np.array([0, 0, 0.01, 0.01, 0, 0, 0.01, 0.01] + [-1] * (3 * n_rules))
                 ub = np.array([1, 1, 1, 1, 1, 1, 1, 1] + [1] * (3 * n_rules))
 
-                best_params, fit_history = train_anfis_with_abc(lag10, lag12, target)
+                best_params, fit_history = train_anfis_with_abc(input1, input2, target)
 
             n_rules = 4
             c1 = best_params[:2]
