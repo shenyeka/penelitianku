@@ -760,7 +760,7 @@ elif menu == "PEMODELAN ARIMA":
         alpha = 0.05  # tingkat signifikansi
 
         # Tombol uji signifikansi koefisien (uji t)
-        if model_arima is not None and st.button("Uji Signifikansi Koefisien (uji t)"):
+        if model_arima is not None and st.button("Uji Signifikansi Koefisien"):
             st.subheader("Uji Signifikansi Koefisien (uji t)")
             params = model_arima.params
             std_err = model_arima.bse
