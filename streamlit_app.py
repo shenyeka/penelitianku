@@ -1093,8 +1093,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
             rules_abc = compute_firing_strength(
                 input1, input2,
-                c_input1_abc, sigma_input1_abc,
-                c_input2_abc, sigma_input2_abc
+                c1, s1,
+                c2, s2
             )
             st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
