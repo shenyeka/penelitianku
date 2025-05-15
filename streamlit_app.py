@@ -1114,7 +1114,6 @@ with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony.
 
     st.subheader("Hasil Optimasi ANFIS (ABC)")
     st.markdown(f"**MSE Terbaik**: `{np.min(fit_history):.6f}`")
-    
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("### Parameter Input 1")
@@ -1124,7 +1123,6 @@ with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony.
         st.markdown("### Parameter Input 2")
         st.write(f"Center: {c_lag12_abc}")
         st.write(f"Sigma: {sigma_lag12_abc}")
-    
     col3, col4, col5 = st.columns(3)
     with col3:
         st.markdown("### p")
@@ -1135,7 +1133,6 @@ with st.spinner("Mengoptimasi parameter ANFIS menggunakan Artificial Bee Colony.
     with col5:
         st.markdown("### r")
         st.write(r_params)
-    
     st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
 
     st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
