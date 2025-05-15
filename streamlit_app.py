@@ -1188,35 +1188,31 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
     try:
-        # Tampilkan prediksi ARIMA (asumsinya sudah 134 baris)
         st.write("Hasil Prediksi ARIMA (Train):")
         st.dataframe(hasil_train)
 
-        # Tampilkan hasil prediksi ANFIS dari optimasi ABC (122 baris)
         st.write("Hasil Prediksi ANFIS (Optimasi ABC):")
         st.dataframe(predictions_denorm2)
 
-        # Gabungkan: 12 baris pertama dari ARIMA + prediksi ANFIS (122 baris)
-        anfis_full = list(hasil_train[:12]) + list(predictions_denorm2)
+        # Gabungkan 12 baris pertama ARIMA + 122 baris ANFIS (asumsi)
+        anfis_full = list(hasil_train["Prediksi"][:12]) + list(predictions_denorm2)
         
-        # Pastikan panjang sama
         if len(anfis_full) != len(hasil_train):
-            st.error(f"Panjang hasil ANFIS gabungan ({len(anfis_full)}) tidak sama dengan ARIMA ({len(hasil_train)}).")
+            st.error(f"Panjang hasil gabungan ({len(anfis_full)}) tidak sama dengan data ARIMA ({len(hasil_train)}).")
         else:
-            # Buat dataframe atau series hasil gabungan ANFIS
-            anfis_full = pd.Series(anfis_full).reset_index(drop=True)
-            hasil_train_reset = pd.Series(hasil_train).reset_index(drop=True)
+            anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
+            arima_series = hasil_train["Prediksi"].reset_index(drop=True)
 
-            # Penjumlahan ARIMA + ANFIS (element-wise)
-            hybrid_prediction = hasil_train_reset + anfis_full
+            # Jumlahkan elemen per elemen
+            hybrid_prediction = arima_series + anfis_full_series
 
             st.write("Hasil Prediksi Gabungan ARIMA + ANFIS (Optimasi ABC):")
             st.dataframe(hybrid_prediction)
 
             # Visualisasi
             st.line_chart({
-                "ARIMA": hasil_train_reset,
-                "ANFIS ABC (Gabungan)": anfis_full,
+                "ARIMA": arima_series,
+                "ANFIS ABC (Gabungan)": anfis_full_series,
                 "Hybrid ARIMA+ANFIS ABC": hybrid_prediction
             })
 
