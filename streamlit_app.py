@@ -360,7 +360,7 @@ if menu == "HOME":
                 <path d="M8 12H16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
-            Sistem ini dirancang untuk melakukan prediksi pada 
+            Sistem ini dirancang untuk melakukan prediksi pada
             <span style="color: #c04070; font-weight: 600;">data univariat</span>.
             <br><br>
             Prediksi dilakukan menggunakan model yang dibangun berdasarkan pola dari data historis, 
