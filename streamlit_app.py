@@ -1181,3 +1181,35 @@ elif menu == "PEMODELAN ANFIS ABC":
 
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
+
+elif selected_menu == "PEMODELAN ARIMA-ANFIS ABC":
+    st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
+
+    # Simpan hasil prediksi ARIMA (train)
+    st.session_state['pred_train_arima'] = hasil_train
+    st.write("Hasil Prediksi ARIMA (Train):")
+    st.dataframe(st.session_state['pred_train_arima'])
+
+    # Pastikan predictions_denorm2 memiliki panjang yang sesuai (lag terpotong)
+    lag_potong = 12  # Jumlah lag yang dipotong, sesuaikan dengan input ANFIS-mu
+    pred_arima_potong = st.session_state['pred_train_arima'][lag_potong:].reset_index(drop=True)
+
+    # Simpan hasil prediksi ANFIS dengan ABC
+    st.session_state['predictions_abc'] = predictions_denorm2
+    st.write("Hasil Prediksi ANFIS (Optimasi ABC):")
+    st.dataframe(st.session_state['predictions_abc'])
+
+    # Gabungkan ARIMA + ANFIS ABC => hybrid prediction
+    pred_arima_anfis_abc = pred_arima_potong + st.session_state['predictions_abc']
+    st.session_state['pred_arima_anfis_abc'] = pred_arima_anfis_abc
+
+    st.write("Hasil Prediksi Gabungan ARIMA + ANFIS (Optimasi ABC):")
+    st.dataframe(st.session_state['pred_arima_anfis_abc'])
+
+    # Visualisasi (opsional)
+    st.line_chart({
+        "ARIMA": pred_arima_potong,
+        "ANFIS ABC": st.session_state['predictions_abc'],
+        "Hybrid ARIMA+ANFIS ABC": pred_arima_anfis_abc
+    })
+
