@@ -760,8 +760,7 @@ elif menu == "PEMODELAN ARIMA":
 
             # Tampilkan hasil prediksi testing
             st.subheader("Hasil Prediksi Testing")
-            hasil_test = test.copy()
-            hasil_test.columns = ["Aktual"]  # jika test hanya 1 kolom
+            hasil_test = test.iloc[:, 0].to_frame(name="Aktual")
             hasil_test["Prediksi"] = pred_test
             st.dataframe(hasil_test)
 
