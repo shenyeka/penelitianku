@@ -359,12 +359,16 @@ if menu == "HOME":
                 <path d="M12 8V16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M8 12H16" stroke="#c04070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-        </div>
         <p style="text-align: center; font-size: 1.2rem; line-height: 1.8; color: #5a2a3a;">
-        Sistem ini menggunakan metode <span style="color: #c04070; font-weight: 600;">ARIMA-ANFIS</span> 
-        dengan optimasi <span style="color: #c04070; font-weight: 600;">Artificial Bee Colony (ABC)</span> 
-        untuk memprediksi data time series univariat.
+            Sistem ini dirancang untuk melakukan prediksi pada 
+            <span style="color: #c04070; font-weight: 600;">data univariat</span>.
+            <br><br>
+            Prediksi dilakukan menggunakan model yang dibangun berdasarkan pola dari data historis, 
+            sehingga dapat memberikan estimasi yang lebih akurat dan relevan terhadap kondisi nyata.
+            <br><br>
+            Hasil prediksi ini dapat digunakan untuk membantu pengambilan keputusan dan perencanaan secara lebih efisien.
         </p>
+            
     </div>
     """, unsafe_allow_html=True)
 
