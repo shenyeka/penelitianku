@@ -1244,5 +1244,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         st.write("📈 **Visualisasi Prediksi**")
         st.line_chart(df_hasil.set_index("Bulan")[["Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
-    except Exception as e:
-        st.error(f"Terjadi kesalahan: {e}")
+        # Hitung MAPE jika tersedia data aktual
+        if target_series is not None:
+            mape = np.mean(np.abs((target_series - arima_anfis_abc) / target_series)) * 100
+            st.success(f"📉 MAPE ARIMA-ANFIS (ABC): {mape:.2f}%")
