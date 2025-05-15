@@ -1061,10 +1061,10 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
             s1 = best_params[2:4]
             c2 = best_params[4:6]
             s2 = best_params[6:8]
-            consequents = best_params[8:]
-            p = consequents[:4]
-            q = consequents[4:8]
-            r = consequents[8:12]
+            params_anfis_abc = best_params[8:]
+            p =params_anfis_abc[:4]
+            q = params_anfis_abc[4:8]
+            r = params_anfis_abc[8:12]
 
             st.subheader("Hasil Optimasi ANFIS (ABC)")
             st.markdown(f"**MSE Terbaik**: `{best_mse:.6f}`")
@@ -1100,8 +1100,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS":
 
         # ===  Prediksi menggunakan parameter hasil optimasi ===
 
-        # Anda perlu definisikan params_anfis_abc yang isinya parameter lengkap untuk fungsi anfis_predict
-        params_anfis_abc = best_params
 
         predictions_abc = anfis_predict(input1, input2, params_anfis_abc)
 
