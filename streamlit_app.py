@@ -734,8 +734,8 @@ elif menu == "PEMODELAN ARIMA":
     from scipy import stats
     from statsmodels.stats.diagnostic import acorr_ljungbox, het_white
 
-    st.title("PREDIKSI DATA MENGGUNAKAN MODEL ARIMA")
-
+    st.markdown("<div class='header-container'>PREDIKSI DATA MENGGUNAKAN MODEL ARIMA</div>", unsafe_allow_html=True)
+    
     train = st.session_state.get('train_data')
     test = st.session_state.get('test_data')
 
