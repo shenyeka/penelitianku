@@ -873,7 +873,7 @@ elif menu == "PEMODELAN ANFIS ABC":
     st.markdown("<div class='header-container'>PEMODELAN ARIMA-ANFIS</div>", unsafe_allow_html=True)
 
     if 'model_arima' in st.session_state:
-        st.subheader("Pemodelan ANFIS dengan residual ARIMA")
+        st.subheader("Input ANFIS")
 
         # Tombol untuk menampilkan residual ARIMA
         if st.button("Lihat Residual ARIMA"):
@@ -883,7 +883,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.session_state['data_anfis_raw'] = data_anfis
 
         # Tombol normalisasi residual
-        if st.button("Normalisasi Residual"):
+        if st.button("Lanjutkan ke Normalisasi Residual"):
             if 'data_anfis_raw' in st.session_state:
                 data_anfis = st.session_state['data_anfis_raw']
                 scaler_residual = MinMaxScaler()
@@ -1067,7 +1067,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi (Setelah Denormalisasi)")
             st.write(predictions_denorm)
 
-        if st.button("Optimasi ABC"):
+        if st.button("Optimasi ABC Model ANFIS"):
             import random
             from sklearn.cluster import KMeans
 
@@ -1257,7 +1257,9 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
 
             # Membentuk rules dan melakukan prediksi
+            st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
             rules_abc = compute_firing_strength(input1, input2, c1, s1, c2, s2)
+            st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
             predictions_abc = anfis_predict(rules_abc, consequents, input1, input2)
             predictions_denorm2 = st.session_state['scaler_residual'].inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
