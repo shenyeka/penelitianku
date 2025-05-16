@@ -1257,9 +1257,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
 
             # Membentuk rules dan melakukan prediksi
-            st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
             rules_abc = compute_firing_strength(input1, input2, c1, s1, c2, s2)
-            st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
 
             predictions_abc = anfis_predict(rules_abc, consequents, input1, input2)
             predictions_denorm2 = st.session_state['scaler_residual'].inverse_transform(predictions_abc.reshape(-1, 1)).flatten()
