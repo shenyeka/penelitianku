@@ -334,7 +334,7 @@ with st.sidebar:
         <h2 style='color: #c04070; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);' class='floating'>🩸 MENU NAVIGASI</h2>
     </div>
     """, unsafe_allow_html=True)
-    menu = st.radio("", ["HOME", "INPUT DATA", "STASIONERITAS DATA", "DATA SPLITTING", "PEMODELAN ARIMA", "PEMODELAN ANFIS ABC", "PEMODELAN ARIMA-ANFIS ABC", "PREDIKSI"],
+    menu = st.radio("", ["HOME", "INPUT DATA", "DATA PREPROCESSING", "STASIONERITAS DATA", "DATA SPLITTING", "PEMODELAN ARIMA", "PEMODELAN ANFIS ABC", "PEMODELAN ARIMA-ANFIS ABC", "PREDIKSI"],
                 label_visibility="collapsed")
 
 
@@ -478,6 +478,82 @@ elif menu == "INPUT DATA":
             # Simpan data ke session_state untuk digunakan di menu DATA PREPROCESSING
             st.session_state["data"] = data  # Pastikan "data" disimpan di session_state
 
+# ==================== DATA PREPROCESSING ====================
+elif menu == "DATA PREPROCESSING":
+    st.markdown("<div class='header-container'>DATA PREPROCESSING</div>", unsafe_allow_html=True)
+
+    st.markdown("""
+        <style>
+            .note-box {
+                background-color: #f8f9fa;
+                border-left: 5px solid #e74c3c;
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 0 8px 8px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .note-title {
+                color: #e74c3c;
+                font-weight: 600;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+            }
+            .note-list {
+                padding-left: 20px;
+            }
+            .note-list li {
+                margin-bottom: 8px;
+            }
+            .highlight {
+                background-color: #fffde7;
+                padding: 2px 4px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+        </style>
+    """, unsafe_allow_html=True)  # This is where the CSS block ends
+
+    # Check if data exists in session_state
+    if "data" in st.session_state:
+        data = st.session_state["data"]
+        st.write("Preview Data:")
+        st.write(data.head())
+
+        # Pilih kolom waktu sebagai index
+        time_col = st.selectbox("Pilih Kolom Waktu sebagai Index", options=data.columns)
+
+        if st.button("Periksa missing value"):
+            if time_col:
+                try:
+                    # Mengubah kolom waktu menjadi datetime dan set sebagai index
+                    data[time_col] = pd.to_datetime(data[time_col])
+                    data.set_index(time_col, inplace=True)
+
+                    # Tangani missing values
+                    missing = data.isnull().sum()
+                    if missing.any():
+                        st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
+                        data.dropna(inplace=True)
+                    else:
+                        st.info("Data tidak memiliki missing values.")
+
+                    # Tampilkan plot data
+                    st.write("Plot Data Setelah Preprocessing:")
+                    fig, ax = plt.subplots()
+                    sns.lineplot(data=data, ax=ax)
+                    ax.set_title("Data Time Series")
+                    st.pyplot(fig)
+
+                    # Simpan data yang sudah diproses ke session_state
+                    st.session_state["data"] = data
+
+                    st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
+
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan saat preprocessing: {e}")
+    else:
+        st.warning("Data belum diunggah, silahkan kembali ke menu 'INPUT DATA'.")
+
 
 # ================== STASIONERITAS DATA =====================
 
@@ -485,25 +561,20 @@ elif menu == "STASIONERITAS DATA":
     st.markdown("<div class='header-container'>STASIONERITAS DATA</div>", unsafe_allow_html=True)
 
     if "data" in st.session_state:
-        data = st.session_state["data"].copy()
-        st.write("Menggunakan data hasil input.")
+        data = st.session_state["data"]
+        st.write("Menggunakan data hasil preprocessing.")
 
         col = st.selectbox("Pilih kolom untuk diuji stasioneritas:", data.columns)
 
-    if col:
-        # Pastikan kolom bertipe float dan tidak mengandung NaN
-        series = pd.to_numeric(data[col], errors="coerce").dropna()
-
-        if len(series) < 10:
-            st.error("Data terlalu sedikit setelah menghapus nilai NaN. Tidak bisa dilakukan uji stasioneritas.")
-        else:
-            # Uji ADF awal
-            st.subheader("Uji ADF Awal")
-            adf_result = adfuller(series)
-            st.write(f"ADF Statistic: {adf_result[0]:.4f}")
-            st.write(f"P-Value: {adf_result[1]:.4f}")
-            for key, val in adf_result[4].items():
-                st.write(f"Critical Value ({key}): {val:.4f}")
+        if st.button("Uji Stasioneritas"):
+            if col:
+                # Uji ADF awal
+                st.subheader("Uji ADF Awal")
+                adf_result = adfuller(data[col])
+                st.write(f"ADF Statistic: {adf_result[0]:.4f}")
+                st.write(f"P-Value: {adf_result[1]:.4f}")
+                for key, val in adf_result[4].items():
+                    st.write(f"Critical Value ({key}): {val:.4f}")
 
                 if adf_result[1] < 0.05:
                     st.success("✅ Data sudah stasioner.")
