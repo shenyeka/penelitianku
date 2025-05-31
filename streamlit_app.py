@@ -490,15 +490,20 @@ elif menu == "STASIONERITAS DATA":
 
         col = st.selectbox("Pilih kolom untuk diuji stasioneritas:", data.columns)
 
-        if st.button("Uji Stasioneritas"):
-            if col:
-                # Uji ADF awal
-                st.subheader("Uji ADF Awal")
-                adf_result = adfuller(data[col])
-                st.write(f"ADF Statistic: {adf_result[0]:.4f}")
-                st.write(f"P-Value: {adf_result[1]:.4f}")
-                for key, val in adf_result[4].items():
-                    st.write(f"Critical Value ({key}): {val:.4f}")
+    if col:
+        # Pastikan kolom bertipe float dan tidak mengandung NaN
+        series = pd.to_numeric(data[col], errors="coerce").dropna()
+
+        if len(series) < 10:
+            st.error("Data terlalu sedikit setelah menghapus nilai NaN. Tidak bisa dilakukan uji stasioneritas.")
+        else:
+            # Uji ADF awal
+            st.subheader("Uji ADF Awal")
+            adf_result = adfuller(series)
+            st.write(f"ADF Statistic: {adf_result[0]:.4f}")
+            st.write(f"P-Value: {adf_result[1]:.4f}")
+            for key, val in adf_result[4].items():
+                st.write(f"Critical Value ({key}): {val:.4f}")
 
                 if adf_result[1] < 0.05:
                     st.success("✅ Data sudah stasioner.")
