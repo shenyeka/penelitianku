@@ -1283,8 +1283,8 @@ elif menu == "PEMODELAN ANFIS ABC":
                 input2_future = input1_future
                 input1_future = pred_test_abc
 
-             pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(pred_test_abc.reshape(-1, 1)).flatten()
-             st.session_state['pred_test_abc'] = pred_test_abc2
+            pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(pred_test_abc.reshape(-1, 1)).flatten()
+            st.session_state['pred_test_abc'] = pred_test_abc2
 
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
