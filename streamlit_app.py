@@ -1422,40 +1422,28 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
 
 # ====== prediksi ======
-# ====== prediksi ======
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-    # ======= ARIMA ==========
-    st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+    #=======ARIMA==========
+        st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+        future_forecast = model_arima.forecast(steps=6)
+        future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]  # asumsi frekuensi bulanan
+        df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
+        st.dataframe(df_forecast)
 
-    if 'model_arima' in st.session_state and 'residual_test' in st.session_state:
-        model_arima = st.session_state['model_arima']
-        test = st.session_state['residual_test']
+        st.line_chart(df_forecast["Prediksi"])
+        st.session_state['forecast_arima_future'] = df_forecast
+    
 
-        try:
-            future_forecast = model_arima.forecast(steps=6)
-            future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]  # asumsi frekuensi bulanan
-            df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
-            st.dataframe(df_forecast)
-            st.line_chart(df_forecast["Prediksi"])
-            st.session_state['forecast_arima_future'] = df_forecast
-        except Exception as e:
-            st.error(f"❌ Gagal melakukan prediksi ARIMA: {e}")
-    else:
-        st.warning("⚠️ Model ARIMA atau data test belum tersedia. Harap lakukan pelatihan terlebih dahulu.")
-
-    # ======= ANFIS ABC ==========
+# Prediksi data testing (out-sample) secara rekursif
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
-    if 'scaler_residual' in st.session_state and 'input1' in st.session_state and 'input2' in st.session_state:
-        input1 = st.session_state['input1']
-        input2 = st.session_state['input2']
-
+# Jumlah langkah prediksi ke depan
         n_steps_ahead = 6
         forecast_future = []    
 
-        # Inisialisasi dengan dua nilai lag terakhir dari data residual training
+# Inisialisasi dengan dua nilai lag terakhir dari data residual training
         input1_future = input1[-1]
         input2_future = input2[-2]
 
@@ -1463,16 +1451,14 @@ elif menu == "PREDIKSI":
             pred = predict_next_step(input1_future, input2_future)
             forecast_future.append(pred)
 
-            # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
+    # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
             input2_future = input1_future
             input1_future = pred
 
-        # Denormalisasi hasil prediksi
+# Denormalisasi hasil prediksi
         forecast_future = np.array(forecast_future)
         pred_future = st.session_state['scaler_residual'].inverse_transform(forecast_future.reshape(-1, 1)).flatten()
         st.session_state['forecast_anfis'] = pred_future
 
         st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
         st.write(pred_future)
-    else:
-        st.warning("⚠️ Data input ANFIS atau scaler belum tersedia. Harap pastikan proses pelatihan sudah dilakukan.")
