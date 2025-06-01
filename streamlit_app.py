@@ -1331,7 +1331,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     except Exception as e:
         st.error(f"❌ Terjadi kesalahan saat pemrosesan data training: {e}")
 
-
     # ============================== #
     # 📘 HYBRID PREDIKSI TESTING     #
     # ============================== #
@@ -1349,12 +1348,16 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         if 'Prediksi' not in test_df.columns:
             if 'pred_arima_test' in st.session_state:
                 pred_arima_test = st.session_state['pred_arima_test']
-                # Pastikan pred_arima_test 1 dimensi
+
+                # Perbaikan: pastikan pred_arima_test 1 dimensi, bukan DataFrame multi kolom
                 if isinstance(pred_arima_test, pd.DataFrame):
                     pred_arima_test = pred_arima_test.iloc[:, 0]
                 elif isinstance(pred_arima_test, np.ndarray) and pred_arima_test.ndim > 1:
                     pred_arima_test = pred_arima_test[:, 0]
-                test_df['Prediksi'] = pd.Series(pred_arima_test).reset_index(drop=True)
+
+                pred_arima_test = pd.Series(pred_arima_test).reset_index(drop=True)
+
+                test_df['Prediksi'] = pred_arima_test
             else:
                 st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
                 st.stop()
@@ -1390,7 +1393,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         mape_hybrid = np.mean(np.abs((aktual_test - pred_hybrid_test_abc) / aktual_test)) * 100
 
         # Buat tanggal untuk testing
-        start_date_test = pd.Timestamp.today()  # Atau sesuaikan sesuai tanggal testing sebenarnya
+        start_date_test = pd.Timestamp.today()  # Sesuaikan tanggal testing sebenarnya jika ada
         tanggal_test = pd.date_range(start=start_date_test, periods=n, freq='MS')
 
         # DataFrame hasil testing
