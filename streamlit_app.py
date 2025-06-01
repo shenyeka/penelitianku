@@ -1259,89 +1259,74 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.write(predictions_denorm2)
 
 # ====== ARIMA-ANFIS ABC ======
+# ====== ARIMA-ANFIS ABC ======
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("📘 PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
-    # Validasi keberadaan data yang dibutuhkan
-    if 'predictions_denorm' not in st.session_state:
-        st.error("Data aktual denormalisasi (predictions_denorm) belum tersedia.")
-        st.stop()
+    # Validasi session_state
     if 'pred_train_arima' not in st.session_state:
-        st.error("Hasil prediksi ARIMA belum tersedia. Silakan jalankan proses ARIMA terlebih dahulu.")
+        st.error("Hasil prediksi ARIMA belum tersedia.")
         st.stop()
     if 'predictions_abc' not in st.session_state:
-        st.error("Hasil prediksi ANFIS dengan optimasi ABC belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
+        st.error("Hasil prediksi ANFIS ABC belum tersedia.")
         st.stop()
 
     try:
-        predictions_denorm = st.session_state['predictions_denorm']
+        # Ambil hasil prediksi ARIMA
         hasil_train = st.session_state['pred_train_arima']
-        predictions_abc = st.session_state['predictions_abc']
-
-        # Pastikan predictions_denorm dalam bentuk Series
-        if isinstance(predictions_denorm, np.ndarray):
-            aktual_train = pd.Series(predictions_denorm)
-        elif isinstance(predictions_denorm, pd.DataFrame):
-            aktual_train = predictions_denorm.iloc[:, 0]
+        if isinstance(hasil_train, pd.DataFrame):
+            pred_arima = hasil_train["Prediksi"].reset_index(drop=True)
+            aktual = hasil_train["Aktual"].reset_index(drop=True)
         else:
-            aktual_train = predictions_denorm
-        aktual_train = aktual_train.reset_index(drop=True)
+            st.error("Format data hasil_train tidak sesuai.")
+            st.stop()
 
-        # Konversi predictions_abc ke Series jika belum
+        # Ambil hasil prediksi ANFIS ABC
+        predictions_abc = st.session_state['predictions_abc']
         if isinstance(predictions_abc, np.ndarray):
             predictions_abc = pd.Series(predictions_abc)
         elif isinstance(predictions_abc, pd.DataFrame):
             predictions_abc = predictions_abc.iloc[:, 0]
         predictions_abc = predictions_abc.reset_index(drop=True)
 
-        n_pred = len(predictions_abc)
+        # Potong panjang agar sama
+        min_len = min(len(pred_arima), len(predictions_abc))
+        pred_arima = pred_arima[-min_len:].reset_index(drop=True)
+        aktual = aktual[-min_len:].reset_index(drop=True)
+        predictions_abc = predictions_abc[-min_len:].reset_index(drop=True)
 
-        # Ambil data aktual sesuai panjang prediksi ANFIS
-        aktual_train = aktual_train.iloc[-n_pred:].reset_index(drop=True)
+        # Hitung prediksi hybrid
+        pred_hybrid = pred_arima + predictions_abc
 
-        # Ambil prediksi ARIMA dan sesuaikan bentuk serta indeksnya
-        predictions_arima = hasil_train["Prediksi"]
-        if isinstance(predictions_arima, pd.DataFrame):
-            predictions_arima = predictions_arima.iloc[:, 0]
-        predictions_arima = predictions_arima.iloc[-n_pred:].reset_index(drop=True)
-
-        # Hitung prediksi hybrid ARIMA + ANFIS ABC
-        pred_hybrid = predictions_arima + predictions_abc
-
-        # Buat tanggal bulanan mulai dari tanggal terakhir aktual_train (asumsi ada index datetime)
-        if hasattr(aktual_train.index, 'dtype') and pd.api.types.is_datetime64_any_dtype(aktual_train.index):
-            start_date = aktual_train.index[-n_pred]
+        # Buat tanggal bulanan (jika hasil_train punya index datetime)
+        if isinstance(hasil_train.index, pd.DatetimeIndex):
+            start_date = hasil_train.index[-min_len]
+            bulan_series = pd.date_range(start=start_date, periods=min_len, freq='MS')
         else:
-            # Jika tidak ada index datetime, gunakan tanggal hari ini sebagai fallback
-            start_date = pd.Timestamp.today()
-
-        bulan_series = pd.date_range(start=start_date, periods=n_pred, freq='MS')
+            bulan_series = pd.date_range(start=pd.Timestamp.today(), periods=min_len, freq='MS')
 
         # Buat DataFrame hasil gabungan
         df_hasil = pd.DataFrame({
             "Bulan": bulan_series,
-            "Aktual": aktual_train,
-            "Prediksi ARIMA": predictions_arima,
+            "Aktual": aktual,
+            "Prediksi ARIMA": pred_arima,
             "Prediksi ANFIS ABC": predictions_abc,
             "Prediksi ARIMA-ANFIS ABC": pred_hybrid
         })
 
+        # Tampilkan
         st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC)**")
         st.dataframe(df_hasil)
 
         st.write("📈 **Visualisasi Prediksi**")
         st.line_chart(df_hasil.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
-        # Hitung MAPE dengan hindari pembagian 0 (hindari error)
-        aktual_nonzero = aktual_train.replace(0, np.nan).dropna()
-        pred_hybrid_nonzero = pred_hybrid[aktual_nonzero.index]
-
-        mape = np.mean(np.abs((aktual_nonzero - pred_hybrid_nonzero) / aktual_nonzero)) * 100
+        # Hitung MAPE
+        mape = np.mean(np.abs((aktual - pred_hybrid) / aktual)) * 100
         st.success(f"📉 MAPE ARIMA-ANFIS (ABC): {mape:.2f}%")
 
-        # Simpan hasil ke session_state
+        # Simpan ke session state jika dibutuhkan
         st.session_state['hasil_hybrid_abc'] = df_hasil
 
     except Exception as e:
         st.error(f"❌ Terjadi kesalahan: {e}")
-
