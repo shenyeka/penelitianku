@@ -725,6 +725,7 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
+=============ARIMA===========
 elif menu == "PEMODELAN ARIMA":
     from statsmodels.tsa.arima.model import ARIMA
     from sklearn.metrics import mean_absolute_percentage_error
@@ -831,41 +832,50 @@ elif menu == "PEMODELAN ARIMA":
             pred_train = model_arima.predict(start=0, end=start_test-1)
             pred_test = model_arima.forecast(steps=len(test))
 
-            # Hasil Prediksi Training
-            st.subheader("Hasil Prediksi Training")
-            hasil_train = train.copy()
-            if hasattr(hasil_train, 'columns'):
-                hasil_train.columns = ["Aktual"]
-            else:
-                hasil_train = hasil_train.to_frame(name="Aktual")
-            hasil_train["Prediksi"] = pred_train
-            st.dataframe(hasil_train)
+        # Opsi untuk potong 12 data pertama
+        potong_12 = st.checkbox("Potong 12 baris pertama dari data training?", value=True)
 
-            # Hasil Prediksi Testing
-            st.subheader("Hasil Prediksi Testing")
-            hasil_test = test.copy()
-            if hasattr(hasil_test, 'columns'):
-                hasil_test.columns = ["Aktual"]
-            else:
-                hasil_test = hasil_test.to_frame(name="Aktual")
-            hasil_test["Prediksi"] = pred_test
-            st.dataframe(hasil_test)
+        # Hasil Prediksi Training
+        st.subheader("Hasil Prediksi Training")
+        hasil_train = train.copy()
+        if hasattr(hasil_train, 'columns'):
+            hasil_train.columns = ["Aktual"]
+        else:
+            hasil_train = hasil_train.to_frame(name="Aktual")
+        hasil_train["Prediksi"] = pred_train
 
-            # Evaluasi Model
-            st.subheader("Evaluasi Model dengan MAPE")
-            mape_train = mean_absolute_percentage_error(hasil_train["Aktual"], hasil_train["Prediksi"]) * 100
-            mape_test = mean_absolute_percentage_error(hasil_test["Aktual"], hasil_test["Prediksi"]) * 100
-            st.write(f"MAPE Training: {mape_train:.2f}%")
-            st.write(f"MAPE Testing: {mape_test:.2f}%")
+        # Terapkan pemotongan jika checkbox dicentang
+        if potong_12:
+            hasil_train = hasil_train.iloc[12:]
 
-            # Visualisasi
-            st.line_chart(hasil_train, use_container_width=True)
-            st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
+        st.dataframe(hasil_train)
 
-            # Simpan ke session_state
-            st.session_state['residual_arima'] = model_arima.resid
-            st.session_state['pred_train_arima'] = hasil_train
-            st.session_state['pred_test_arima'] = hasil_test
+        # Hasil Prediksi Testing
+        st.subheader("Hasil Prediksi Testing")
+        hasil_test = test.copy()
+        if hasattr(hasil_test, 'columns'):
+            hasil_test.columns = ["Aktual"]
+        else:
+            hasil_test = hasil_test.to_frame(name="Aktual")
+        hasil_test["Prediksi"] = pred_test
+        st.dataframe(hasil_test)
+
+        # Evaluasi Model
+        st.subheader("Evaluasi Model dengan MAPE")
+        mape_train = mean_absolute_percentage_error(hasil_train["Aktual"], hasil_train["Prediksi"]) * 100
+        mape_test = mean_absolute_percentage_error(hasil_test["Aktual"], hasil_test["Prediksi"]) * 100
+        st.write(f"MAPE Training: {mape_train:.2f}%")
+        st.write(f"MAPE Testing: {mape_test:.2f}%")
+
+        # Visualisasi
+        st.line_chart(hasil_train, use_container_width=True)
+        st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
+
+        # Simpan ke session_state
+        st.session_state['residual_arima'] = model_arima.resid
+        st.session_state['pred_train_arima'] = hasil_train
+        st.session_state['pred_test_arima'] = hasil_test
+
 
 
 #===========MENU ANFIS ABC========
