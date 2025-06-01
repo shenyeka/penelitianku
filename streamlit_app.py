@@ -1329,33 +1329,35 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
     st.subheader("🧪 PREDIKSI TESTING MENGGUNAKAN ANFIS (ABC) SAJA")
 
-    # Validasi residual training & parameter ANFIS
-    if 'residual_train' not in st.session_state or len(st.session_state['residual_train']) < 2:
-        st.error("❗ Residual ARIMA dari training tidak tersedia atau kurang dari 2 nilai.")
+    if 'lag10' not in st.session_state or 'lag12' not in st.session_state or 'params_anfis_abc' not in st.session_state:
+        st.error("❗ Data lag atau parameter ANFIS belum tersedia.")
         st.stop()
 
     try:
-        # Fungsi untuk prediksi recursive ANFIS
+        lag10 = st.session_state['lag10']
+        lag12 = st.session_state['lag12']
+        test = st.session_state['data_test']
+        scaler_residual = st.session_state['scaler_residual']
+        c_lag10_abc = st.session_state['c_lag10_abc']
+        sigma_lag10_abc = st.session_state['sigma_lag10_abc']
+        c_lag12_abc = st.session_state['c_lag12_abc']
+        sigma_lag12_abc = st.session_state['sigma_lag12_abc']
+        params_anfis_abc = st.session_state['params_anfis_abc']
+
+        # Fungsi prediksi langkah ke depan
         def predict_next_step(lag10_future, lag12_future):
             lag10_arr = np.array([lag10_future])
             lag12_arr = np.array([lag12_future])
-            rules = firing_strength(
-                lag10_arr, lag12_arr,
-                c_lag10_abc, sigma_lag10_abc,
-                c_lag12_abc, sigma_lag12_abc
-            )
+            rules = firing_strength(lag10_arr, lag12_arr, c_lag10_abc, sigma_lag10_abc, c_lag12_abc, sigma_lag12_abc)
             pred = anfis_predict(rules, params_anfis_abc, lag10_arr, lag12_arr)[0]
             return pred
 
-        # Tentukan panjang prediksi (misal 6 bulan)
-        n_forecast = 6
-
-        # Gunakan dua residual terakhir dari training sebagai input awal
-        last_residuals = st.session_state['residual_train'][-2:]
-        lag12_future = last_residuals[0]
-        lag10_future = last_residuals[1]
-
+        # Prediksi future sebanyak panjang test
+        n_forecast = len(test)
         forecast_anfis = []
+
+        lag10_future = lag10[-1]
+        lag12_future = lag12[-2]
 
         for _ in range(n_forecast):
             pred = predict_next_step(lag10_future, lag12_future)
@@ -1363,26 +1365,25 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             lag12_future = lag10_future
             lag10_future = pred
 
-        # Denormalisasi
-        forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
-        forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis)
+        # Denormalisasi hasil prediksi ANFIS
+        forecast_anfis_array = np.array(forecast_anfis).reshape(-1, 1)
+        forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis_array).flatten()
 
-        # Buat DataFrame hasil
-        forecast_index = pd.date_range(start="2025-01-01", periods=n_forecast, freq='MS')
-        df_pred_anfis = pd.DataFrame({
-            "Tanggal": forecast_index,
-            "Prediksi ANFIS (Denormalisasi)": forecast_anfis_denorm.flatten()
+        # Tampilkan hasil ke dalam DataFrame
+        forecast_index = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
+        forecast_df_anfis = pd.DataFrame({
+            'Tanggal': forecast_index,
+            'Prediksi ANFIS (Denormalized)': forecast_anfis_denorm
         })
 
-        # Tampilkan hasil
-        st.write("📋 **Hasil Prediksi ANFIS (Residual) – Tanpa ARIMA**")
-        st.dataframe(df_pred_anfis)
+        st.write("📘 **Hasil Prediksi ANFIS (ABC) - Testing**")
+        st.dataframe(forecast_df_anfis)
 
-        st.write("📈 **Visualisasi Prediksi ANFIS Saja**")
-        st.line_chart(df_pred_anfis.set_index("Tanggal"))
+        # Simpan ke session state
+        st.session_state['forecast_anfis_test'] = forecast_df_anfis
 
-        # Simpan ke session_state
-        st.session_state['hasil_prediksi_anfis_test'] = df_pred_anfis
+        # Visualisasi
+        st.line_chart(forecast_df_anfis.set_index("Tanggal"))
 
     except Exception as e:
-        st.error(f"❌ Terjadi kesalahan saat memproses prediksi ANFIS: {e}")
+        st.error(f"❌ Terjadi kesalahan saat memproses prediksi ANFIS (ABC) pada data testing: {e}")
