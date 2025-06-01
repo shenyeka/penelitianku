@@ -1425,12 +1425,17 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-    # Validasi model ARIMA
+    # Validasi model dan data test
     if 'model_arima' not in st.session_state:
-        st.error("❗ Model ARIMA belum tersedia. Silakan lakukan pelatihan terlebih dahulu.")
+        st.error("❗ Model ARIMA belum tersedia.")
+        st.stop()
+
+    if 'test' not in st.session_state:
+        st.error("❗ Data testing belum tersedia.")
         st.stop()
 
     model_arima = st.session_state['model_arima']
+    test = st.session_state['test']
 
     #======= ARIMA ==========
     st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
