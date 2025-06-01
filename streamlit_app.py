@@ -1117,7 +1117,7 @@ elif menu == "PEMODELAN ANFIS ABC":
                 return np.concatenate([c1_init, s1_init, c2_init, s2_init, anfis_params])
 
          # Pelatihan ANFIS dengan ABC
-            def train_anfis_with_abc(input1, input2, target, n_mf=2, n_individuals=150, max_iter=1000, limit=30):
+            def train_anfis_with_abc(input1, input2, target, n_mf=2, n_individuals=200, max_iter=1000, limit=30):
 
                 c10_init, s10_init = init_mf_centers_sigma(input1, n_mf, data_min, data_max)
                 c12_init, s12_init = init_mf_centers_sigma(input2, n_mf, data_min, data_max)
@@ -1258,72 +1258,69 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
+#======ARIMA-ANFIS ABC==============
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
-    st.subheader("PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
+    st.subheader("📘 PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
-    if 'data_anfis' not in st.session_state or 'scaler_residual' not in st.session_state:
-        st.error("Data residual atau scaler_residual belum tersedia. Pastikan residual telah disiapkan sebelumnya.")
+    if 'train' not in st.session_state:
+        st.error("Data train belum tersedia. Silakan lakukan pemisahan data terlebih dahulu.")
+        st.stop()
+    if 'pred_train_arima' not in st.session_state:
+        st.error("Hasil prediksi ARIMA belum tersedia. Silakan jalankan proses ARIMA terlebih dahulu.")
+        st.stop()
+    if 'predictions_abc' not in st.session_state:
+        st.error("Hasil prediksi ANFIS dengan optimasi ABC belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
         st.stop()
 
     try:
-        data_anfis = st.session_state['data_anfis']
-        scaler_residual = st.session_state['scaler_residual']
-
-        # Denormalisasi residual
-        residual_norm = data_anfis['residual'].values.reshape(-1, 1)
-        actual_residual = scaler_residual.inverse_transform(residual_norm).flatten()
-
-        # Ambil prediksi ARIMA
-        if 'pred_train_arima' not in st.session_state:
-            st.error("Data hasil_train (pred_train_arima) belum tersedia. Jalankan proses ARIMA terlebih dahulu.")
-            st.stop()
+        train = st.session_state['train']
         hasil_train = st.session_state['pred_train_arima']
-        arima_series = hasil_train["Prediksi"].reset_index(drop=True)
+        predictions_abc = st.session_state['predictions_abc']  # array atau DataFrame/Series
 
-        # Ambil prediksi ANFIS (ABC)
-        if 'predictions_abc' not in st.session_state:
-            st.error("Data prediksi ANFIS (predictions_abc) belum tersedia. Jalankan proses optimasi ABC terlebih dahulu.")
-            st.stop()
-        predictions_denorm2 = st.session_state['predictions_abc']  # biasanya panjang 110
+        # Pastikan predictions_abc dalam bentuk Series
+        if isinstance(predictions_abc, np.ndarray):
+            predictions_abc = pd.Series(predictions_abc)
+        elif isinstance(predictions_abc, pd.DataFrame):
+            predictions_abc = predictions_abc.iloc[:, 0]
+        predictions_abc = predictions_abc.reset_index(drop=True)
 
-        # Gabungkan 12 residual awal + prediksi_abc
-        anfis_full = list(actual_residual[:12]) + list(predictions_denorm2)
-        anfis_full_series = pd.Series(anfis_full).reset_index(drop=True)
+        n_pred = len(predictions_abc)  # Panjang prediksi yang fleksibel
 
-        # Panjang data harus disamakan
-        panjang_data = len(anfis_full_series)
-        arima_series = arima_series[:panjang_data]
-        target_series = hasil_train['Aktual'].reset_index(drop=True)[:panjang_data] if 'Aktual' in hasil_train.columns else None
+        # Ambil data aktual dan ARIMA sesuai panjang prediksi ANFIS
+        aktual_train = train['Jumlah permintaan'].iloc[-n_pred:].reset_index(drop=True)
 
-        # Buat tanggal bulanan dari Jan 2011 sampai Feb 2022
-        tanggal_mulai = pd.to_datetime("2011-01-01")
-        bulan_series = pd.date_range(start=tanggal_mulai, periods=panjang_data, freq='MS')
+        predictions_arima = hasil_train["Prediksi"]
+        if isinstance(predictions_arima, pd.DataFrame):
+            predictions_arima = predictions_arima.iloc[:, 0]
+        predictions_arima = predictions_arima.iloc[-n_pred:].reset_index(drop=True)
 
-        # Hybrid prediksi
-        arima_anfis_abc = arima_series + anfis_full_series
+        # Hybrid = ARIMA + ANFIS (ABC)
+        pred_hybrid = predictions_arima + predictions_abc
 
-        # Tabel hasil
+        # Buat tanggal bulanan sesuai data aktual terakhir
+        bulan_series = pd.date_range(start=train.index[-n_pred], periods=n_pred, freq='MS')
+
+        # Buat DataFrame hasil
         df_hasil = pd.DataFrame({
             "Bulan": bulan_series,
-            "Residual Aktual": anfis_full_series,
-            "Prediksi ARIMA": arima_series,
-            "Prediksi ANFIS ABC": anfis_full_series,
-            "Prediksi ARIMA-ANFIS ABC": arima_anfis_abc
+            "Aktual": aktual_train,
+            "Prediksi ARIMA": predictions_arima,
+            "Prediksi ANFIS ABC": predictions_abc,
+            "Prediksi ARIMA-ANFIS ABC": pred_hybrid
         })
-
-        if target_series is not None:
-            df_hasil["Aktual"] = target_series
 
         st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC)**")
         st.dataframe(df_hasil)
 
         st.write("📈 **Visualisasi Prediksi**")
-        st.line_chart(df_hasil.set_index("Bulan")[["Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
+        st.line_chart(df_hasil.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
-        # Hitung MAPE jika tersedia data aktual
-        if target_series is not None:
-            mape = np.mean(np.abs((target_series - arima_anfis_abc) / target_series)) * 100
-            st.success(f"📉 MAPE ARIMA-ANFIS (ABC): {mape:.2f}%")
-            
+        # Hitung MAPE
+        mape = np.mean(np.abs((aktual_train - pred_hybrid) / aktual_train)) * 100
+        st.success(f"📉 MAPE ARIMA-ANFIS (ABC): {mape:.2f}%")
+
+        # Simpan jika ingin digunakan nanti
+        st.session_state['hasil_hybrid_abc'] = df_hasil
+
     except Exception as e:
-        st.error(f"Terjadi kesalahan: {e}")
+        st.error(f"❌ Terjadi kesalahan: {e}")
