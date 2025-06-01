@@ -1289,7 +1289,7 @@ elif menu == "PEMODELAN ANFIS ABC":
 # Denormalisasi hasil prediksi
             forecast_anfis = np.array(forecast_anfis)
             pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(forecast_anfis.reshape(-1, 1)).flatten()
-            st.session_state['pred_test_abc'] = pred_test_abc2
+            st.session_state['forecast_anfis'] = pred_test_abc2
 
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
