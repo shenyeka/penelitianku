@@ -1260,6 +1260,37 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
+            st.markdown("### Membentuk prediksi testing")
+            def predict_next_step(input1_future, input2_future):
+                input1_arr = np.array([input1_future])
+                input2_arr = np.array([input2_future])
+                rules3 = firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+                pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
+                return pred_test_abc
+            
+            n_forecast = 34
+            forecast_anfis = []
+
+            # Inisialisasi dengan dua nilai lag terakhir dari data asli
+            input1_future = input1[-1]
+            input2_future = input2[-2]
+
+            for _ in range(n_forecast):
+                pred = predict_next_step(input1_future, input2_future)
+                forecast_anfis.append(pred)
+
+                # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
+                input2_future = input1_future
+                input1_future = pred_test_abc
+
+             pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(pred_test_abc.reshape(-1, 1)).flatten()
+             st.session_state['pred_test_abc'] = pred_test_abc2
+
+            st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
+            st.write(pred_test_abc2)
+
+            
+
 # ====== ARIMA-ANFIS ABC ======
 # ====== ARIMA-ANFIS ABC ======
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
@@ -1326,75 +1357,3 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-st.subheader("📘 Testing Hybrid ARIMA-ANFIS dengan Optimasi ABC")
-
-# Validasi data penting
-required_keys = ['test', 'params_anfis_abc', 'c1', 'c2', 's1', 's2', 'input1', 'input2',
-                 'scaler_residual', 'pred_arima_test']
-missing = [k for k in required_keys if k not in st.session_state]
-if missing:
-    st.error(f"❗ Data/model belum lengkap, missing: {missing}")
-    st.stop()
-
-test_df = st.session_state['test']
-aktual_test = test_df['Aktual'].reset_index(drop=True)
-params_anfis_abc = st.session_state['params_anfis_abc']
-c1 = st.session_state['c1']
-s1 = st.session_state['s1']
-c2 = st.session_state['c2']
-s2 = st.session_state['s2']
-input1 = st.session_state['input1']
-input2 = st.session_state['input2']
-scaler_residual = st.session_state['scaler_residual']
-pred_arima_test = st.session_state['pred_arima_test'].reset_index(drop=True)
-
-n_forecast = len(test_df)
-forecast_anfis = []
-
-# Inisialisasi lag input terakhir
-input1_future = input1[-1]
-input2_future = input2[-2]
-
-def predict_next_step(input1_f, input2_f):
-    input1_arr = np.array([input1_f])
-    input2_arr = np.array([input2_f])
-    rules = firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)  # hitung firing strength
-    pred = anfis_predict(rules, params_anfis_abc, input1_arr, input2_arr)[0]
-    return pred
-
-for _ in range(n_forecast):
-    pred = predict_next_step(input1_future, input2_future)
-    forecast_anfis.append(pred)
-    # Geser lag input
-    input2_future = input1_future
-    input1_future = pred
-
-forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
-forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis).flatten()
-
-# Samakan panjang prediksi dan aktual
-min_len = min(len(pred_arima_test), len(forecast_anfis_denorm), len(aktual_test))
-pred_arima_test = pred_arima_test[-min_len:].reset_index(drop=True)
-forecast_anfis_denorm = forecast_anfis_denorm[-min_len:]
-aktual_test = aktual_test[-min_len:].reset_index(drop=True)
-
-pred_hybrid_test = pred_arima_test + forecast_anfis_denorm
-
-# Buat dataframe hasil testing
-df_test_result = pd.DataFrame({
-    "Aktual": aktual_test,
-    "Prediksi ARIMA": pred_arima_test,
-    "Prediksi ANFIS ABC": forecast_anfis_denorm,
-    "Prediksi Hybrid": pred_hybrid_test
-})
-
-st.write("📊 **Hasil Prediksi Testing Hybrid ARIMA + ANFIS ABC**")
-st.dataframe(df_test_result)
-st.line_chart(df_test_result.set_index(df_test_result.index)[["Aktual", "Prediksi ARIMA", "Prediksi Hybrid"]])
-
-mse_test = mean_squared_error(aktual_test, pred_hybrid_test)
-rmse_test = np.sqrt(mse_test)
-mape_test = mean_absolute_percentage_error(aktual_test, pred_hybrid_test) * 100
-
-st.success(f"📉 MAPE Hybrid Testing: {mape_test:.2f}%")
-st.info(f"MSE: {mse_test:.4f}, RMSE: {rmse_test:.4f}")
