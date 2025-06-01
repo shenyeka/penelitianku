@@ -1340,10 +1340,19 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     test_df = st.session_state['test']
     aktual_test = test_df['Aktual']
     params_anfis_abc = st.session_state['params_anfis_abc']
-    c1 = st.session_state['c1']
-    c2 = st.session_state['c2']
-    s1 = st.session_state['s1']
-    s2 = st.session_state['s2']
+    # Ekstrak parameter MF
+    c1 = best_params[0:2]
+    s1 = best_params[2:4]
+    c2 = best_params[4:6]
+    s2 = best_params[6:8]
+
+    # Simpan ke session_state
+    st.session_state['c1'] = c1
+    st.session_state['s1'] = s1
+    st.session_state['c2'] = c2
+    st.session_state['s2'] = s2
+
+# Input data
     input1 = st.session_state['input1']
     input2 = st.session_state['input2']
     scaler_residual = st.session_state['scaler_residual']
