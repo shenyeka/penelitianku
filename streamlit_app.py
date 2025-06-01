@@ -1326,122 +1326,63 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-    st.markdown("<div class='header-container'>PREDIKSI REKURSIF ARIMA-ANFIS ABC</div>", unsafe_allow_html=True)
-    
-    # Check if required models are available
-    if 'model_arima' not in st.session_state or 'predictions_abc' not in st.session_state:
-        st.error("Model ARIMA atau ANFIS ABC belum tersedia. Silakan latih model terlebih dahulu.")
-        st.stop()
-    
-    # Load required components from session state
-    model_arima = st.session_state['model_arima']
-    scaler_residual = st.session_state['scaler_residual']
-    
-    # Get ANFIS ABC parameters
-    c1 = st.session_state['c_input1']
-    s1 = st.session_state['sigma_input1']
-    c2 = st.session_state['c_input2']
-    s2 = st.session_state['sigma_input2']
-    params_anfis_abc = np.concatenate([
-        st.session_state['p_abc'],
-        st.session_state['q_abc'],
-        st.session_state['r_abc']
-    ])
-    
-    # Get the last values from training data for initial lags
-    data_anfis = st.session_state['data_anfis_with_lags']
-    lag_cols = [col for col in data_anfis.columns if 'residual_lag' in col]
-    last_lags = data_anfis[lag_cols].iloc[-1].values
-    
-    # User input for number of steps to predict
-    n_steps = st.number_input("Masukkan jumlah periode yang ingin diprediksi:", 
-                             min_value=1, max_value=24, value=12, step=1)
-    
-    if st.button("Mulai Prediksi Rekursif"):
-        with st.spinner(f"Memprediksi {n_steps} langkah ke depan..."):
-            # Initialize containers for predictions
-            arima_predictions = []
-            anfis_predictions = []
-            hybrid_predictions = []
-            
-            # Get last date from training data
-            last_date = data_anfis.index[-1]
-            
-            # Prepare initial lags for ANFIS
-            current_lags = list(last_lags)
-            
-            for i in range(n_steps):
-                # Step 1: ARIMA prediction
-                arima_pred = model_arima.forecast(steps=1).values[0]
-                arima_predictions.append(arima_pred)
-                
-                # Step 2: ANFIS prediction (using current lags)
-                # Convert lags to numpy array
-                input_data = np.array(current_lags).reshape(1, -1)
-                
-                # Compute firing strength
-                def gaussian_mf(x, c, sigma):
-                    return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
-                
-                def compute_firing_strength(input1, input2, c1, s1, c2, s2):
-                    mf1 = gaussian_mf(input1, c1, s1)
-                    mf2 = gaussian_mf(input2, c2, s2)
-                    rules = np.array([mf1[:, i] * mf2[:, j] 
-                                     for i in range(len(c1)) 
-                                     for j in range(len(c2))]).T
-                    return rules
-                
-                rules = compute_firing_strength(input_data[:,0], input_data[:,1], c1, s1, c2, s2)
-                
-                # ANFIS prediction
-                def anfis_predict(rules, params, input1, input2):
-                    n_rules = rules.shape[1]
-                    p = params[:n_rules]
-                    q = params[n_rules:2*n_rules]
-                    r = params[2*n_rules:3*n_rules]
-                    rule_outputs = p * input1[:,None] + q * input2[:,None] + r
-                    denom = np.sum(rules, axis=1)
-                    denom = np.where(denom == 0, 1e-6, denom)
-                    output = np.sum(rules * rule_outputs, axis=1) / denom
-                    return output
-                
-                anfis_pred = anfis_predict(rules, params_anfis_abc, input_data[:,0], input_data[:,1])[0]
-                
-                # Denormalize ANFIS prediction
-                anfis_pred_denorm = scaler_residual.inverse_transform(
-                    np.array(anfis_pred).reshape(-1,1))[0][0]
-                anfis_predictions.append(anfis_pred_denorm)
-                
-                # Step 3: Hybrid prediction
-                hybrid_pred = arima_pred + anfis_pred_denorm
-                hybrid_predictions.append(hybrid_pred)
-                
-                # Update lags for next step (shift window)
-                current_lags.pop(0)
-                current_lags.append(anfis_pred)  # Use normalized residual for next prediction
-            
-            # Create date index for predictions
-            pred_dates = pd.date_range(
-                start=last_date + pd.DateOffset(months=1),
-                periods=n_steps,
-                freq='MS'
-            )
-            
-            # Create results DataFrame
-            results_df = pd.DataFrame({
-                'Tanggal': pred_dates,
-                'Prediksi ARIMA': arima_predictions,
-                'Prediksi ANFIS ABC': anfis_predictions,
-                'Prediksi Hybrid ARIMA-ANFIS ABC': hybrid_predictions
-            }).set_index('Tanggal')
-            
-            # Store results in session state
-            st.session_state['recursive_predictions'] = results_df
-            
-            # Display results
-            st.success(f"Prediksi untuk {n_steps} periode ke depan berhasil dibuat!")
-            st.dataframe(results_df)
-            
-            # Plot results
-            st.line_chart(results_df[['Prediksi Hybrid ARIMA-ANFIS ABC']])
-            
+st.subheader("📘 PREDIKSI DATA TESTING")
+
+if 'model_arima' not in st.session_state or 'scaler_residual' not in st.session_state:
+    st.error("❗ Model ARIMA atau scaler residual belum tersedia.")
+    st.stop()
+
+try:
+    test_df = st.session_state['data_test']
+    predictions_arima_test = test_df['Jumlah permintaan_pred']
+    aktual_test = test_df['Jumlah permintaan_asli']
+
+    # Ambil dua nilai lag terakhir dari data training residual (sudah dinormalisasi)
+    lag10_future = st.session_state['lag10'][-1]
+    lag12_future = st.session_state['lag10'][-2]
+
+    n_forecast = len(test_df)
+    forecast_anfis = []
+
+    # 🔁 Prediksi rekursif ANFIS (residual ARIMA)
+    for _ in range(n_forecast):
+        pred = predict_next_step(lag10_future, lag12_future)
+        forecast_anfis.append(pred)
+
+        # Geser lag: lag12 <- lag10, lag10 <- prediksi baru
+        lag12_future = lag10_future
+        lag10_future = pred
+
+    # Denormalisasi prediksi ANFIS
+    forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
+    forecast_anfis_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_anfis).flatten()
+
+    # Gabungkan prediksi ARIMA dan ANFIS
+    pred_hybrid_test = predictions_arima_test.values + forecast_anfis_denorm
+
+    # Evaluasi
+    mse_test = mean_squared_error(aktual_test, pred_hybrid_test)
+    rmse_test = np.sqrt(mse_test)
+    mape_test = mean_absolute_percentage_error(aktual_test, pred_hybrid_test) * 100
+
+    # Visualisasi hasil prediksi testing
+    df_hasil_test = pd.DataFrame({
+        "Bulan": test_df.index,
+        "Aktual": aktual_test,
+        "Prediksi ARIMA": predictions_arima_test,
+        "Prediksi ANFIS (denorm)": forecast_anfis_denorm,
+        "Prediksi ARIMA-ANFIS ABC": pred_hybrid_test
+    })
+
+    st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC) - Testing**")
+    st.dataframe(df_hasil_test)
+
+    st.write("📈 **Visualisasi Prediksi Testing**")
+    st.line_chart(df_hasil_test.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
+
+    st.success(f"✅ Evaluasi Data Testing:\n\n📉 MAPE: `{mape_test:.2f}%` | RMSE: `{rmse_test:.4f}`")
+
+    st.session_state['hasil_hybrid_abc_test'] = df_hasil_test
+
+except Exception as e:
+    st.error(f"❌ Terjadi kesalahan saat prediksi data testing: {e}")
