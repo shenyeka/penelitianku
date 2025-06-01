@@ -1327,63 +1327,57 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
 # Fungsi prediksi langkah berikutnya ANFIS
-        def predict_next_step(lag10_future, lag12_future):
-            lag10_arr = np.array([lag10_future])
-            lag12_arr = np.array([lag12_future])
-            rules = compute_firing_strength(lag10_arr, lag12_arr, c1, s1, c2, s2)
-            pred = anfis_predict(rules, consequents, lag10_arr, lag12_arr)[0]
-            return pred
+    def predict_next_step(lag10_future, lag12_future):
+        lag10_arr = np.array([lag10_future])
+        lag12_arr = np.array([lag12_future])
+        rules = compute_firing_strength(lag10_arr, lag12_arr, c1, s1, c2, s2)
+        pred = anfis_predict(rules, consequents, lag10_arr, lag12_arr)[0]
+        return pred
 
-        # Prediksi testing ANFIS secara rekursif
-        n_forecast = len(test)
+    n_forecast = len(test)
 
-        lag10_future = lag10[-1]
-        lag12_future = lag12[-2]
+    lag10_future = lag10[-1]
+    lag12_future = lag12[-2]
 
-        forecast_anfis = []
-        for _ in range(n_forecast):
-            pred = predict_next_step(lag10_future, lag12_future)
-            forecast_anfis.append(pred)
-            lag12_future = lag10_future
-            lag10_future = pred
+    forecast_anfis = []
+    for _ in range(n_forecast):
+        pred = predict_next_step(lag10_future, lag12_future)
+        forecast_anfis.append(pred)
+        lag12_future = lag10_future
+        lag10_future = pred
 
-        forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
-        forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis).flatten()
+    forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
+    forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis).flatten()
 
-        # Ambil prediksi ARIMA dan aktual testing
-        predictions_arima_test = test['Jumlah permintaan_pred']
-        actual_test = test['Jumlah permintaan']
+    predictions_arima_test = test['Jumlah permintaan_pred']
+    actual_test = test['Jumlah permintaan']
 
-        # Samakan panjang data testing
-        min_len_test = min(len(predictions_arima_test), len(forecast_anfis_denorm), len(actual_test))
-        predictions_arima_test = predictions_arima_test[-min_len_test:]
-        forecast_anfis_denorm = forecast_anfis_denorm[-min_len_test:]
-        actual_test = actual_test[-min_len_test:]
+    min_len_test = min(len(predictions_arima_test), len(forecast_anfis_denorm), len(actual_test))
+    predictions_arima_test = predictions_arima_test[-min_len_test:]
+    forecast_anfis_denorm = forecast_anfis_denorm[-min_len_test:]
+    actual_test = actual_test[-min_len_test:]
 
-        # Hitung prediksi hybrid testing
-        pred_hybrid_test_abc = predictions_arima_test.values + forecast_anfis_denorm
+    pred_hybrid_test_abc = predictions_arima_test.values + forecast_anfis_denorm
 
-        # Buat DataFrame hasil testing
-        forecast_index = pd.date_range(start=test.index[0], periods=min_len_test, freq='MS')
-        df_hybrid_test = pd.DataFrame({
-            'Tanggal': forecast_index,
-            'Aktual': actual_test.values,
-            'Prediksi ARIMA': predictions_arima_test.values,
-            'Prediksi ANFIS': forecast_anfis_denorm,
-            'Prediksi Hybrid ARIMA-ANFIS ABC': pred_hybrid_test_abc
-        })
+    forecast_index = pd.date_range(start=test.index[0], periods=min_len_test, freq='MS')
+    df_hybrid_test = pd.DataFrame({
+        'Tanggal': forecast_index,
+        'Aktual': actual_test.values,
+        'Prediksi ARIMA': predictions_arima_test.values,
+        'Prediksi ANFIS': forecast_anfis_denorm,
+        'Prediksi Hybrid ARIMA-ANFIS ABC': pred_hybrid_test_abc
+    })
 
-        st.write("📊 **Hasil Prediksi Testing Hybrid ARIMA + ANFIS ABC**")
-        st.dataframe(df_hybrid_test.set_index('Tanggal'))
+    st.write("📊 **Hasil Prediksi Testing Hybrid ARIMA + ANFIS ABC**")
+    st.dataframe(df_hybrid_test.set_index('Tanggal'))
 
-        st.write("📈 **Visualisasi Prediksi Testing**")
-        st.line_chart(df_hybrid_test.set_index('Tanggal')[['Aktual', 'Prediksi ARIMA', 'Prediksi Hybrid ARIMA-ANFIS ABC']])
+    st.write("📈 **Visualisasi Prediksi Testing**")
+    st.line_chart(df_hybrid_test.set_index('Tanggal')[['Aktual', 'Prediksi ARIMA', 'Prediksi Hybrid ARIMA-ANFIS ABC']])
 
-        mape_test = np.mean(np.abs((actual_test - pred_hybrid_test_abc) / actual_test)) * 100
-        st.success(f"📉 MAPE Hybrid ARIMA-ANFIS ABC - Testing: {mape_test:.2f}%")
+    mape_test = np.mean(np.abs((actual_test - pred_hybrid_test_abc) / actual_test)) * 100
+    st.success(f"📉 MAPE Hybrid ARIMA-ANFIS ABC - Testing: {mape_test:.2f}%")
 
-        # Simpan hasil testing hybrid ke session_state (opsional)
-        st.session_state['hasil_hybrid_abc_test'] = df_hybrid_test
+    st.session_state['hasil_hybrid_abc_test'] = df_hybrid_test
 
-    except Exception as e:
-        st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
+except Exception as e:
+    st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
