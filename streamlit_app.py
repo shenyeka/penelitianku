@@ -1327,89 +1327,89 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
 
-  def predict_next_step(input1_future, input2_future):
-        input1_arr = np.array([input1_future])
-        input2_arr = np.array([input2_future])
-        rules = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-        pred = anfis_predict(rules, params_anfis_abc, input1_arr, input2_arr)[0]
-        return pred
+def predict_next_step(input1_future, input2_future):
+    input1_arr = np.array([input1_future])
+    input2_arr = np.array([input2_future])
+    rules = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+    pred = anfis_predict(rules, params_anfis_abc, input1_arr, input2_arr)[0]
+    return pred
 
-    n_forecast = len(test)
-    forecast_anfis = []
+n_forecast = len(test)
+forecast_anfis = []
 
-    input1_future = input1[-1]
-    input2_future = input2[-2]
+input1_future = input1[-1]
+input2_future = input2[-2]
 
-    for _ in range(n_forecast):
-        pred = predict_next_step(input1_future, input2_future)
-        forecast_anfis.append(pred)
+for _ in range(n_forecast):
+    pred = predict_next_step(input1_future, input2_future)
+    forecast_anfis.append(pred)
 
-        input2_future = input1_future
-        input1_future = pred
+    input2_future = input1_future
+    input1_future = pred
 
-    forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
-    forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis)
+forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
+forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis)
 
-    forecast_index = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
-    forecast_df_anfis = pd.DataFrame({
-        'Tanggal': forecast_index,
-        'Prediksi ANFIS (Denormalized)': forecast_anfis_denorm.flatten()
-    })
+forecast_index = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
+forecast_df_anfis = pd.DataFrame({
+    'Tanggal': forecast_index,
+    'Prediksi ANFIS (Denormalized)': forecast_anfis_denorm.flatten()
+})
 
-    st.write("📊 **Hasil Prediksi ANFIS (Denormalisasi) Langkah ke Depan**")
-    st.dataframe(forecast_df_anfis)
+st.write("📊 **Hasil Prediksi ANFIS (Denormalisasi) Langkah ke Depan**")
+st.dataframe(forecast_df_anfis)
 
-    # Prediksi ARIMA data testing
-    predictions_arima_test = test['Jumlah permintaan_pred']
-    pred_anfis_test = forecast_df_anfis['Prediksi ANFIS (Denormalized)'].values
+# Prediksi ARIMA data testing
+predictions_arima_test = test['Jumlah permintaan_pred']
+pred_anfis_test = forecast_df_anfis['Prediksi ANFIS (Denormalized)'].values
 
-    if len(predictions_arima_test) != len(pred_anfis_test):
-        st.warning(f"Panjang data ARIMA ({len(predictions_arima_test)}) dan ANFIS ({len(pred_anfis_test)}) tidak sama, menyesuaikan panjang terkecil.")
-        min_len_test = min(len(predictions_arima_test), len(pred_anfis_test))
-        predictions_arima_test = predictions_arima_test[-min_len_test:]
-        pred_anfis_test = pred_anfis_test[-min_len_test:]
-        aktual_test_adj = aktual_test[-min_len_test:]
-    else:
-        aktual_test_adj = aktual_test
+if len(predictions_arima_test) != len(pred_anfis_test):
+    st.warning(f"Panjang data ARIMA ({len(predictions_arima_test)}) dan ANFIS ({len(pred_anfis_test)}) tidak sama, menyesuaikan panjang terkecil.")
+    min_len_test = min(len(predictions_arima_test), len(pred_anfis_test))
+    predictions_arima_test = predictions_arima_test[-min_len_test:]
+    pred_anfis_test = pred_anfis_test[-min_len_test:]
+    aktual_test_adj = aktual_test[-min_len_test:]
+else:
+    aktual_test_adj = aktual_test
 
-    pred_hybrid_test_abc = predictions_arima_test.values + pred_anfis_test
+pred_hybrid_test_abc = predictions_arima_test.values + pred_anfis_test
 
-    st.write("📊 **Hasil Prediksi Hybrid ARIMA-ANFIS ABC - Testing**")
-    df_hybrid_test = pd.DataFrame({
-        'Tanggal': predictions_arima_test.index if isinstance(predictions_arima_test.index, pd.DatetimeIndex) else forecast_index[-len(pred_hybrid_test_abc):],
-        'Aktual': aktual_test_adj.values,
-        'Prediksi ARIMA': predictions_arima_test.values,
-        'Prediksi ANFIS ABC': pred_anfis_test,
-        'Prediksi Hybrid': pred_hybrid_test_abc
-    })
-    st.dataframe(df_hybrid_test)
+st.write("📊 **Hasil Prediksi Hybrid ARIMA-ANFIS ABC - Testing**")
+df_hybrid_test = pd.DataFrame({
+    'Tanggal': predictions_arima_test.index if isinstance(predictions_arima_test.index, pd.DatetimeIndex) else forecast_index[-len(pred_hybrid_test_abc):],
+    'Aktual': aktual_test_adj.values,
+    'Prediksi ARIMA': predictions_arima_test.values,
+    'Prediksi ANFIS ABC': pred_anfis_test,
+    'Prediksi Hybrid': pred_hybrid_test_abc
+})
+st.dataframe(df_hybrid_test)
 
-    # Evaluasi performa testing
-    mape_final = mean_absolute_percentage_error(aktual_test_adj, pred_hybrid_test_abc) * 100
+# Evaluasi performa testing
+mape_final = mean_absolute_percentage_error(aktual_test_adj, pred_hybrid_test_abc) * 100
 
-    st.success(f"📉 MAPE Test: {mape_final:.2f} %")
+st.success(f"📉 MAPE Test: {mape_final:.2f} %")
 
-    # Visualisasi hasil testing
-    import matplotlib.pyplot as plt
-    import matplotlib.dates as mdates
+# Visualisasi hasil testing
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-    if not isinstance(aktual_test_adj.index, pd.DatetimeIndex):
-        aktual_test_adj.index = pd.date_range(start="2022-01-01", periods=len(aktual_test_adj), freq='MS')
+if not isinstance(aktual_test_adj.index, pd.DatetimeIndex):
+    aktual_test_adj.index = pd.date_range(start="2022-01-01", periods=len(aktual_test_adj), freq='MS')
 
-    pred_hybrid_test_series = pd.Series(pred_hybrid_test_abc, index=aktual_test_adj.index)
+pred_hybrid_test_series = pd.Series(pred_hybrid_test_abc, index=aktual_test_adj.index)
 
-    plt.figure(figsize=(14, 6))
-    plt.plot(aktual_test_adj.index, aktual_test_adj, label='Data Aktual Test', color='blue')
-    plt.plot(pred_hybrid_test_series.index, pred_hybrid_test_series, label='Prediksi ARIMA-ANFIS ABC (Test)', color='green', linestyle='--')
+plt.figure(figsize=(14, 6))
+plt.plot(aktual_test_adj.index, aktual_test_adj, label='Data Aktual Test', color='blue')
+plt.plot(pred_hybrid_test_series.index, pred_hybrid_test_series, label='Prediksi ARIMA-ANFIS ABC (Test)', color='green', linestyle='--')
 
-    plt.legend()
-    plt.title('Perbandingan Data Aktual dan Prediksi Out-sample Periode 2022-2024')
-    plt.xlabel('Bulan-Tahun')
-    plt.ylabel('Jumlah Permintaan')
+plt.legend()
+plt.title('Perbandingan Data Aktual dan Prediksi Out-sample Periode 2022-2024')
+plt.xlabel('Bulan-Tahun')
+plt.ylabel('Jumlah Permintaan')
 
-    plt.xlim(pd.Timestamp('2022-03-01'), pd.Timestamp('2024-12-01'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    st.pyplot(plt)
+plt.xlim(pd.Timestamp('2022-03-01'), pd.Timestamp('2024-12-01'))
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
+plt.xticks(rotation=45)
+plt.tight_layout()
+st.pyplot(plt)
