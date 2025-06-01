@@ -1425,20 +1425,28 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-    # Validasi model dan data test
-    if 'model_arima' not in st.session_state:
-        st.error("❗ Model ARIMA belum tersedia.")
-        st.stop()
+    # ===== Validasi Session State =====
+    required_keys = ['model_arima', 'test', 'input1', 'input2',
+                     'scaler_residual', 'c1', 's1', 'c2', 's2', 'params_anfis_abc']
+    for key in required_keys:
+        if key not in st.session_state:
+            st.error(f"❗ {key} belum tersedia. Silakan jalankan pelatihan terlebih dahulu.")
+            st.stop()
 
-    if 'test' not in st.session_state:
-        st.error("❗ Data testing belum tersedia.")
-        st.stop()
-
+    # Ambil dari session state
     model_arima = st.session_state['model_arima']
     test = st.session_state['test']
+    input1 = st.session_state['input1']
+    input2 = st.session_state['input2']
+    scaler = st.session_state['scaler_residual']
+    c1 = st.session_state['c1']
+    s1 = st.session_state['s1']
+    c2 = st.session_state['c2']
+    s2 = st.session_state['s2']
+    consequents = st.session_state['params_anfis_abc'][-len(c1)*len(c2)*3:]
 
-    #======= ARIMA ==========
-    st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+    # ====== Prediksi ARIMA ======
+    st.subheader("🔮 Prediksi ARIMA 6 Langkah ke Depan")
     future_forecast = model_arima.forecast(steps=6)
     future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]
     df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
@@ -1446,35 +1454,27 @@ elif menu == "PREDIKSI":
     st.line_chart(df_forecast["Prediksi"])
     st.session_state['forecast_arima_future'] = df_forecast
 
-    #========= ANFIS ABC =========
-    st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
+    # ====== Prediksi ANFIS ABC ======
+    st.markdown("🔧 Prediksi ANFIS ABC 6 Langkah ke Depan (Rekursif)")
 
     n_steps_ahead = 6
     forecast_future = []
 
-    # Validasi variabel input dan scaler
-    required_keys = ['input1', 'input2', 'scaler_residual']
-    for key in required_keys:
-        if key not in st.session_state:
-            st.error(f"❗ {key} belum tersedia. Silakan lakukan pelatihan ANFIS ABC terlebih dahulu.")
-            st.stop()
-
-    input1 = st.session_state['input1']
-    input2 = st.session_state['input2']
-    scaler = st.session_state['scaler_residual']
-
+    # Inisialisasi lag input dengan 2 nilai terakhir
     input1_future = input1[-1]
     input2_future = input2[-2]
 
     for _ in range(n_steps_ahead):
-        pred = predict_next_step(input1_future, input2_future)
+        pred = predict_next_step(input1_future, input2_future, c1, s1, c2, s2, consequents)
         forecast_future.append(pred)
         input2_future = input1_future
         input1_future = pred
 
+    # Denormalisasi hasil prediksi
     forecast_future = np.array(forecast_future)
     pred_future = scaler.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
     st.session_state['forecast_anfis'] = pred_future
 
-    st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
-    st.write(pred_future)
+    st.subheader("📈 Hasil Prediksi 6 Langkah ANFIS dengan Optimasi ABC")
+    st.dataframe(pd.DataFrame({'Prediksi ANFIS': pred_future}, index=future_index))
+    st.line_chart(pd.DataFrame({'ANFIS ABC': pred_future}, index=future_index))
