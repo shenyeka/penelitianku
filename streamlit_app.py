@@ -1326,7 +1326,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-st.subheader("📘 PREDIKSI DATA TESTING")
 
   def predict_next_step(input1_future, input2_future):
         input1_arr = np.array([input1_future])
