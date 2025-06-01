@@ -1328,61 +1328,89 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 st.subheader("📘 PREDIKSI DATA TESTING")
 
-if 'model_arima' not in st.session_state or 'scaler_residual' not in st.session_state:
-    st.error("❗ Model ARIMA atau scaler residual belum tersedia.")
-    st.stop()
+  def predict_next_step(input1_future, input2_future):
+        input1_arr = np.array([input1_future])
+        input2_arr = np.array([input2_future])
+        rules = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+        pred = anfis_predict(rules, params_anfis_abc, input1_arr, input2_arr)[0]
+        return pred
 
-try:
-    test_df = st.session_state['data_test']
-    predictions_arima_test = test_df['Jumlah permintaan_pred']
-    aktual_test = test_df['Jumlah permintaan_asli']
-
-    # Ambil dua nilai lag terakhir dari data training residual (sudah dinormalisasi)
-    lag10_future = st.session_state['lag10'][-1]
-    lag12_future = st.session_state['lag10'][-2]
-
-    n_forecast = len(test_df)
+    n_forecast = len(test)
     forecast_anfis = []
 
-    # 🔁 Prediksi rekursif ANFIS (residual ARIMA)
+    input1_future = input1[-1]
+    input2_future = input2[-2]
+
     for _ in range(n_forecast):
-        pred = predict_next_step(lag10_future, lag12_future)
+        pred = predict_next_step(input1_future, input2_future)
         forecast_anfis.append(pred)
 
-        # Geser lag: lag12 <- lag10, lag10 <- prediksi baru
-        lag12_future = lag10_future
-        lag10_future = pred
+        input2_future = input1_future
+        input1_future = pred
 
-    # Denormalisasi prediksi ANFIS
     forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
-    forecast_anfis_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_anfis).flatten()
+    forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis)
 
-    # Gabungkan prediksi ARIMA dan ANFIS
-    pred_hybrid_test = predictions_arima_test.values + forecast_anfis_denorm
-
-    # Evaluasi
-    mse_test = mean_squared_error(aktual_test, pred_hybrid_test)
-    rmse_test = np.sqrt(mse_test)
-    mape_test = mean_absolute_percentage_error(aktual_test, pred_hybrid_test) * 100
-
-    # Visualisasi hasil prediksi testing
-    df_hasil_test = pd.DataFrame({
-        "Bulan": test_df.index,
-        "Aktual": aktual_test,
-        "Prediksi ARIMA": predictions_arima_test,
-        "Prediksi ANFIS (denorm)": forecast_anfis_denorm,
-        "Prediksi ARIMA-ANFIS ABC": pred_hybrid_test
+    forecast_index = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
+    forecast_df_anfis = pd.DataFrame({
+        'Tanggal': forecast_index,
+        'Prediksi ANFIS (Denormalized)': forecast_anfis_denorm.flatten()
     })
 
-    st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC) - Testing**")
-    st.dataframe(df_hasil_test)
+    st.write("📊 **Hasil Prediksi ANFIS (Denormalisasi) Langkah ke Depan**")
+    st.dataframe(forecast_df_anfis)
 
-    st.write("📈 **Visualisasi Prediksi Testing**")
-    st.line_chart(df_hasil_test.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
+    # Prediksi ARIMA data testing
+    predictions_arima_test = test['Jumlah permintaan_pred']
+    pred_anfis_test = forecast_df_anfis['Prediksi ANFIS (Denormalized)'].values
 
-    st.success(f"✅ Evaluasi Data Testing:\n\n📉 MAPE: `{mape_test:.2f}%` | RMSE: `{rmse_test:.4f}`")
+    if len(predictions_arima_test) != len(pred_anfis_test):
+        st.warning(f"Panjang data ARIMA ({len(predictions_arima_test)}) dan ANFIS ({len(pred_anfis_test)}) tidak sama, menyesuaikan panjang terkecil.")
+        min_len_test = min(len(predictions_arima_test), len(pred_anfis_test))
+        predictions_arima_test = predictions_arima_test[-min_len_test:]
+        pred_anfis_test = pred_anfis_test[-min_len_test:]
+        aktual_test_adj = aktual_test[-min_len_test:]
+    else:
+        aktual_test_adj = aktual_test
 
-    st.session_state['hasil_hybrid_abc_test'] = df_hasil_test
+    pred_hybrid_test_abc = predictions_arima_test.values + pred_anfis_test
 
-except Exception as e:
-    st.error(f"❌ Terjadi kesalahan saat prediksi data testing: {e}")
+    st.write("📊 **Hasil Prediksi Hybrid ARIMA-ANFIS ABC - Testing**")
+    df_hybrid_test = pd.DataFrame({
+        'Tanggal': predictions_arima_test.index if isinstance(predictions_arima_test.index, pd.DatetimeIndex) else forecast_index[-len(pred_hybrid_test_abc):],
+        'Aktual': aktual_test_adj.values,
+        'Prediksi ARIMA': predictions_arima_test.values,
+        'Prediksi ANFIS ABC': pred_anfis_test,
+        'Prediksi Hybrid': pred_hybrid_test_abc
+    })
+    st.dataframe(df_hybrid_test)
+
+    # Evaluasi performa testing
+    mape_final = mean_absolute_percentage_error(aktual_test_adj, pred_hybrid_test_abc) * 100
+
+    st.success(f"📉 MAPE Test: {mape_final:.2f} %")
+
+    # Visualisasi hasil testing
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+
+    if not isinstance(aktual_test_adj.index, pd.DatetimeIndex):
+        aktual_test_adj.index = pd.date_range(start="2022-01-01", periods=len(aktual_test_adj), freq='MS')
+
+    pred_hybrid_test_series = pd.Series(pred_hybrid_test_abc, index=aktual_test_adj.index)
+
+    plt.figure(figsize=(14, 6))
+    plt.plot(aktual_test_adj.index, aktual_test_adj, label='Data Aktual Test', color='blue')
+    plt.plot(pred_hybrid_test_series.index, pred_hybrid_test_series, label='Prediksi ARIMA-ANFIS ABC (Test)', color='green', linestyle='--')
+
+    plt.legend()
+    plt.title('Perbandingan Data Aktual dan Prediksi Out-sample Periode 2022-2024')
+    plt.xlabel('Bulan-Tahun')
+    plt.ylabel('Jumlah Permintaan')
+
+    plt.xlim(pd.Timestamp('2022-03-01'), pd.Timestamp('2024-12-01'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(plt)
