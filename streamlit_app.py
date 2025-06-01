@@ -1423,42 +1423,42 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
 # ====== prediksi ======
 elif menu == "PREDIKSI":
-    st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
+        st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
     #=======ARIMA==========
-        st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
-        future_forecast = model_arima.forecast(steps=6)
-        future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]  # asumsi frekuensi bulanan
-        df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
-        st.dataframe(df_forecast)
+            st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+            future_forecast = model_arima.forecast(steps=6)
+            future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]  # asumsi frekuensi bulanan
+            df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
+            st.dataframe(df_forecast)
 
-        st.line_chart(df_forecast["Prediksi"])
-        st.session_state['forecast_arima_future'] = df_forecast
+            st.line_chart(df_forecast["Prediksi"])
+            st.session_state['forecast_arima_future'] = df_forecast
     
 
 # Prediksi data testing (out-sample) secara rekursif
-    st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
+        st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
 # Jumlah langkah prediksi ke depan
-        n_steps_ahead = 6
-        forecast_future = []    
+            n_steps_ahead = 6
+            forecast_future = []    
 
 # Inisialisasi dengan dua nilai lag terakhir dari data residual training
-        input1_future = input1[-1]
-        input2_future = input2[-2]
+            input1_future = input1[-1]
+            input2_future = input2[-2]
 
-        for _ in range(n_steps_ahead):
-            pred = predict_next_step(input1_future, input2_future)
-            forecast_future.append(pred)
+            for _ in range(n_steps_ahead):
+                pred = predict_next_step(input1_future, input2_future)
+                forecast_future.append(pred)
 
     # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
-            input2_future = input1_future
-            input1_future = pred
+                input2_future = input1_future
+                input1_future = pred
 
 # Denormalisasi hasil prediksi
-        forecast_future = np.array(forecast_future)
-        pred_future = st.session_state['scaler_residual'].inverse_transform(forecast_future.reshape(-1, 1)).flatten()
-        st.session_state['forecast_anfis'] = pred_future
+            forecast_future = np.array(forecast_future)
+            pred_future = st.session_state['scaler_residual'].inverse_transform(forecast_future.reshape(-1, 1)).flatten()
+            st.session_state['forecast_anfis'] = pred_future
 
-        st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
-        st.write(pred_future)
+            st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
+            st.write(pred_future)
