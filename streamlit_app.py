@@ -1260,6 +1260,50 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
+            def predict_next_step(input1_future, input2_future):
+            # Gunakan parameter hasil optimasi sebagai global atau simpan di st.session_state
+            rules = firing_strength(
+                np.array([input1_future]), 
+                np.array([input2_future]), 
+                c1, s1, c2, s2
+            )
+            pred = anfis_predict(rules, consequents, np.array([input1_future]), np.array([input2_future]))[0]
+            return pred
+
+        n_forecast = len(test)  # test adalah dataset testing Anda
+        forecast_anfis = []
+
+        # Inisialisasi dengan dua nilai lag terakhir dari data asli (input1, input2)
+        input1_future = input1[-1]
+        input2_future = input2[-2]
+
+        for _ in range(n_forecast):
+            pred = predict_next_step(input1_future, input2_future)
+            forecast_anfis.append(pred)
+
+            # Update lags untuk langkah berikutnya
+            input2_future = input1_future
+            input1_future = pred
+
+        # Membuat DataFrame prediksi
+        forecast_index = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
+        forecast_anfis_arr = np.array(forecast_anfis).reshape(-1, 1)
+
+        # Denormalisasi prediksi
+        forecast_anfis_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_anfis_arr)
+
+        forecast_df_anfis = pd.DataFrame({
+            'Tanggal': forecast_index,
+            'Prediksi ANFIS (Denormalisasi)': forecast_anfis_denorm.flatten()
+        })
+
+        st.subheader("📅 Hasil Prediksi ANFIS Data Testing (Denormalisasi)")
+        st.dataframe(forecast_df_anfis)
+
+        # Print juga di console (jika jalankan lokal)
+        print("Hasil Prediksi ANFIS Data Testing:")
+        print(forecast_df_anfis)
+
 # ====== ARIMA-ANFIS ABC ======
 # ====== ARIMA-ANFIS ABC ======
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
