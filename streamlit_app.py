@@ -1433,30 +1433,6 @@ elif menu == "PREDIKSI":
     pred = anfis_predict(rules, consequents, input1, input2)[0]
     return pred
 
-def compute_firing_strength(input1, input2, c1, s1, c2, s2):
-    mf1 = np.exp(-((input1[:, None] - np.array(c1)[None, :]) ** 2) / (2 * np.array(s1)[None, :] ** 2))
-    mf2 = np.exp(-((input2[:, None] - np.array(c2)[None, :]) ** 2) / (2 * np.array(s2)[None, :] ** 2))
-    firing_strength = np.array([
-        mf1[:, i] * mf2[:, j]
-        for i in range(len(c1)) for j in range(len(c2))
-    ]).T
-    normalized = firing_strength / np.sum(firing_strength, axis=1, keepdims=True)
-    return normalized
-
-def anfis_predict(firing_strength, consequents, input1, input2):
-    input_matrix = np.vstack([np.ones_like(input1), input1, input2]).T  # [1, x1, x2]
-    rule_outputs = np.dot(input_matrix, np.array(consequents).reshape(-1, 3).T)  # (n_sample, n_rules)
-    output = np.sum(firing_strength * rule_outputs, axis=1)  # (n_sample,)
-    return output
-
-    # ===== Validasi Session State =====
-    required_keys = ['model_arima', 'test', 'input1', 'input2',
-                     'scaler_residual', 'c1', 's1', 'c2', 's2', 'params_anfis_abc']
-    for key in required_keys:
-        if key not in st.session_state:
-            st.error(f"❗ {key} belum tersedia. Silakan jalankan pelatihan terlebih dahulu.")
-            st.stop()
-
     # Ambil dari session state
     model_arima = st.session_state['model_arima']
     test = st.session_state['test']
