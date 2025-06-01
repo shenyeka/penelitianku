@@ -709,6 +709,8 @@ elif menu == "DATA SPLITTING":
             # Simpan untuk proses berikutnya
             st.session_state["train_data"] = train_data
             st.session_state["test_data"] = test_data
+            st.session_state["train"] = train_data          # Tambahan untuk sinkronisasi
+            st.session_state["test"] = test_data            # Tambahan untuk sinkronisasi
 
             st.success(f"✅ Data berhasil di-split dengan rasio {split_ratio*100}% training dan {(1-split_ratio)*100}% testing.")
 
