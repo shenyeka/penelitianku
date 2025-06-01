@@ -1274,7 +1274,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         st.stop()
 
     try:
-        # Ambil hasil prediksi ARIMA
+        # Ambil hasil prediksi ARIMA (training)
         hasil_train = st.session_state['pred_train_arima']
         if isinstance(hasil_train, pd.DataFrame):
             pred_arima = hasil_train["Prediksi"].reset_index(drop=True)
@@ -1283,7 +1283,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             st.error("❗ Format data hasil_train tidak sesuai.")
             st.stop()
 
-        # Ambil hasil prediksi ANFIS ABC
+        # Ambil hasil prediksi ANFIS ABC (training)
         predictions_abc = st.session_state['predictions_abc']
         if isinstance(predictions_abc, np.ndarray):
             predictions_abc = pd.Series(predictions_abc)
@@ -1291,16 +1291,16 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             predictions_abc = predictions_abc.iloc[:, 0]
         predictions_abc = predictions_abc.reset_index(drop=True)
 
-        # Potong panjang agar sama
-        min_len = min(len(pred_arima), len(predictions_abc))
+        # Samakan panjang data
+        min_len = min(len(pred_arima), len(predictions_abc), len(aktual))
         pred_arima = pred_arima[-min_len:].reset_index(drop=True)
-        aktual = aktual[-min_len:].reset_index(drop=True)
         predictions_abc = predictions_abc[-min_len:].reset_index(drop=True)
+        aktual = aktual[-min_len:].reset_index(drop=True)
 
         # Hitung prediksi hybrid
         pred_hybrid = pred_arima + predictions_abc
 
-        # Buat tanggal bulanan (jika hasil_train punya index datetime)
+        # Buat tanggal bulanan (jika index hasil_train adalah DatetimeIndex)
         if isinstance(hasil_train.index, pd.DatetimeIndex):
             start_date = hasil_train.index[-min_len]
             bulan_series = pd.date_range(start=start_date, periods=min_len, freq='MS')
@@ -1316,22 +1316,22 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             "Prediksi ARIMA-ANFIS ABC": pred_hybrid
         })
 
-        # Tampilkan
-        st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC)**")
+        # Tampilkan hasil training
+        st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC) - Training**")
         st.dataframe(df_hasil)
 
         st.write("📈 **Visualisasi Prediksi (Training)**")
         st.line_chart(df_hasil.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
-        # Hitung MAPE
+        # Hitung MAPE training
         mape = np.mean(np.abs((aktual - pred_hybrid) / aktual)) * 100
         st.success(f"📉 MAPE ARIMA-ANFIS (ABC) - Training: {mape:.2f}%")
 
-        # Simpan ke session state jika dibutuhkan
+        # Simpan ke session state
         st.session_state['hasil_hybrid_abc'] = df_hasil
 
     except Exception as e:
-        st.error(f"❌ Terjadi kesalahan: {e}")
+        st.error(f"❌ Terjadi kesalahan saat memproses prediksi training: {e}")
 
     # ============================== #
     # 📘 HYBRID PREDIKSI TESTING     #
@@ -1339,57 +1339,59 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("📘 Hasil Prediksi Hybrid Data Testing (ARIMA + ANFIS ABC)")
 
     try:
-        # Ambil hasil test dari session_state
-        if 'test' in st.session_state:
-            test_df = st.session_state['test']
-        else:
+        # Ambil data testing
+        test_df = st.session_state.get('test')
+        if test_df is None:
             st.error("❗ Data testing belum tersedia.")
             st.stop()
 
-        # Ambil prediksi ARIMA
+        # Ambil prediksi ARIMA testing
         if 'Jumlah permintaan_pred' in test_df.columns:
             pred_arima_test = test_df['Jumlah permintaan_pred'].reset_index(drop=True)
         elif 'Prediksi' in test_df.columns:
             pred_arima_test = test_df['Prediksi'].reset_index(drop=True)
         else:
-            st.error("❗ Kolom prediksi ARIMA tidak ditemukan.")
+            st.error("❗ Kolom prediksi ARIMA pada data testing tidak ditemukan.")
             st.stop()
 
-        # Ambil aktual
+        # Ambil nilai aktual testing
         if 'Jumlah permintaan' in test_df.columns:
             aktual_test = test_df['Jumlah permintaan'].reset_index(drop=True)
         elif 'Aktual' in test_df.columns:
             aktual_test = test_df['Aktual'].reset_index(drop=True)
         else:
-            st.error("❗ Kolom aktual tidak ditemukan.")
+            st.error("❗ Kolom aktual pada data testing tidak ditemukan.")
             st.stop()
 
-        # Ambil prediksi ANFIS ABC dari session_state
-        if 'forecast_df_anfis' in st.session_state:
-            pred_anfis_test = st.session_state['forecast_df_anfis']['Prediksi ANFIS (Denormalized)'].reset_index(drop=True)
-        else:
-            st.error("❗ Hasil prediksi ANFIS (ABC) belum tersedia.")
+        # Ambil prediksi ANFIS testing dari session_state
+        forecast_df_anfis = st.session_state.get('forecast_df_anfis')
+        if forecast_df_anfis is None or 'Prediksi ANFIS (Denormalized)' not in forecast_df_anfis.columns:
+            st.error("❗ Hasil prediksi ANFIS (ABC) untuk testing belum tersedia.")
             st.stop()
+        pred_anfis_test = forecast_df_anfis['Prediksi ANFIS (Denormalized)'].reset_index(drop=True)
 
         # Sinkronisasi panjang
         n = min(len(pred_arima_test), len(pred_anfis_test), len(aktual_test))
-        pred_arima_test = pred_arima_test[-n:]
-        pred_anfis_test = pred_anfis_test[-n:]
-        aktual_test = aktual_test[-n:]
+        pred_arima_test = pred_arima_test[-n:].reset_index(drop=True)
+        pred_anfis_test = pred_anfis_test[-n:].reset_index(drop=True)
+        aktual_test = aktual_test[-n:].reset_index(drop=True)
 
-        # Hitung prediksi hybrid
-        pred_hybrid_test_abc = pred_arima_test.values + pred_anfis_test.values
+        # Hitung prediksi hybrid testing
+        pred_hybrid_test_abc = pred_arima_test + pred_anfis_test
 
-        # Hitung MAPE
+        # Hitung MAPE testing
         mape_arima = np.mean(np.abs((aktual_test - pred_arima_test) / aktual_test)) * 100
         mape_anfis = np.mean(np.abs((aktual_test - pred_anfis_test) / aktual_test)) * 100
         mape_hybrid = np.mean(np.abs((aktual_test - pred_hybrid_test_abc) / aktual_test)) * 100
 
-        # Buat tanggal
-        start_date_test = pd.to_datetime("2022-01-03")
-        tanggal_test = pd.date_range(start=start_date_test, periods=n, freq='MS')
+        # Buat tanggal testing (sesuaikan dengan data asli jika memungkinkan)
+        if isinstance(test_df.index, pd.DatetimeIndex):
+            start_date_test = test_df.index[-n]
+            tanggal_test = pd.date_range(start=start_date_test, periods=n, freq='MS')
+        else:
+            tanggal_test = pd.date_range(start=pd.Timestamp.today(), periods=n, freq='MS')
 
-        # Buat DataFrame hasil
+        # Buat DataFrame hasil testing
         df_hasil_test = pd.DataFrame({
             "Bulan": tanggal_test,
             "Aktual": aktual_test,
@@ -1398,14 +1400,14 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             "Prediksi ARIMA-ANFIS ABC": pred_hybrid_test_abc
         })
 
-        # Tampilkan DataFrame
+        # Tampilkan hasil testing
+        st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC) - Testing**")
         st.dataframe(df_hasil_test)
 
-        # Visualisasi
         st.write("📈 **Visualisasi Prediksi (Testing)**")
         st.line_chart(df_hasil_test.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
 
-        # Tampilkan MAPE
+        # Tampilkan nilai MAPE testing
         st.write("📊 **Nilai MAPE (Testing):**")
         st.success(f"MAPE ARIMA: {mape_arima:.2f}%")
         st.success(f"MAPE ANFIS ABC: {mape_anfis:.2f}%")
@@ -1414,9 +1416,9 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         # Simpan ke session_state
         st.session_state['hasil_hybrid_abc_test'] = df_hasil_test
 
-        # Tombol unduh
+        # Tombol unduh hasil testing
         csv = df_hasil_test.to_csv(index=False).encode('utf-8')
         st.download_button("⬇️ Unduh Hasil Prediksi Hybrid (CSV)", data=csv, file_name="hasil_prediksi_hybrid_test.csv", mime="text/csv")
 
     except Exception as e:
-        st.error(f"❌ Terjadi kesalahan saat menghasilkan prediksi hybrid: {e}")
+        st.error(f"❌ Terjadi kesalahan saat menghasilkan prediksi hybrid testing: {e}")
