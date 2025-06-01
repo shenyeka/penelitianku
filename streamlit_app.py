@@ -725,7 +725,7 @@ elif menu == "DATA SPLITTING":
         st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
-=============ARIMA===========
+#=============ARIMA===========
 elif menu == "PEMODELAN ARIMA":
     from statsmodels.tsa.arima.model import ARIMA
     from sklearn.metrics import mean_absolute_percentage_error
