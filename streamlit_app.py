@@ -1348,7 +1348,13 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         # Pastikan kolom 'Prediksi' dari ARIMA sudah ada di test_df
         if 'Prediksi' not in test_df.columns:
             if 'pred_arima_test' in st.session_state:
-                test_df['Prediksi'] = st.session_state['pred_arima_test']
+                pred_arima_test = st.session_state['pred_arima_test']
+                # Pastikan pred_arima_test 1 dimensi
+                if isinstance(pred_arima_test, pd.DataFrame):
+                    pred_arima_test = pred_arima_test.iloc[:, 0]
+                elif isinstance(pred_arima_test, np.ndarray) and pred_arima_test.ndim > 1:
+                    pred_arima_test = pred_arima_test[:, 0]
+                test_df['Prediksi'] = pd.Series(pred_arima_test).reset_index(drop=True)
             else:
                 st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
                 st.stop()
