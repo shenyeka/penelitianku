@@ -1326,85 +1326,49 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-st.subheader("📘 Hasil Prediksi Hybrid Data Testing (ARIMA + ANFIS ABC)")
+    st.subheader("📄 HASIL PREDIKSI TESTING MENGGUNAKAN ANFIS (ABC)")
 
-try:
-    if 'test' in st.session_state:
-        test_df = st.session_state['test'].copy()
-    else:
-        st.error("❗ Data testing belum tersedia.")
+    if 'test' not in st.session_state or 'lag10_test' not in st.session_state or 'lag12_test' not in st.session_state:
+        st.error("❗ Data test atau lag belum tersedia.")
         st.stop()
 
-    # Pastikan test_df memiliki kolom 'Aktual'
-    if 'Aktual' not in test_df.columns:
-        if isinstance(test_df, pd.DataFrame) and test_df.shape[1] == 1:
-            test_df.columns = ['Aktual']
-        elif isinstance(test_df, pd.Series):
-            test_df = test_df.to_frame(name='Aktual')
-        else:
-            st.error("❗ Tidak bisa mengenali format data testing untuk kolom 'Aktual'.")
-            st.stop()
+    try:
+        test = st.session_state['test']
+        lag10 = st.session_state['lag10_test']
+        lag12 = st.session_state['lag12_test']
 
-    # Prediksi ARIMA testing
-    if 'Prediksi' not in test_df.columns:
-        if 'pred_arima_test' in st.session_state:
-            pred_arima_test = st.session_state['pred_arima_test']
-            if isinstance(pred_arima_test, pd.DataFrame):
-                pred_arima_test = pred_arima_test.iloc[:, 0]
-            elif isinstance(pred_arima_test, np.ndarray) and pred_arima_test.ndim > 1:
-                pred_arima_test = pred_arima_test[:, 0]
-            pred_arima_test = pd.Series(pred_arima_test).reset_index(drop=True)
-            test_df['Prediksi'] = pred_arima_test
-        else:
-            st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
-            st.stop()
+        def predict_next_step(lag10_future, lag12_future):
+            lag10_arr = np.array([lag10_future])
+            lag12_arr = np.array([lag12_future])
+            rules = firing_strength(lag10_arr, lag12_arr, c_lag10_abc, sigma_lag10_abc, c_lag12_abc, sigma_lag12_abc)
+            pred = anfis_predict(rules, params_anfis_abc, lag10_arr, lag12_arr)[0]
+            return pred
 
-    aktual_test = test_df['Aktual'].reset_index(drop=True)
-    pred_arima_test = test_df['Prediksi'].reset_index(drop=True)
+        n_forecast = len(test)
+        forecast_anfis = []
 
-    if 'forecast_df_anfis' in st.session_state:
-        pred_anfis_test = st.session_state['forecast_df_anfis']['Prediksi ANFIS (Denormalized)'].reset_index(drop=True)
-    else:
-        st.error("❗ Hasil prediksi ANFIS (ABC) testing belum tersedia.")
-        st.stop()
+        lag10_future = lag10[-1]
+        lag12_future = lag12[-2]
 
-    n = min(len(pred_arima_test), len(pred_anfis_test), len(aktual_test))
-    pred_arima_test = pred_arima_test[-n:].reset_index(drop=True)
-    pred_anfis_test = pred_anfis_test[-n:].reset_index(drop=True)
-    aktual_test = aktual_test[-n:].reset_index(drop=True)
+        for _ in range(n_forecast):
+            pred = predict_next_step(lag10_future, lag12_future)
+            forecast_anfis.append(pred)
+            lag12_future = lag10_future
+            lag10_future = pred
 
-    pred_hybrid_test_abc = pred_arima_test.values + pred_anfis_test.values
+        forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
+        forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis)
 
-    mape_arima = np.mean(np.abs((aktual_test - pred_arima_test) / aktual_test)) * 100
-    mape_anfis = np.mean(np.abs((aktual_test - pred_anfis_test) / aktual_test)) * 100
-    mape_hybrid = np.mean(np.abs((aktual_test - pred_hybrid_test_abc) / aktual_test)) * 100
+        bulan_series = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
+        df_pred_anfis_test = pd.DataFrame({
+            "Bulan": bulan_series,
+            "Prediksi ANFIS ABC (Denormalized)": forecast_anfis_denorm.flatten()
+        })
 
-    start_date_test = pd.Timestamp.today()
-    tanggal_test = pd.date_range(start=start_date_test, periods=n, freq='MS')
+        st.write("📊 **Tabel Hasil Prediksi ANFIS (ABC) - Data Testing**")
+        st.dataframe(df_pred_anfis_test)
 
-    df_hasil_test = pd.DataFrame({
-        "Bulan": tanggal_test,
-        "Aktual": aktual_test,
-        "Prediksi ARIMA": pred_arima_test,
-        "Prediksi ANFIS ABC": pred_anfis_test,
-        "Prediksi ARIMA-ANFIS ABC": pred_hybrid_test_abc
-    })
+        st.session_state['hasil_prediksi_anfis_abc_test'] = df_pred_anfis_test
 
-    st.write("📊 **Tabel Hasil Prediksi Gabungan ARIMA + ANFIS (ABC) - Testing**")
-    st.dataframe(df_hasil_test)
-
-    st.write("📈 **Visualisasi Prediksi Testing**")
-    st.line_chart(df_hasil_test.set_index("Bulan")[["Aktual", "Prediksi ARIMA", "Prediksi ARIMA-ANFIS ABC"]])
-
-    st.write("📊 **Nilai MAPE (Testing):**")
-    st.success(f"MAPE ARIMA: {mape_arima:.2f}%")
-    st.success(f"MAPE ANFIS ABC: {mape_anfis:.2f}%")
-    st.success(f"MAPE Hybrid ARIMA + ANFIS ABC: {mape_hybrid:.2f}%")
-
-    st.session_state['hasil_hybrid_abc_test'] = df_hasil_test
-
-    csv = df_hasil_test.to_csv(index=False).encode('utf-8')
-    st.download_button("⬇️ Unduh Hasil Prediksi Hybrid Testing (CSV)", data=csv, file_name="hasil_prediksi_hybrid_test.csv", mime="text/csv")
-
-except Exception as e:
-    st.error(f"❌ Terjadi kesalahan saat menghasilkan prediksi hybrid testing: {e}")
+    except Exception as e:
+        st.error(f"❌ Terjadi kesalahan saat memproses prediksi ANFIS ABC untuk data testing: {e}")
