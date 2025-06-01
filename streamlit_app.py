@@ -817,7 +817,7 @@ elif menu == "PEMODELAN ARIMA":
         if model_arima is not None and st.button("Prediksi dan Evaluasi"):
             start_test = len(train)
             pred_train = model_arima.predict(start=0, end=start_test - 1)
-            pred_test = model_arima.forecast(steps=len(test))
+            pred_arima_test = model_arima.forecast(steps=len(test))
 
             potong_12 = st.checkbox("Potong 12 baris pertama dari data training?", value=True)
 
@@ -838,7 +838,7 @@ elif menu == "PEMODELAN ARIMA":
                 hasil_test.columns = ["Aktual"]
             else:
                 hasil_test = hasil_test.to_frame(name="Aktual")
-            hasil_test["Prediksi"] = pred_test
+            hasil_test["Prediksi"] = pred_arima_test
             st.dataframe(hasil_test)
 
             st.subheader("Evaluasi Model dengan MAPE")
@@ -852,7 +852,7 @@ elif menu == "PEMODELAN ARIMA":
 
             st.session_state['residual_arima'] = model_arima.resid
             st.session_state['pred_train_arima'] = hasil_train
-            st.session_state['pred_test_arima'] = hasil_test
+            st.session_state['pred_arima_test'] = hasil_test
 
     else:
         st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
@@ -1347,8 +1347,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
         # Pastikan kolom 'Prediksi' dari ARIMA sudah ada di test_df
         if 'Prediksi' not in test_df.columns:
-            if 'pred_test' in st.session_state:
-                test_df['Prediksi'] = st.session_state['pred_test']
+            if 'pred_arima_test' in st.session_state:
+                test_df['Prediksi'] = st.session_state['pred_arima_test']
             else:
                 st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
                 st.stop()
