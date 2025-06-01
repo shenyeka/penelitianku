@@ -1326,64 +1326,84 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
+st.subheader("🧪 PREDIKSI TESTING MENGGUNAKAN ANFIS (ABC) SAJA")
 
-    st.subheader("🧪 PREDIKSI TESTING MENGGUNAKAN ANFIS (ABC) SAJA")
+# Cek apakah semua variabel penting tersedia
+required_vars = [
+    'lag10', 'lag12', 'params_anfis_abc',
+    'c_lag10_abc', 'sigma_lag10_abc',
+    'c_lag12_abc', 'sigma_lag12_abc',
+    'scaler_residual', 'test'
+]
 
-    if 'lag10' not in st.session_state or 'lag12' not in st.session_state or 'params_anfis_abc' not in st.session_state:
-        st.error("❗ Data lag atau parameter ANFIS belum tersedia.")
-        st.stop()
+missing = [var for var in required_vars if var not in st.session_state]
+if missing:
+    st.error(f"❗ Data berikut belum tersedia: {', '.join(missing)}")
+    st.stop()
 
-    try:
-        lag10 = st.session_state['lag10']
-        lag12 = st.session_state['lag12']
-        test = st.session_state['data_test']
-        scaler_residual = st.session_state['scaler_residual']
-        c_lag10_abc = st.session_state['c_lag10_abc']
-        sigma_lag10_abc = st.session_state['sigma_lag10_abc']
-        c_lag12_abc = st.session_state['c_lag12_abc']
-        sigma_lag12_abc = st.session_state['sigma_lag12_abc']
-        params_anfis_abc = st.session_state['params_anfis_abc']
+# Ambil variabel dari session_state
+lag10 = st.session_state.lag10
+lag12 = st.session_state.lag12
+params_anfis_abc = st.session_state.params_anfis_abc
+c_lag10_abc = st.session_state.c_lag10_abc
+sigma_lag10_abc = st.session_state.sigma_lag10_abc
+c_lag12_abc = st.session_state.c_lag12_abc
+sigma_lag12_abc = st.session_state.sigma_lag12_abc
+scaler_residual = st.session_state.scaler_residual
+test = st.session_state.test
 
-        # Fungsi prediksi langkah ke depan
-        def predict_next_step(lag10_future, lag12_future):
-            lag10_arr = np.array([lag10_future])
-            lag12_arr = np.array([lag12_future])
-            rules = firing_strength(lag10_arr, lag12_arr, c_lag10_abc, sigma_lag10_abc, c_lag12_abc, sigma_lag12_abc)
-            pred = anfis_predict(rules, params_anfis_abc, lag10_arr, lag12_arr)[0]
-            return pred
+# Fungsi firing strength dan prediksi ANFIS
+def firing_strength(x1, x2, c1, s1, c2, s2):
+    def gaussian(x, c, s):
+        return np.exp(-0.5 * ((x - c) / s) ** 2)
 
-        # Prediksi future sebanyak panjang test
-        n_forecast = len(test)
-        forecast_anfis = []
+    mf1 = np.array([gaussian(x1, c, s) for c, s in zip(c1, s1)]).T
+    mf2 = np.array([gaussian(x2, c, s) for c, s in zip(c2, s2)]).T
 
-        lag10_future = lag10[-1]
-        lag12_future = lag12[-2]
+    rules = np.array([mf1[:, i] * mf2[:, j] for i in range(len(c1)) for j in range(len(c2))]).T
+    normalized = rules / np.sum(rules, axis=1, keepdims=True)
+    return normalized
 
-        for _ in range(n_forecast):
-            pred = predict_next_step(lag10_future, lag12_future)
-            forecast_anfis.append(pred)
-            lag12_future = lag10_future
-            lag10_future = pred
+def anfis_predict(rules, params, x1, x2):
+    X = np.vstack((np.ones_like(x1), x1, x2, x1 * x2)).T
+    out = np.dot(rules, np.dot(params, X.T)).diagonal()
+    return out
 
-        # Denormalisasi hasil prediksi ANFIS
-        forecast_anfis_array = np.array(forecast_anfis).reshape(-1, 1)
-        forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis_array).flatten()
+# Fungsi prediksi 1 langkah
+def predict_next_step(lag10_val, lag12_val):
+    x1 = np.array([lag10_val])
+    x2 = np.array([lag12_val])
+    rules = firing_strength(x1, x2, c_lag10_abc, sigma_lag10_abc, c_lag12_abc, sigma_lag12_abc)
+    return anfis_predict(rules, params_anfis_abc, x1, x2)[0]
 
-        # Tampilkan hasil ke dalam DataFrame
-        forecast_index = pd.date_range(start="2022-01-03", periods=n_forecast, freq='MS')
-        forecast_df_anfis = pd.DataFrame({
-            'Tanggal': forecast_index,
-            'Prediksi ANFIS (Denormalized)': forecast_anfis_denorm
-        })
+# Prediksi rekursif
+n_steps = len(test)
+forecast_anfis_norm = []
 
-        st.write("📘 **Hasil Prediksi ANFIS (ABC) - Testing**")
-        st.dataframe(forecast_df_anfis)
+# Inisialisasi dari dua lag terakhir data training
+lag10_future = lag10[-1]
+lag12_future = lag12[-2]
 
-        # Simpan ke session state
-        st.session_state['forecast_anfis_test'] = forecast_df_anfis
+for _ in range(n_steps):
+    pred = predict_next_step(lag10_future, lag12_future)
+    forecast_anfis_norm.append(pred)
+    lag12_future = lag10_future
+    lag10_future = pred
 
-        # Visualisasi
-        st.line_chart(forecast_df_anfis.set_index("Tanggal"))
+# Denormalisasi hasil prediksi
+forecast_anfis_array = np.array(forecast_anfis_norm).reshape(-1, 1)
+forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis_array).flatten()
 
-    except Exception as e:
-        st.error(f"❌ Terjadi kesalahan saat memproses prediksi ANFIS (ABC) pada data testing: {e}")
+# Simpan ke session_state untuk penggunaan selanjutnya (misal hybrid)
+st.session_state['forecast_anfis_test'] = forecast_anfis_denorm
+
+# Tampilkan hasil prediksi
+tanggal_pred = pd.date_range(start="2022-01-01", periods=n_steps, freq='MS')
+df_pred_anfis = pd.DataFrame({
+    "Tanggal": tanggal_pred,
+    "Prediksi ANFIS (Denorm)": forecast_anfis_denorm
+})
+
+st.write("📈 Hasil Prediksi Testing Menggunakan ANFIS (ABC) Saja:")
+st.dataframe(df_pred_anfis)
+st.line_chart(df_pred_anfis.set_index("Tanggal"))
