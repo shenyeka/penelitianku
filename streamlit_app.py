@@ -1326,7 +1326,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-st.subheader("📘 PREDIKSI DATA TESTING")
+    st.subheader("📘 PREDIKSI DATA TESTING")
 
     if 'pred_arima_test' not in st.session_state:
         st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
