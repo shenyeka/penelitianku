@@ -1326,8 +1326,10 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-   st.subheader("📘 PREDIKSI DATA TESTING")
-
+        min_len_test = min(len(pred_arima_test), len(forecast_anfis_denorm))
+        pred_arima_test = pred_arima_test[-min_len_test:].reset_index(drop=True)
+        forecast_anfis_denorm_trim = pd.Series(forecast_anfis_denorm[-min_len_test:]).reset_index(drop=True)
+        pred_hybrid_test_abc = pred_arima_test + forecast_anfis_denorm_trim
         # Buat DataFrame hasil hybrid test
         df_hybrid_test = pd.DataFrame({
             'Tanggal': forecast_index[-min_len_test:],
