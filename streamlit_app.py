@@ -1326,86 +1326,75 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
- 
-    st.subheader("📘 Testing Hybrid ARIMA-ANFIS dengan Optimasi ABC")
+st.subheader("📘 Testing Hybrid ARIMA-ANFIS dengan Optimasi ABC")
 
-    # Validasi data penting
-    required_keys = ['test', 'params_anfis_abc', 'c1', 'c2', 's1', 's2', 'input1', 'input2',
-                     'scaler_residual', 'pred_arima_test']
-    missing = [k for k in required_keys if k not in st.session_state]
-    if missing:
-        st.error(f"❗ Data/model belum lengkap, missing: {missing}")
-        st.stop()
+# Validasi data penting
+required_keys = ['test', 'params_anfis_abc', 'c1', 'c2', 's1', 's2', 'input1', 'input2',
+                 'scaler_residual', 'pred_arima_test']
+missing = [k for k in required_keys if k not in st.session_state]
+if missing:
+    st.error(f"❗ Data/model belum lengkap, missing: {missing}")
+    st.stop()
 
-    test_df = st.session_state['test']
-    aktual_test = test_df['Aktual']
-    params_anfis_abc = st.session_state['params_anfis_abc']
-    # Ekstrak parameter MF
-    c1 = best_params[0:2]
-    s1 = best_params[2:4]
-    c2 = best_params[4:6]
-    s2 = best_params[6:8]
+test_df = st.session_state['test']
+aktual_test = test_df['Aktual'].reset_index(drop=True)
+params_anfis_abc = st.session_state['params_anfis_abc']
+c1 = st.session_state['c1']
+s1 = st.session_state['s1']
+c2 = st.session_state['c2']
+s2 = st.session_state['s2']
+input1 = st.session_state['input1']
+input2 = st.session_state['input2']
+scaler_residual = st.session_state['scaler_residual']
+pred_arima_test = st.session_state['pred_arima_test'].reset_index(drop=True)
 
-    # Simpan ke session_state
-    st.session_state['c1'] = c1
-    st.session_state['s1'] = s1
-    st.session_state['c2'] = c2
-    st.session_state['s2'] = s2
+n_forecast = len(test_df)
+forecast_anfis = []
 
-# Input data
-    input1 = st.session_state['input1']
-    input2 = st.session_state['input2']
-    scaler_residual = st.session_state['scaler_residual']
-    pred_arima_test = st.session_state['pred_arima_test']
+# Inisialisasi lag input terakhir
+input1_future = input1[-1]
+input2_future = input2[-2]
 
-    n_forecast = len(test_df)
-    forecast_anfis = []
+def predict_next_step(input1_f, input2_f):
+    input1_arr = np.array([input1_f])
+    input2_arr = np.array([input2_f])
+    rules = firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)  # hitung firing strength
+    pred = anfis_predict(rules, params_anfis_abc, input1_arr, input2_arr)[0]
+    return pred
 
-    # Inisialisasi input lag dengan nilai terakhir dari data input (sesuaikan indexing)
-    input1_future = input1[-1]
-    input2_future = input2[-2]
+for _ in range(n_forecast):
+    pred = predict_next_step(input1_future, input2_future)
+    forecast_anfis.append(pred)
+    # Geser lag input
+    input2_future = input1_future
+    input1_future = pred
 
-    def predict_next_step(input1_f, input2_f):
-        input1_arr = np.array([input1_f])
-        input2_arr = np.array([input2_f])
-        rules = firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)  # shape (1, n_rules) misal
-        pred = anfis_predict(rules, params_anfis_abc, input1_arr, input2_arr)[0]
-        return pred
+forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
+forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis).flatten()
 
-    for _ in range(n_forecast):
-        pred = predict_next_step(input1_future, input2_future)
-        forecast_anfis.append(pred)
-        # Update lag untuk langkah berikutnya
-        input2_future = input1_future
-        input1_future = pred
+# Samakan panjang prediksi dan aktual
+min_len = min(len(pred_arima_test), len(forecast_anfis_denorm), len(aktual_test))
+pred_arima_test = pred_arima_test[-min_len:].reset_index(drop=True)
+forecast_anfis_denorm = forecast_anfis_denorm[-min_len:]
+aktual_test = aktual_test[-min_len:].reset_index(drop=True)
 
-    forecast_anfis = np.array(forecast_anfis).reshape(-1, 1)
-    forecast_anfis_denorm = scaler_residual.inverse_transform(forecast_anfis).flatten()
+pred_hybrid_test = pred_arima_test + forecast_anfis_denorm
 
-    # Sesuaikan panjang prediksi
-    min_len = min(len(pred_arima_test), len(forecast_anfis_denorm), len(aktual_test))
-    pred_arima_test = pred_arima_test[-min_len:].reset_index(drop=True)
-    forecast_anfis_denorm = forecast_anfis_denorm[-min_len:]
-    aktual_test = aktual_test[-min_len:].reset_index(drop=True)
+# Buat dataframe hasil testing
+df_test_result = pd.DataFrame({
+    "Aktual": aktual_test,
+    "Prediksi ARIMA": pred_arima_test,
+    "Prediksi ANFIS ABC": forecast_anfis_denorm,
+    "Prediksi Hybrid": pred_hybrid_test
+})
 
-    # Prediksi hybrid
-    pred_hybrid_test = pred_arima_test + forecast_anfis_denorm
+st.write("📊 **Hasil Prediksi Testing Hybrid ARIMA + ANFIS ABC**")
+st.dataframe(df_test_result)
+st.line_chart(df_test_result.set_index(df_test_result.index)[["Aktual", "Prediksi ARIMA", "Prediksi Hybrid"]])
 
-    # Tampilkan hasil testing dalam DataFrame
-    df_test_result = pd.DataFrame({
-        "Aktual": aktual_test,
-        "Prediksi ARIMA": pred_arima_test,
-        "Prediksi ANFIS ABC": forecast_anfis_denorm,
-        "Prediksi Hybrid": pred_hybrid_test
-    })
+mse_test = mean_squared_error(aktual_test, pred_hybrid_test)
+rmse_test = np.sqrt(mse_test)
+mape_test = mean_absolute_percentage_error(aktual_test, pred_hybrid_test) * 100
 
-    st.write("📊 **Hasil Prediksi Testing Hybrid ARIMA + ANFIS ABC**")
-    st.dataframe(df_test_result)
-    st.line_chart(df_test_result)
-
-    mse_test = mean_squared_error(aktual_test, pred_hybrid_test)
-    rmse_test = np.sqrt(mse_test)
-    mape_test = mean_absolute_percentage_error(aktual_test, pred_hybrid_test) * 100
-
-    st.success(f"📉 MAPE Hybrid Testing: {mape_test:.2f}%")
-    st.info(f"MSE: {mse_test:.4f}, RMSE: {rmse_test:.4f}")
+st.success(f"📉 MAPE Hybrid Testing: {mape_test:.2f}%")
+st.info(f"MSE: {mse_test:.4f}, RMSE: {rmse_test:.4f}")
