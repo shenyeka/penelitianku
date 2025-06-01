@@ -1425,14 +1425,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-    def predict_next_step(input1, input2, c1, s1, c2, s2, consequents):
-    # Prediksi satu langkah ke depan dengan parameter ANFIS
-    input1 = np.array([input1])
-    input2 = np.array([input2])
-    rules = compute_firing_strength(input1, input2, c1, s1, c2, s2)
-    pred = anfis_predict(rules, consequents, input1, input2)[0]
-    return pred
-
     # Ambil dari session state
     model_arima = st.session_state['model_arima']
     test = st.session_state['test']
@@ -1459,6 +1451,14 @@ elif menu == "PREDIKSI":
 
     n_steps_ahead = 6
     forecast_future = []
+
+def predict_next_step(input1, input2, c1, s1, c2, s2, consequents):
+    # Prediksi satu langkah ke depan dengan parameter ANFIS
+    input1 = np.array([input1])
+    input2 = np.array([input2])
+    rules = compute_firing_strength(input1, input2, c1, s1, c2, s2)
+    pred = anfis_predict(rules, consequents, input1, input2)[0]
+    return pred
 
     # Inisialisasi lag input dengan 2 nilai terakhir
     input1_future = input1[-1]
