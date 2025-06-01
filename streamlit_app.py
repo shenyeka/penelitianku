@@ -1351,7 +1351,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
         # Ambil kolom aktual dari test_df
         if 'Aktual' in test_df.columns:
-            aktual_test = test_df['Aktual'].reset_index(drop=True)
+            aktual_test = hasil_test["Aktual"].reset_index(drop=True)
         else:
             st.error("❗ Kolom aktual tidak ditemukan pada data testing.")
             st.stop()
