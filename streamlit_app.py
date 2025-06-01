@@ -1260,18 +1260,21 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
+# Prediksi data testing (out-sample) secara rekursif
             st.markdown("### Membentuk prediksi testing")
+
             def predict_next_step(input1_future, input2_future):
                 input1_arr = np.array([input1_future])
                 input2_arr = np.array([input2_future])
-                rules3 = firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+                rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
                 pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
                 return pred_test_abc
-            
+
+# Jumlah langkah prediksi ke depan
             n_forecast = 34
             forecast_anfis = []
 
-            # Inisialisasi dengan dua nilai lag terakhir dari data asli
+# Inisialisasi dengan dua nilai lag terakhir dari data residual training
             input1_future = input1[-1]
             input2_future = input2[-2]
 
@@ -1279,16 +1282,17 @@ elif menu == "PEMODELAN ANFIS ABC":
                 pred = predict_next_step(input1_future, input2_future)
                 forecast_anfis.append(pred)
 
-                # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
+    # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
                 input2_future = input1_future
-                input1_future = pred_test_abc
+                input1_future = pred
 
-            pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(pred_test_abc.reshape(-1, 1)).flatten()
+# Denormalisasi hasil prediksi
+            forecast_anfis = np.array(forecast_anfis)
+            pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(forecast_anfis.reshape(-1, 1)).flatten()
             st.session_state['pred_test_abc'] = pred_test_abc2
 
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
-
             
 
 # ====== ARIMA-ANFIS ABC ======
