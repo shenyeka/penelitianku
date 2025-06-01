@@ -1296,7 +1296,6 @@ elif menu == "PEMODELAN ANFIS ABC":
             
 
 # ====== ARIMA-ANFIS ABC ======
-# ====== ARIMA-ANFIS ABC ======
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("📘 PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
@@ -1421,3 +1420,52 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
     except Exception as e:
         st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
+
+# ====== prediksi ======
+elif menu == "PREDIKSI":
+    st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
+
+    #=======ARIMA==========
+        st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+        future_forecast = model_arima.forecast(steps=6)
+        future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]  # asumsi frekuensi bulanan
+        df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
+        st.dataframe(df_forecast)
+
+        st.line_chart(df_forecast["Prediksi"])
+        st.session_state['forecast_arima_future'] = df_forecast
+    
+
+# Prediksi data testing (out-sample) secara rekursif
+    st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
+
+    def predict_next_step(input1_future, input2_future):
+        input1_arr = np.array([input1_future])
+        input2_arr = np.array([input2_future])
+        rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+        pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
+        return pred_test_abc
+
+# Jumlah langkah prediksi ke depan
+        n_forecast = 34
+        forecast_anfis = []
+
+# Inisialisasi dengan dua nilai lag terakhir dari data residual training
+        input1_future = input1[-1]
+        input2_future = input2[-2]
+
+        for _ in range(n_forecast):
+            pred = predict_next_step(input1_future, input2_future)
+            forecast_anfis.append(pred)
+
+    # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
+            input2_future = input1_future
+            input1_future = pred
+
+# Denormalisasi hasil prediksi
+        forecast_anfis = np.array(forecast_anfis)
+        pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(forecast_anfis.reshape(-1, 1)).flatten()
+        st.session_state['forecast_anfis'] = pred_test_abc2
+
+        st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
+        st.write(pred_test_abc2)
