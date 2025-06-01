@@ -1326,116 +1326,118 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-st.subheader("📘 PREDIKSI DATA TESTING")
+   st.subheader("📘 PREDIKSI DATA TESTING")
 
-if 'pred_arima_test' not in st.session_state:
-    st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
-    st.stop()
+    if 'pred_arima_test' not in st.session_state:
+        st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
+        st.stop()
 
-# Pastikan mape_train sudah ada di session state agar bisa ditampilkan
-mape_train = st.session_state.get('mape_train', None)
-if mape_train is None:
-    st.warning("⚠️ MAPE Training belum tersedia, silakan lakukan training terlebih dahulu.")
+    if st.button("Mulai Prediksi Hybrid untuk Data Testing"):
+        with st.spinner("Menghitung prediksi hybrid untuk data testing..."):
+            try:
+                # Ambil data testing
+                test_data = st.session_state['pred_arima_test']
+                aktual_test = test_data["Aktual"].values
+                pred_arima_test = test_data["Prediksi"].values
+                
+                # Fungsi untuk prediksi ANFIS ABC
+                def predict_next_step(lag1, lag2, c1, s1, c2, s2, params):
+                    def gaussian_mf(x, c, sigma):
+                        return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
+                    
+                    # Hitung firing strength untuk setiap membership function
+                    mf1_low = gaussian_mf(lag1, c1[0], s1[0])
+                    mf1_high = gaussian_mf(lag1, c1[1], s1[1])
+                    mf2_low = gaussian_mf(lag2, c2[0], s2[0])
+                    mf2_high = gaussian_mf(lag2, c2[1], s2[1])
+                    
+                    # Hitung rule strength (product inference)
+                    rule1 = mf1_low * mf2_low
+                    rule2 = mf1_low * mf2_high
+                    rule3 = mf1_high * mf2_low
+                    rule4 = mf1_high * mf2_high
+                    
+                    rules = np.array([rule1, rule2, rule3, rule4])
+                    rules = rules / (rules.sum() + 1e-10)  # Normalisasi
+                    
+                    # Prediksi ANFIS
+                    n_rules = 4
+                    p = params[:n_rules]
+                    q = params[n_rules:2*n_rules]
+                    r = params[2*n_rules:3*n_rules]
+                    
+                    # Hitung output setiap rule
+                    output = (rules * (p * lag1 + q * lag2 + r)).sum()
+                    return output
 
-def predict_next_step(lag1, lag2, c1, s1, c2, s2, params):
-    import numpy as np
-    
-    def gaussian_mf(x, c, sigma):
-        return np.exp(-((x - c) ** 2) / (2 * sigma ** 2))
-    
-    # Hitung nilai MF input1 dan input2 (2 MF masing-masing)
-    mf1_vals = [gaussian_mf(lag1, c, s) for c, s in zip(c1, s1)]
-    mf2_vals = [gaussian_mf(lag2, c, s) for c, s in zip(c2, s2)]
-    
-    # Hitung firing strength untuk 4 rule (2 x 2)
-    rules = np.array([mf1 * mf2 for mf1 in mf1_vals for mf2 in mf2_vals])
-    
-    # Parameter konsekuen p, q, r masing-masing 4 elemen (total 12)
-    n_rules = 4
-    p = params[:n_rules]
-    q = params[n_rules:2*n_rules]
-    r = params[2*n_rules:3*n_rules]
-    
-    # Hitung output ANFIS
-    numerator = np.sum(rules * (p * lag1 + q * lag2 + r))
-    denominator = np.sum(rules) if np.sum(rules) != 0 else 1e-6  # Hindari pembagian 0
-    
-    output = numerator / denominator
-    return output
+                # Parameter ANFIS ABC dari session state
+                c1 = st.session_state.get('c_input1', [0.3, 0.7])
+                s1 = st.session_state.get('sigma_input1', [0.1, 0.1])
+                c2 = st.session_state.get('c_input2', [0.3, 0.7])
+                s2 = st.session_state.get('sigma_input2', [0.1, 0.1])
+                params_anfis = st.session_state.get('params_anfis_abc', np.zeros(12))
 
-if st.button("Mulai Prediksi Hybrid untuk Data Testing"):
-    with st.spinner("Menghitung prediksi hybrid untuk data testing..."):
-        try:
-            # Ambil data testing
-            test_data = st.session_state['pred_arima_test']
-            aktual_test = test_data["Aktual"].values
-            pred_arima_test = test_data["Prediksi"].values
-            
-            # Parameter ANFIS ABC dari session state
-            c1 = st.session_state.get('c_input1', [0.3, 0.7])
-            s1 = st.session_state.get('sigma_input1', [0.1, 0.1])
-            c2 = st.session_state.get('c_input2', [0.3, 0.7])
-            s2 = st.session_state.get('sigma_input2', [0.1, 0.1])
-            params_anfis = st.session_state.get('params_anfis_abc', np.zeros(12))
-            
-            # Inisialisasi lag dari data training terakhir
-            lag1 = st.session_state['input1'][-1]
-            lag2 = st.session_state['input2'][-1]
-            
-            # Prediksi multi-step untuk testing
-            pred_anfis_test = []
-            for _ in range(len(aktual_test)):
-                pred = predict_next_step(lag1, lag2, c1, s1, c2, s2, params_anfis)
-                pred_anfis_test.append(pred)
-                lag2 = lag1
-                lag1 = pred
-            
-            # Denormalisasi prediksi ANFIS
-            scaler = st.session_state['scaler_residual']
-            pred_anfis_test_denorm = scaler.inverse_transform(np.array(pred_anfis_test).reshape(-1, 1)).flatten()
-            
-            # Gabungkan dengan prediksi ARIMA
-            pred_hybrid_test = pred_arima_test + pred_anfis_test_denorm
-            
-            # Dataframe hasil prediksi testing
-            df_test = pd.DataFrame({
-                "Aktual": aktual_test,
-                "Prediksi ARIMA": pred_arima_test,
-                "Prediksi ANFIS ABC": pred_anfis_test_denorm,
-                "Prediksi Hybrid": pred_hybrid_test
-            })
-            
-            st.write("📊 **Hasil Prediksi Testing**")
-            st.dataframe(df_test)
-            st.line_chart(df_test[["Aktual", "Prediksi Hybrid"]])
-            
-            # Hitung MAPE testing
-            mape_test = np.mean(np.abs((aktual_test - pred_hybrid_test) / aktual_test)) * 100
-            st.success(f"📉 MAPE Testing: {mape_test:.2f}%")
-            
-            # Simpan hasil ke session state
-            st.session_state['hasil_hybrid_test'] = df_test
-            st.session_state['mape_test'] = mape_test
-            
-        except Exception as e:
-            st.error(f"❌ Error dalam prediksi testing: {str(e)}")
-            st.stop()
+                # Inisialisasi lag dari data training terakhir
+                input1 = st.session_state.get('input1', np.zeros(1))
+                input2 = st.session_state.get('input2', np.zeros(1))
+                lag1 = input1[-1] if len(input1) > 0 else 0
+                lag2 = input2[-1] if len(input2) > 0 else 0
+                
+                # Prediksi multi-step untuk testing
+                pred_anfis_test = []
+                for _ in range(len(aktual_test)):
+                    pred = predict_next_step(lag1, lag2, c1, s1, c2, s2, params_anfis)
+                    pred_anfis_test.append(pred)
+                    # Update lag untuk step berikutnya
+                    lag2 = lag1
+                    lag1 = pred
 
-    # Tampilkan perbandingan MAPE jika mape_train tersedia
-    st.subheader("🔄 Perbandingan Kinerja Model")
-    col1, col2 = st.columns(2)
-    with col1:
-        if mape_train is not None:
+                # Denormalisasi prediksi ANFIS
+                scaler = st.session_state.get('scaler_residual', None)
+                if scaler is not None:
+                    pred_anfis_test_denorm = scaler.inverse_transform(np.array(pred_anfis_test).reshape(-1, 1)).flatten()
+                else:
+                    pred_anfis_test_denorm = np.array(pred_anfis_test)
+                    st.warning("⚠️ Scaler tidak ditemukan, menggunakan nilai tanpa denormalisasi")
+
+                # Gabungkan dengan prediksi ARIMA
+                pred_hybrid_test = pred_arima_test + pred_anfis_test_denorm
+
+                # Hasil akhir
+                df_test = pd.DataFrame({
+                    "Aktual": aktual_test,
+                    "Prediksi ARIMA": pred_arima_test,
+                    "Prediksi ANFIS ABC": pred_anfis_test_denorm,
+                    "Prediksi Hybrid": pred_hybrid_test
+                })
+
+                st.write("📊 **Hasil Prediksi Testing**")
+                st.dataframe(df_test)
+
+                st.line_chart(df_test[["Aktual", "Prediksi Hybrid"]])
+                
+                mape_test = np.mean(np.abs((aktual_test - pred_hybrid_test) / (aktual_test + 1e-10))) * 100
+                st.success(f"📉 MAPE Testing: {mape_test:.2f}%")
+
+                # Simpan hasil ke session state
+                st.session_state['hasil_hybrid_test'] = df_test
+
+            except Exception as e:
+                st.error(f"❌ Error dalam prediksi testing: {str(e)}")
+                st.stop()
+
+        # Tampilkan perbandingan MAPE
+        st.subheader("🔄 Perbandingan Kinerja Model")
+        col1, col2 = st.columns(2)
+        with col1:
             st.metric("MAPE Training", f"{mape_train:.2f}%")
-        else:
-            st.write("MAPE Training belum tersedia.")
-    with col2:
-        st.metric("MAPE Testing", f"{mape_test:.2f}%")
+        with col2:
+            st.metric("MAPE Testing", f"{mape_test:.2f}%")
 
-    # Rekomendasi model berdasarkan MAPE testing
-    if mape_test < 10:
-        st.success("✅ Model sangat akurat (MAPE < 10%)")
-    elif mape_test < 20:
-        st.warning("⚠️ Model cukup akurat (10% ≤ MAPE < 20%)")
-    else:
-        st.error("❌ Model kurang akurat (MAPE ≥ 20%)")
+        # Rekomendasi model
+        if mape_test < 10:
+            st.success("✅ Model sangat akurat (MAPE < 10%)")
+        elif mape_test < 20:
+            st.warning("⚠️ Model cukup akurat (10% ≤ MAPE < 20%)")
+        else:
+            st.error("❌ Model kurang akurat (MAPE ≥ 20%)")
