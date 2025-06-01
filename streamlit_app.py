@@ -1269,7 +1269,7 @@ elif menu == "PEMODELAN ANFIS ABC":
                 pred = anfis_predict(rules, consequents, np.array([input1_future]), np.array([input2_future]))[0]
                 return pred
 
-            n_forecast = len(aktual_test)  # test dataset
+            n_forecast = 34  # test dataset
             forecast_anfis = []
 
             # Inisialisasi dengan dua nilai lag terakhir dari data asli (input1, input2)
