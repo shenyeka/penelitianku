@@ -1326,7 +1326,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 # ========================== #
 # 📘 HYBRID PREDIKSI TESTING #
 # ========================== #
-     st.subheader("🧪 PREDIKSI TESTING MENGGUNAKAN ANFIS (ABC) SAJA")
+
+    st.subheader("🧪 PREDIKSI TESTING MENGGUNAKAN ANFIS (ABC) SAJA")
 
     # Validasi residual training & parameter ANFIS
     if 'residual_train' not in st.session_state or len(st.session_state['residual_train']) < 2:
@@ -1346,8 +1347,8 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
             pred = anfis_predict(rules, params_anfis_abc, lag10_arr, lag12_arr)[0]
             return pred
 
-        # Tentukan panjang prediksi (default 6 bulan ke depan atau bisa fleksibel)
-        n_forecast = 6  # bisa diubah jadi len(test) jika tersedia
+        # Tentukan panjang prediksi (misal 6 bulan)
+        n_forecast = 6
 
         # Gunakan dua residual terakhir dari training sebagai input awal
         last_residuals = st.session_state['residual_train'][-2:]
@@ -1359,7 +1360,6 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         for _ in range(n_forecast):
             pred = predict_next_step(lag10_future, lag12_future)
             forecast_anfis.append(pred)
-            # Geser lag
             lag12_future = lag10_future
             lag10_future = pred
 
