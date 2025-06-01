@@ -1379,5 +1379,3 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
     st.session_state['hasil_hybrid_abc_test'] = df_hybrid_test
 
-except Exception as e:
-    st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
