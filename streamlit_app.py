@@ -1428,13 +1428,15 @@ elif menu == "PREDIKSI":
 
     # ======= ARIMA ==========
     st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
-    future_forecast = model_arima.forecast(steps=6)
-    future_index = pd.date_range(start=test.index[-1], periods=7, freq='MS')[1:]  # asumsi frekuensi bulanan
-    df_forecast = pd.DataFrame({'Prediksi': future_forecast}, index=future_index)
-    st.dataframe(df_forecast)
+    n_steps_ahead = 6
+    future_arima = model_arima.forecast(steps=n_steps_ahead)
+    forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
+    forecast_arima_df = pd.DataFrame({
+    'Prediksi Jumlah Permintaan (ARIMA)': future_arima})
+    st.dataframe(forecast_arima_df)
 
-    st.line_chart(df_forecast["Prediksi"])
-    st.session_state['forecast_arima_future'] = df_forecast
+    st.line_chart(forecast_arima_df["Prediksi"])
+    st.session_state['forecast_arima_future'] = forecast_arima_df
 
     # ======= ANFIS ABC ==========
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
