@@ -1491,3 +1491,18 @@ elif menu == "PREDIKSI":
     else:
         st.warning("Silakan jalankan model ANFIS-ABC terlebih dahulu pada menu 'PEMODELAN ARIMA-ANFIS'.")
 
+    # ======= GABUNGKAN DAN JUMLAHKAN HASIL PREDIKSI =======
+    if 'forecast_arima_future' in st.session_state and 'forecast_6steps_anfis' in st.session_state:
+        forecast_arima_df = st.session_state['forecast_arima_future']
+        pred_anfis = st.session_state['forecast_6steps_anfis']
+
+        # Gabungkan prediksi ARIMA dan ANFIS
+        combined_df = forecast_arima_df.copy()
+        combined_df['Prediksi ANFIS'] = pred_anfis
+        combined_df['Total Prediksi'] = combined_df['Prediksi'] + combined_df['Prediksi ANFIS']
+
+        st.subheader("Gabungan Prediksi ARIMA + ANFIS-ABC")
+        st.dataframe(combined_df)
+
+        # Plot hasil gabungan
+        st.line_chart(combined_df[['Prediksi', 'Prediksi ANFIS', 'Total Prediksi']])
