@@ -1462,17 +1462,15 @@ elif menu == "PREDIKSI":
     # ======= ANFIS ABC ==========
 st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
+# Ambil input1 dan input2 dari session_state
+input1 = st.session_state['input1']
+input2 = st.session_state['input2']
+
 def predict_next_step(input1_future, input2_future):
-    # Pastikan input ke fungsi berupa array 1D dengan bentuk (1,)
     input1_arr = np.array([input1_future])
     input2_arr = np.array([input2_future])
-    
-    # Hitung firing strength dengan parameter MFs (c1,s1,c2,s2)
     rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-    
-    # Prediksi output ANFIS
     pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
-    
     return pred_test_abc
 
 n_steps_ahead = 6
@@ -1485,17 +1483,17 @@ input2_future = input2[-1]  # lag kedua terakhir (t-2)
 for _ in range(n_steps_ahead):
     pred = predict_next_step(input1_future, input2_future)
     forecast_future.append(pred)
-    
-    # Geser lag untuk langkah selanjutnya
+
+    # Geser lag untuk langkah berikutnya
     input2_future = input1_future
     input1_future = pred
 
 forecast_future = np.array(forecast_future)
 
-# Denormalisasi hasil prediksi (pastikan scaler_residual sudah fit sebelumnya)
+# Denormalisasi hasil prediksi
 pred_future = scaler_residual.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
 
-# Simpan hasil ke session_state untuk dipakai di lain tempat
+# Simpan hasil prediksi ke session_state agar bisa dipakai di tempat lain
 st.session_state['forecast_anfis'] = pred_future
 
 st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
