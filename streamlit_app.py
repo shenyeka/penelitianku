@@ -1466,6 +1466,10 @@ elif menu == "PREDIKSI":
     n_steps_ahead = 6
     forecast_future = []
 
+if 'input1' in st.session_state and 'input2' in st.session_state:
+    input1 = st.session_state['input1']
+    input2 = st.session_state['input2']
+
     # Inisialisasi dengan dua nilai lag terakhir dari data residual training
     input1_future = input1[-1]
     input2_future = input2[-2]
