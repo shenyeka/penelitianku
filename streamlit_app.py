@@ -1422,21 +1422,29 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
 
 # ====== prediksi ======
-# ====== prediksi ======
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-    # ======= ARIMA ==========
-    st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
-    n_steps_ahead = 6
-    future_arima = model_arima.forecast(steps=n_steps_ahead)
-    forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
-    forecast_arima_df = pd.DataFrame({
-    'Prediksi Jumlah Permintaan (ARIMA)': future_arima})
-    st.dataframe(forecast_arima_df)
+    if 'model_arima' not in st.session_state:
+        st.warning("Model ARIMA belum dibuat. Silakan lakukan pemodelan terlebih dahulu.")
+    else:
+        model_arima = st.session_state['model_arima']
 
-    st.line_chart(forecast_arima_df["Prediksi"])
-    st.session_state['forecast_arima_future'] = forecast_arima_df
+        # ======= ARIMA ==========
+        st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+        n_steps_ahead = 6
+        future_arima = model_arima.forecast(steps=n_steps_ahead)
+        start_date = model_arima.data.dates[-1] + pd.Timedelta(days=1)
+        forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
+        
+        forecast_arima_df = pd.DataFrame({
+            'Bulan': forecast_dates,
+            'Prediksi': future_arima
+        }).set_index('Tanggal')
+        
+        st.dataframe(forecast_arima_df)
+        st.line_chart(forecast_arima_df["Prediksi"])
+        st.session_state['forecast_arima_future'] = forecast_arima_df
 
     # ======= ANFIS ABC ==========
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
