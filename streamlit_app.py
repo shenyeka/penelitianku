@@ -1425,36 +1425,40 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-if 'model_arima' not in st.session_state:
-    st.warning("Model ARIMA belum dilatih. Silakan latih model terlebih dahulu di menu 'PEMODELAN ARIMA'.")
-else:
-    model_arima = st.session_state['model_arima']  # Ambil model dari session_state
+    if 'model_arima' not in st.session_state:
+        st.warning("Model ARIMA belum dilatih.")
+    else:
+        model_arima = st.session_state['model_arima']
+        train = st.session_state.get('train_data')
 
-    st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
-    n_steps_ahead = 6
+        n_steps_ahead = 6
+        try:
+            future_arima = model_arima.forecast(steps=n_steps_ahead)
+            if future_arima is None or len(future_arima) == 0:
+                st.error("Forecast gagal. Hasil ARIMA kosong.")
+            else:
+                try:
+                    start_date = model_arima.data.dates[-1] + pd.Timedelta(days=1)
+                except:
+                    start_date = train.index[-1] + pd.Timedelta(days=1)
 
-    # Forecast
-    future_arima = model_arima.forecast(steps=n_steps_ahead)
+                forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
 
-    # Tentukan tanggal mulai prediksi
-    try:
-        # Jika ARIMA menggunakan data dengan index waktu
-        start_date = model_arima.data.dates[-1] + pd.Timedelta(days=1)
-    except:
-        # Backup: jika dates tidak tersedia, pakai index terakhir dari train
-        start_date = st.session_state['train'].index[-1] + pd.Timedelta(days=1)
+                forecast_arima_df = pd.DataFrame({
+                    'Tanggal': forecast_dates,
+                    'Prediksi': future_arima
+                })
 
-    # Buat tanggal prediksi
-    forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
+                forecast_arima_df = forecast_arima_df.set_index('Tanggal')
 
-    # Pastikan jumlah tanggal sama dengan prediksi
-    forecast_arima_df = pd.DataFrame({
-        'Prediksi': future_arima
-    }, index=forecast_dates)
+                st.write("Hasil Prediksi ARIMA 6 langkah ke depan:")
+                st.dataframe(forecast_arima_df)
+                st.line_chart(forecast_arima_df['Prediksi'])
 
-    st.dataframe(forecast_arima_df)
-    st.line_chart(forecast_arima_df["Prediksi"])
-    st.session_state['forecast_arima_future'] = forecast_arima_df
+                st.session_state['forecast_arima_future'] = forecast_arima_df
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
+
 
     # ======= ANFIS ABC ==========
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
