@@ -1506,7 +1506,7 @@ elif menu == "PREDIKSI":
         # Plot hasil gabungan
         st.line_chart(combined_df[['Prediksi', 'Prediksi ANFIS', 'Total Prediksi']])
 
-                st.markdown("### 📌 Catatan Pembacaan Hasil Plot Prediksi")
+    st.markdown("### Interpretasi hasil prediksi")
 
         st.markdown("""
         Berdasarkan plot di atas:
