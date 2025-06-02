@@ -1445,7 +1445,7 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 
 # ====== prediksi ======
 elif menu == "PREDIKSI":
-    st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
+    st.subheader("PREDICTION 6 STEPS AHEAD")
 
     if 'model_arima' not in st.session_state:
         st.warning("Model ARIMA belum dilatih.")
@@ -1464,7 +1464,7 @@ elif menu == "PREDIKSI":
                     'Prediksi': future_arima
                 }).set_index('Langkah ke-')
 
-                st.write("Hasil Prediksi ARIMA 6 langkah ke depan:")
+                st.write("ARIMA Forecast Future:")
                 st.dataframe(forecast_arima_df)
 
                 st.session_state['forecast_arima_future'] = forecast_arima_df
@@ -1473,7 +1473,7 @@ elif menu == "PREDIKSI":
 
     # ======= ANFIS ABC ==========
     # Prediksi 6 langkah ke depan setelah prediksi testing
-    st.markdown("### Prediksi 6 Langkah ke Depan")
+    st.markdown("ANFIS Forecast Future:")
     
     # Periksa apakah hasil prediksi sudah tersedia
     if 'forecast_6steps_anfis' in st.session_state:
