@@ -1505,3 +1505,34 @@ elif menu == "PREDIKSI":
 
         # Plot hasil gabungan
         st.line_chart(combined_df[['Prediksi', 'Prediksi ANFIS', 'Total Prediksi']])
+
+                st.markdown("### 📌 Catatan Pembacaan Hasil Plot Prediksi")
+
+        st.markdown("""
+        Berdasarkan plot di atas:
+        - **Prediksi ARIMA** (biru) menggambarkan tren dasar berdasarkan pola historis deret waktu.
+        - **Prediksi ANFIS** (oranye) memodelkan sisa atau residual dari ARIMA untuk menangkap pola nonlinier yang tidak dapat ditangkap oleh ARIMA.
+        - **Total Prediksi** (hijau) merupakan gabungan dari keduanya dan menjadi hasil akhir dari model hybrid **ARIMA-ANFIS**.
+
+        Jika garis **Total Prediksi** mendekati garis data aktual (jika ditampilkan), maka model berhasil menangkap pola dengan baik dan menghasilkan prediksi yang akurat.
+        """)
+
+        if 'mape_anfis' in st.session_state:
+            mape_value = st.session_state['mape_anfis']
+            st.markdown(f"""
+            ### 📉 Evaluasi Akurasi Model (MAPE)
+            - Nilai **MAPE (Mean Absolute Percentage Error)** dari model hybrid ARIMA-ANFIS adalah **{mape_value:.2f}%**.
+            - Ini menunjukkan bahwa rata-rata kesalahan prediksi dibandingkan dengan nilai aktual berada dalam kisaran tersebut.
+            - Semakin kecil nilai MAPE, semakin baik performa model.
+
+            #### 🔍 Kategori Kemampuan Model Prediksi berdasarkan MAPE:
+            - **MAPE < 10%** : Kemampuan model prediksi **sangat baik**.
+            - **10% ≤ MAPE < 20%** : Kemampuan model prediksi **baik**.
+            - **20% ≤ MAPE < 50%** : Kemampuan model prediksi **layak**.
+            - **MAPE ≥ 50%** : Kemampuan model prediksi **buruk**.
+
+            **Kesimpulan:** Model hybrid ARIMA-ANFIS menunjukkan performa yang sesuai dengan kategori di atas berdasarkan nilai MAPE.
+            """)
+        else:
+            st.info("Nilai MAPE belum tersedia. Silakan lakukan evaluasi model pada menu 'PEMODELAN ARIMA-ANFIS'.")
+
