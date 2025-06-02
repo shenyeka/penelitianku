@@ -1463,37 +1463,37 @@ elif menu == "PREDIKSI":
     # ======= ANFIS ABC ==========
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
-if 'input1' in st.session_state and 'input2' in st.session_state:
-    input1 = st.session_state['input1']
-    input2 = st.session_state['input2']
+    if 'input1' in st.session_state and 'input2' in st.session_state:
+        input1 = st.session_state['input1']
+        input2 = st.session_state['input2']
 
 # Fungsi untuk prediksi 1 langkah ke depan
-def predict_next_step(input1_future, input2_future):
-    input1_arr = np.array([input1_future])
-    input2_arr = np.array([input2_future])
-    rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-    pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
-    return pred_test_abc
+    def predict_next_step(input1_future, input2_future):
+        input1_arr = np.array([input1_future])
+        input2_arr = np.array([input2_future])
+        rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+        pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
+        return pred_test_abc
 
-    n_steps_ahead = 6
-    forecast_anfis = []
+        n_steps_ahead = 6
+        forecast_anfis = []
 
     # Inisialisasi dengan dua nilai lag terakhir dari data residual training
-    input1_future = input1[-1]
-    input2_future = input2[-2]
+        input1_future = input1[-1]
+        input2_future = input2[-2]
 
-    for _ in range(n_steps_ahead):
-        pred = predict_next_step(input1_future, input2_future)
-        forecast_future.append(pred)
+        for _ in range(n_steps_ahead):
+            pred = predict_next_step(input1_future, input2_future)
+            forecast_future.append(pred)
 
         # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
-        input2_future = input1_future
-        input1_future = pred
+            input2_future = input1_future
+            input1_future = pred
 
     # Denormalisasi hasil prediksi
-    future_anfis = np.array(future_anfis)
-    pred_future = st.session_state['scaler_residual'].inverse_transform(forecast_future.reshape(-1, 1)).flatten()
-    st.session_state['forecast_anfis'] = pred_future
+        future_anfis = np.array(future_anfis)
+        pred_future = st.session_state['scaler_residual'].inverse_transform(forecast_future.reshape(-1, 1)).flatten()
+        st.session_state['forecast_anfis'] = pred_future
 
-    st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
-    st.write(pred_future)
+        st.subheader("📈 Hasil prediksi ANFIS ABC 6 langkah ke depan")
+        st.write(pred_future)
