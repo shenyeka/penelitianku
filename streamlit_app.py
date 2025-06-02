@@ -1467,13 +1467,6 @@ if 'input1' in st.session_state and 'input2' in st.session_state:
     input1 = st.session_state['input1']
     input2 = st.session_state['input2']
 
-# Ambil parameter model dari session_state
-    c1 = st.session_state['c1']
-    s1 = st.session_state['s1']
-    c2 = st.session_state['c2']
-    s2 = st.session_state['s2']
-    consequents = st.session_state['consequents']
-
 # Fungsi untuk prediksi 1 langkah ke depan
 def predict_next_step(input1_future, input2_future):
     input1_arr = np.array([input1_future])
