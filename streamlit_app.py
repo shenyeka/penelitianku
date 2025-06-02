@@ -1461,36 +1461,65 @@ elif menu == "PREDIKSI":
 
     # ======= ANFIS ABC ==========
 # Improved ANFIS ABC Multi-Step Forecasting
+# Complete ANFIS ABC Forecasting Solution
 st.markdown("## Prediksi ANFIS ABC 6 Langkah ke Depan")
 
+# ================== HELPER FUNCTIONS ==================
+def gaussian_mf(x: np.ndarray, centers: np.ndarray, sigmas: np.ndarray) -> np.ndarray:
+    """Calculate Gaussian membership function values"""
+    x = x[:, np.newaxis]
+    centers = np.array(centers)[np.newaxis, :]
+    sigmas = np.clip(np.array(sigmas)[np.newaxis, :], 1e-3, None)
+    return np.exp(-((x - centers) ** 2) / (2 * sigmas ** 2))
+
+def compute_firing_strength(input1: np.ndarray, input2: np.ndarray, 
+                          c1: np.ndarray, s1: np.ndarray, 
+                          c2: np.ndarray, s2: np.ndarray) -> np.ndarray:
+    """Calculate firing strength for ANFIS rules"""
+    # Calculate membership degrees for each input
+    mf1 = gaussian_mf(input1, c1, s1)  # shape: (n_samples, n_mf1)
+    mf2 = gaussian_mf(input2, c2, s2)  # shape: (n_samples, n_mf2)
+    
+    # Create all possible rule combinations
+    n_mf1 = len(c1)
+    n_mf2 = len(c2)
+    rules = np.zeros((len(input1), n_mf1 * n_mf2))
+    
+    # Calculate firing strength for each rule (T-norm product)
+    for i in range(n_mf1):
+        for j in range(n_mf2):
+            rules[:, i * n_mf2 + j] = mf1[:, i] * mf2[:, j]
+    
+    return rules
+
+def anfis_predict(rules: np.ndarray, params: np.ndarray, 
+                 input1: np.ndarray, input2: np.ndarray) -> np.ndarray:
+    """Make predictions using ANFIS model"""
+    n_rules = rules.shape[1]
+    p = params[:n_rules]
+    q = params[n_rules:2 * n_rules]
+    r = params[2 * n_rules:3 * n_rules]
+    
+    # Calculate rule outputs
+    rule_outputs = p * input1[:, None] + q * input2[:, None] + r
+    
+    # Normalize firing strengths
+    rule_strengths = rules / (np.sum(rules, axis=1, keepdims=True) + 1e-6)
+    
+    # Calculate weighted average of rule outputs
+    return np.sum(rule_strengths * rule_outputs, axis=1)
+
+# ================== PREDICTION FUNCTIONS ==================
 def predict_next_step(input1_val: float, input2_val: float, 
                      c1: np.ndarray, s1: np.ndarray, 
                      c2: np.ndarray, s2: np.ndarray,
                      consequents: np.ndarray) -> float:
-    """
-    Make single-step prediction using ANFIS ABC model
-    
-    Args:
-        input1_val: First input value (lag 1)
-        input2_val: Second input value (lag 2)
-        c1, s1: Centers and sigmas for input1 membership functions
-        c2, s2: Centers and sigmas for input2 membership functions
-        consequents: ANFIS consequent parameters
-        
-    Returns:
-        Predicted value for next time step
-    """
+    """Make single-step prediction using ANFIS ABC model"""
     try:
-        # Convert inputs to numpy arrays
         input1_arr = np.array([input1_val])
         input2_arr = np.array([input2_val])
-        
-        # Compute firing strength
         rules = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-        
-        # Make prediction
         return anfis_predict(rules, consequents, input1_arr, input2_arr)[0]
-    
     except Exception as e:
         st.error(f"Error in prediction: {str(e)}")
         return np.nan
@@ -1500,109 +1529,108 @@ def multi_step_forecast(initial_input1: float, initial_input2: float,
                        c2: np.ndarray, s2: np.ndarray, 
                        consequents: np.ndarray,
                        scaler: MinMaxScaler) -> np.ndarray:
-    """
-    Generate multi-step forecast using ANFIS ABC model
-    
-    Args:
-        initial_input1: Most recent value for first input
-        initial_input2: Second most recent value for second input
-        n_steps: Number of steps to forecast
-        c1, s1: Membership function params for input1
-        c2, s2: Membership function params for input2
-        consequents: ANFIS consequent parameters
-        scaler: Scaler object for denormalization
-        
-    Returns:
-        Array of denormalized forecasts
-    """
+    """Generate multi-step forecast"""
     forecasts = []
     current_input1 = initial_input1
     current_input2 = initial_input2
     
-    with st.spinner(f"Generating {n_steps}-step forecast..."):
-        progress_bar = st.progress(0)
-        
-        for step in range(n_steps):
-            # Make prediction
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for step in range(n_steps):
+        try:
             pred = predict_next_step(current_input1, current_input2, 
-                                   c1, s1, c2, s2, consequents)
+                                  c1, s1, c2, s2, consequents)
             
-            # Shift inputs for next step
+            if np.isnan(pred):
+                st.warning(f"Prediksi langkah {step+1} menghasilkan NaN")
+                pred = current_input1  # Fallback to last known value
+            
+            forecasts.append(pred)
             current_input2 = current_input1
             current_input1 = pred
             
-            forecasts.append(pred)
+            progress = (step + 1) / n_steps
+            progress_bar.progress(progress)
+            status_text.text(f"Progres: {int(progress*100)}%")
             
-            # Update progress
-            progress_bar.progress((step + 1) / n_steps)
-        
-        progress_bar.empty()
+        except Exception as e:
+            st.error(f"Gagal pada langkah {step+1}: {str(e)}")
+            forecasts.append(np.nan)
+            break
     
-    # Convert to numpy array and denormalize
+    progress_bar.empty()
+    status_text.empty()
+    
     forecasts = np.array(forecasts)
-    if scaler:
+    if scaler and len(forecasts) > 0:
         forecasts = scaler.inverse_transform(forecasts.reshape(-1, 1)).flatten()
     
     return forecasts
 
-# Configuration
-n_steps_ahead = 6
-
-# Get required parameters from session state
+# ================== MAIN EXECUTION ==================
 try:
-    # Model parameters
-    c1 = st.session_state['c_input1']
-    s1 = st.session_state['sigma_input1']
-    c2 = st.session_state['c_input2'] 
-    s2 = st.session_state['sigma_input2']
-    consequents = st.session_state.get('consequents', np.zeros(12))  # Adjust size as needed
+    # Validate required parameters
+    required_params = ['c_input1', 'sigma_input1', 'c_input2', 'sigma_input2',
+                     'input1', 'input2', 'scaler_residual', 'consequents']
     
-    # Input data
-    input1 = st.session_state['input1']
-    input2 = st.session_state['input2']
-    scaler_residual = st.session_state['scaler_residual']
+    missing_params = [p for p in required_params if p not in st.session_state]
+    if missing_params:
+        raise ValueError(f"Parameter yang diperlukan tidak ada: {missing_params}")
+    
+    # Get parameters from session state
+    params = {p: st.session_state[p] for p in required_params}
     
     # Generate forecast
+    n_steps_ahead = 6
     pred_future = multi_step_forecast(
-        initial_input1=input1[-1],
-        initial_input2=input2[-2],
+        initial_input1=params['input1'][-1],
+        initial_input2=params['input2'][-2],
         n_steps=n_steps_ahead,
-        c1=c1, s1=s1, c2=c2, s2=s2,
-        consequents=consequents,
-        scaler=scaler_residual
+        c1=params['c_input1'],
+        s1=params['sigma_input1'],
+        c2=params['c_input2'],
+        s2=params['sigma_input2'],
+        consequents=params['consequents'],
+        scaler=params['scaler_residual']
     )
     
-    # Store results
+    # Store and display results
     st.session_state['forecast_anfis'] = pred_future
     
-    # Display results
-    st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
-    
-    # Create a nice results table
-    forecast_dates = pd.date_range(
-        start=pd.Timestamp.today(), 
-        periods=n_steps_ahead, 
-        freq='MS'  # Monthly frequency
-    )
-    
-    results_df = pd.DataFrame({
-        'Periode': forecast_dates.strftime('%b %Y'),
-        'Prediksi': pred_future.round(2)
-    })
-    
-    st.dataframe(results_df.style.format({'Prediksi': '{:.2f}'}))
-    
-    # Visualization
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(forecast_dates, pred_future, marker='o', label='Prediksi')
-    ax.set_title('Prediksi 6 Langkah ke Depan')
-    ax.set_xlabel('Periode')
-    ax.set_ylabel('Nilai')
-    ax.grid(True)
-    ax.legend()
-    st.pyplot(fig)
-    
-except KeyError as e:
-    st.error(f"Data yang diperlukan tidak tersedia di session state: {str(e)}")
+    if len(pred_future) == 0 or np.all(np.isnan(pred_future)):
+        st.error("Gagal menghasilkan prediksi. Periksa data input dan parameter model.")
+    else:
+        st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
+        
+        # Create results table
+        forecast_dates = pd.date_range(
+            start=pd.Timestamp.today(), 
+            periods=n_steps_ahead, 
+            freq='MS'
+        )
+        
+        results_df = pd.DataFrame({
+            'Periode': forecast_dates.strftime('%b %Y'),
+            'Prediksi': [f"{x:.2f}" if not np.isnan(x) else "N/A" for x in pred_future]
+        })
+        
+        st.dataframe(results_df)
+        
+        # Visualization
+        fig, ax = plt.subplots(figsize=(10, 5))
+        valid_dates = forecast_dates[~np.isnan(pred_future)]
+        valid_preds = pred_future[~np.isnan(pred_future)]
+        
+        if len(valid_preds) > 0:
+            ax.plot(valid_dates, valid_preds, 'o-', label='Prediksi')
+            ax.set_title('Prediksi 6 Langkah ke Depan')
+            ax.set_xlabel('Periode')
+            ax.set_ylabel('Nilai')
+            ax.grid(True)
+            ax.legend()
+            st.pyplot(fig)
+        
 except Exception as e:
-    st.error(f"Terjadi kesalahan dalam prediksi: {str(e)}")
+    st.error(f"Terjadi kesalahan: {str(e)}")
+    st.error("Pastikan model ANFIS ABC sudah dilatih dengan benar sebelum melakukan prediksi.")
