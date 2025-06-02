@@ -1480,7 +1480,6 @@ elif menu == "PREDIKSI":
         pred_anfis = st.session_state['forecast_6steps_anfis']
         
         # Tampilkan prediksi
-        st.subheader("Hasil Prediksi (Model ANFIS-ABC)")
         pred_df = pd.DataFrame({
             'Langkah Ke-': list(range(1, 7)),
             'Prediksi Permintaan': pred_anfis
@@ -1501,7 +1500,7 @@ elif menu == "PREDIKSI":
         combined_df['Prediksi ANFIS'] = pred_anfis
         combined_df['Total Prediksi'] = combined_df['Prediksi'] + combined_df['Prediksi ANFIS']
 
-        st.subheader("Gabungan Prediksi ARIMA + ANFIS-ABC")
+        st.subheader("ARIMA-ANFIS ABC Forecast Future")
         st.dataframe(combined_df)
 
         # Plot hasil gabungan
