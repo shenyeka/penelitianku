@@ -1459,6 +1459,9 @@ elif menu == "PREDIKSI":
         except Exception as e:
             st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
 
+st.write("Input1 Future:", input1_future)
+st.write("Input2 Future:", input2_future)
+st.write("Prediksi:", pred)
 
     # ======= ANFIS ABC ==========
 st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
