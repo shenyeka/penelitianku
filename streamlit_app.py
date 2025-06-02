@@ -1293,6 +1293,32 @@ elif menu == "PEMODELAN ANFIS ABC":
 
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
+
+# Prediksi 6 langkah ke depan setelah prediksi testing
+            st.markdown("### Prediksi 6 Langkah ke Depan")
+
+# Gunakan dua nilai terakhir dari hasil forecast sebagai input awal
+            input1_future_ext = forecast_anfis[-1]
+            input2_future_ext = forecast_anfis[-2]
+
+            forecast_6steps = []
+
+            for _ in range(6):
+                pred = predict_next_step(input1_future_ext, input2_future_ext)
+                forecast_6steps.append(pred)
+
+    # Perbarui lag untuk langkah berikutnya
+                input2_future_ext = input1_future_ext
+                input1_future_ext = pred
+
+# Denormalisasi hasil prediksi 6 langkah
+            forecast_6steps = np.array(forecast_6steps)
+            pred_6steps_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_6steps.reshape(-1, 1)).flatten()
+            st.session_state['forecast_6steps'] = pred_6steps_denorm
+
+            st.subheader("📈 Hasil Prediksi 6 Langkah ke Depan (Denormalisasi)")
+            st.write(pred_6steps_denorm)
+
             
 
 # ====== ARIMA-ANFIS ABC ======
@@ -1460,27 +1486,3 @@ elif menu == "PREDIKSI":
             st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
 
     # ======= ANFIS ABC ==========
-# Prediksi 6 langkah ke depan setelah prediksi testing
-st.markdown("### Prediksi 6 Langkah ke Depan")
-
-# Gunakan dua nilai terakhir dari hasil forecast sebagai input awal
-input1_future_ext = forecast_anfis[-1]
-input2_future_ext = forecast_anfis[-2]
-
-forecast_6steps = []
-
-for _ in range(6):
-    pred = predict_next_step(input1_future_ext, input2_future_ext)
-    forecast_6steps.append(pred)
-
-    # Perbarui lag untuk langkah berikutnya
-    input2_future_ext = input1_future_ext
-    input1_future_ext = pred
-
-# Denormalisasi hasil prediksi 6 langkah
-forecast_6steps = np.array(forecast_6steps)
-pred_6steps_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_6steps.reshape(-1, 1)).flatten()
-st.session_state['forecast_6steps'] = pred_6steps_denorm
-
-st.subheader("📈 Hasil Prediksi 6 Langkah ke Depan (Denormalisasi)")
-st.write(pred_6steps_denorm)
