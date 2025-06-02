@@ -1483,19 +1483,20 @@ elif menu == "PREDIKSI":
     st.markdown("### Prediksi 6 Langkah ke Depan")
     
     if 'forecast_6steps_anfis' in st.session_state:
-        pred_anfis = st.session_state['forecast_6steps_anfis']
-
-        # Buat tanggal prediksi sama dengan ARIMA (agar sejajar)
-        if 'forecast_arima_future' in st.session_state:
-            forecast_dates = st.session_state['forecast_arima_future'].index
-        else:
+        try:
+            pred_anfis = st.session_state['forecast_6steps_anfis']
+            train = st.session_state['train_data']
             forecast_dates = pd.date_range(start=train.index[-1] + pd.Timedelta(days=1), periods=6, freq='D')
 
-        forecast_anfis_df = pd.DataFrame({
-            'Tanggal': forecast_dates,
-            'Prediksi ANFIS-ABC': pred_anfis
-        }).set_index('Tanggal')
+            forecast_anfis_df = pd.DataFrame({
+                'Tanggal': forecast_dates,
+                'Prediksi ANFIS-ABC': pred_anfis
+            }).set_index('Tanggal')
 
-        st.write("Hasil Prediksi ANFIS-ABC 6 langkah ke depan:")
-        st.dataframe(forecast_anfis_df)
-        st.line_chart(forecast_anfis_df['Prediksi ANFIS-ABC'])
+            st.write("Hasil Prediksi ANFIS-ABC 6 langkah ke depan:")
+            st.dataframe(forecast_anfis_df)
+            st.line_chart(forecast_anfis_df['Prediksi ANFIS-ABC'])
+        except Exception as e:
+            st.error(f"Terjadi error saat menampilkan prediksi ANFIS-ABC: {e}")
+    else:
+        st.warning("Prediksi 6 langkah ANFIS-ABC belum tersedia. Silakan jalankan di menu 'ANFIS ABC'.")
