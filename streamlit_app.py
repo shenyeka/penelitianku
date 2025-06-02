@@ -1459,19 +1459,10 @@ elif menu == "PREDIKSI":
             if future_arima is None or len(future_arima) == 0:
                 st.error("Forecast gagal. Hasil ARIMA kosong.")
             else:
-                try:
-                    start_date = model_arima.data.dates[-1] + pd.Timedelta(days=1)
-                except:
-                    start_date = train.index[-1] + pd.Timedelta(days=1)
-
-                forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
-
                 forecast_arima_df = pd.DataFrame({
-                    'Tanggal': forecast_dates,
+                    'Langkah ke-': range(1, n_steps_ahead + 1),
                     'Prediksi': future_arima
-                })
-
-                forecast_arima_df = forecast_arima_df.set_index('Tanggal')
+                }).set_index('Langkah ke-')
 
                 st.write("Hasil Prediksi ARIMA 6 langkah ke depan:")
                 st.dataframe(forecast_arima_df)
@@ -1496,14 +1487,6 @@ elif menu == "PREDIKSI":
             'Prediksi Permintaan': pred_anfis
         })
         st.dataframe(pred_df)
-
-        # Plot hasil prediksi
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=pred_df['Langkah Ke-'], y=pred_df['Prediksi Permintaan'],
-                                 mode='lines+markers', name='Prediksi ANFIS-ABC'))
-        fig.update_layout(title='Prediksi Permintaan Darah 6 Langkah ke Depan',
-                          xaxis_title='Langkah ke-', yaxis_title='Jumlah Permintaan')
-        st.plotly_chart(fig)
 
     else:
         st.warning("Silakan jalankan model ANFIS-ABC terlebih dahulu pada menu 'PEMODELAN ARIMA-ANFIS'.")
