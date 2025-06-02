@@ -1425,26 +1425,36 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
 elif menu == "PREDIKSI":
     st.subheader("PREDIKSI 6 LANGKAH KE DEPAN")
 
-    if 'model_arima' not in st.session_state:
-        st.warning("Model ARIMA belum dibuat. Silakan lakukan pemodelan terlebih dahulu.")
-    else:
-        model_arima = st.session_state['model_arima']
+if 'model_arima' not in st.session_state:
+    st.warning("Model ARIMA belum dilatih. Silakan latih model terlebih dahulu di menu 'PEMODELAN ARIMA'.")
+else:
+    model_arima = st.session_state['model_arima']  # Ambil model dari session_state
 
-        # ======= ARIMA ==========
-        st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
-        n_steps_ahead = 6
-        future_arima = model_arima.forecast(steps=n_steps_ahead)
+    st.subheader("Prediksi ARIMA 6 Langkah ke Depan")
+    n_steps_ahead = 6
+
+    # Forecast
+    future_arima = model_arima.forecast(steps=n_steps_ahead)
+
+    # Tentukan tanggal mulai prediksi
+    try:
+        # Jika ARIMA menggunakan data dengan index waktu
         start_date = model_arima.data.dates[-1] + pd.Timedelta(days=1)
-        forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
-        
-        forecast_arima_df = pd.DataFrame({
-            'Bulan': forecast_dates,
-            'Prediksi': future_arima
-        }).set_index('Tanggal')
-        
-        st.dataframe(forecast_arima_df)
-        st.line_chart(forecast_arima_df["Prediksi"])
-        st.session_state['forecast_arima_future'] = forecast_arima_df
+    except:
+        # Backup: jika dates tidak tersedia, pakai index terakhir dari train
+        start_date = st.session_state['train'].index[-1] + pd.Timedelta(days=1)
+
+    # Buat tanggal prediksi
+    forecast_dates = pd.date_range(start=start_date, periods=n_steps_ahead, freq='D')
+
+    # Pastikan jumlah tanggal sama dengan prediksi
+    forecast_arima_df = pd.DataFrame({
+        'Prediksi': future_arima
+    }, index=forecast_dates)
+
+    st.dataframe(forecast_arima_df)
+    st.line_chart(forecast_arima_df["Prediksi"])
+    st.session_state['forecast_arima_future'] = forecast_arima_df
 
     # ======= ANFIS ABC ==========
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
