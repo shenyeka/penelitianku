@@ -1294,9 +1294,6 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
 
-# Prediksi 6 langkah ke depan setelah prediksi testing
-            st.markdown("### Prediksi 6 Langkah ke Depan")
-
 # Gunakan dua nilai terakhir dari hasil forecast sebagai input awal
             input1_future_ext = forecast_anfis[-1]
             input2_future_ext = forecast_anfis[-2]
@@ -1482,6 +1479,9 @@ elif menu == "PREDIKSI":
             st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
 
     # ======= ANFIS ABC ==========
+    # Prediksi 6 langkah ke depan setelah prediksi testing
+    st.markdown("### Prediksi 6 Langkah ke Depan")
+    
     if 'forecast_6steps_anfis' in st.session_state:
         pred_anfis = st.session_state['forecast_6steps_anfis']
 
