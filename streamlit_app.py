@@ -1460,41 +1460,149 @@ elif menu == "PREDIKSI":
             st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
 
     # ======= ANFIS ABC ==========
-st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
+# Improved ANFIS ABC Multi-Step Forecasting
+st.markdown("## Prediksi ANFIS ABC 6 Langkah ke Depan")
 
-    def predict_next_step(input1_future, input2_future):
-        input1_arr = np.array([input1_future])
-        input2_arr = np.array([input2_future])
-        rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-        pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
-        return pred_test_abc
+def predict_next_step(input1_val: float, input2_val: float, 
+                     c1: np.ndarray, s1: np.ndarray, 
+                     c2: np.ndarray, s2: np.ndarray,
+                     consequents: np.ndarray) -> float:
+    """
+    Make single-step prediction using ANFIS ABC model
+    
+    Args:
+        input1_val: First input value (lag 1)
+        input2_val: Second input value (lag 2)
+        c1, s1: Centers and sigmas for input1 membership functions
+        c2, s2: Centers and sigmas for input2 membership functions
+        consequents: ANFIS consequent parameters
+        
+    Returns:
+        Predicted value for next time step
+    """
+    try:
+        # Convert inputs to numpy arrays
+        input1_arr = np.array([input1_val])
+        input2_arr = np.array([input2_val])
+        
+        # Compute firing strength
+        rules = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+        
+        # Make prediction
+        return anfis_predict(rules, consequents, input1_arr, input2_arr)[0]
+    
+    except Exception as e:
+        st.error(f"Error in prediction: {str(e)}")
+        return np.nan
 
-    n_steps_ahead = 6
-    forecast_future = []
+def multi_step_forecast(initial_input1: float, initial_input2: float,
+                       n_steps: int, c1: np.ndarray, s1: np.ndarray,
+                       c2: np.ndarray, s2: np.ndarray, 
+                       consequents: np.ndarray,
+                       scaler: MinMaxScaler) -> np.ndarray:
+    """
+    Generate multi-step forecast using ANFIS ABC model
+    
+    Args:
+        initial_input1: Most recent value for first input
+        initial_input2: Second most recent value for second input
+        n_steps: Number of steps to forecast
+        c1, s1: Membership function params for input1
+        c2, s2: Membership function params for input2
+        consequents: ANFIS consequent parameters
+        scaler: Scaler object for denormalization
+        
+    Returns:
+        Array of denormalized forecasts
+    """
+    forecasts = []
+    current_input1 = initial_input1
+    current_input2 = initial_input2
+    
+    with st.spinner(f"Generating {n_steps}-step forecast..."):
+        progress_bar = st.progress(0)
+        
+        for step in range(n_steps):
+            # Make prediction
+            pred = predict_next_step(current_input1, current_input2, 
+                                   c1, s1, c2, s2, consequents)
+            
+            # Shift inputs for next step
+            current_input2 = current_input1
+            current_input1 = pred
+            
+            forecasts.append(pred)
+            
+            # Update progress
+            progress_bar.progress((step + 1) / n_steps)
+        
+        progress_bar.empty()
+    
+    # Convert to numpy array and denormalize
+    forecasts = np.array(forecasts)
+    if scaler:
+        forecasts = scaler.inverse_transform(forecasts.reshape(-1, 1)).flatten()
+    
+    return forecasts
 
-    # Inisialisasi lag dengan dua nilai terakhir dari residual (input1 dan input2)
-    input1_future = input1[-1]
-    input2_future = input2[-2]
+# Configuration
+n_steps_ahead = 6
 
-    for _ in range(n_steps_ahead):
-        pred = predict_next_step(input1_future, input2_future)
-        forecast_future.append(pred)
-
-        # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
-        input2_future = input1_future
-        input1_future = pred
-
-    forecast_future = np.array(forecast_future)
-
-    # Denormalisasi hasil prediksi
-    pred_future = scaler_residual.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
-
-    # Simpan hasil ke session_state untuk dipakai di lain tempat
+# Get required parameters from session state
+try:
+    # Model parameters
+    c1 = st.session_state['c_input1']
+    s1 = st.session_state['sigma_input1']
+    c2 = st.session_state['c_input2'] 
+    s2 = st.session_state['sigma_input2']
+    consequents = st.session_state.get('consequents', np.zeros(12))  # Adjust size as needed
+    
+    # Input data
+    input1 = st.session_state['input1']
+    input2 = st.session_state['input2']
+    scaler_residual = st.session_state['scaler_residual']
+    
+    # Generate forecast
+    pred_future = multi_step_forecast(
+        initial_input1=input1[-1],
+        initial_input2=input2[-2],
+        n_steps=n_steps_ahead,
+        c1=c1, s1=s1, c2=c2, s2=s2,
+        consequents=consequents,
+        scaler=scaler_residual
+    )
+    
+    # Store results
     st.session_state['forecast_anfis'] = pred_future
-
+    
+    # Display results
     st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
-    st.write(pred_future)
-
-else:
-    missing = [key for key in required_keys if key not in st.session_state]
-    st.warning(f"Data/parameter belum lengkap di session_state, kunci hilang: {missing}")
+    
+    # Create a nice results table
+    forecast_dates = pd.date_range(
+        start=pd.Timestamp.today(), 
+        periods=n_steps_ahead, 
+        freq='MS'  # Monthly frequency
+    )
+    
+    results_df = pd.DataFrame({
+        'Periode': forecast_dates.strftime('%b %Y'),
+        'Prediksi': pred_future.round(2)
+    })
+    
+    st.dataframe(results_df.style.format({'Prediksi': '{:.2f}'}))
+    
+    # Visualization
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(forecast_dates, pred_future, marker='o', label='Prediksi')
+    ax.set_title('Prediksi 6 Langkah ke Depan')
+    ax.set_xlabel('Periode')
+    ax.set_ylabel('Nilai')
+    ax.grid(True)
+    ax.legend()
+    st.pyplot(fig)
+    
+except KeyError as e:
+    st.error(f"Data yang diperlukan tidak tersedia di session state: {str(e)}")
+except Exception as e:
+    st.error(f"Terjadi kesalahan dalam prediksi: {str(e)}")
