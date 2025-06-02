@@ -1466,6 +1466,14 @@ st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 input1 = st.session_state['input1']
 input2 = st.session_state['input2']
 
+# Inisialisasi parameter ANFIS dari best_params
+c1 = best_params[:2]
+s1 = best_params[2:4]
+c2 = best_params[4:6]
+s2 = best_params[6:8]
+consequents = best_params[8:]
+n_rules = len(c1) * len(c2)
+
 def predict_next_step(input1_future, input2_future):
     input1_arr = np.array([input1_future])
     input2_arr = np.array([input2_future])
@@ -1477,8 +1485,8 @@ n_steps_ahead = 6
 forecast_future = []
 
 # Inisialisasi lag dengan dua nilai terakhir dari residual
-input1_future = input1[-1]  # lag terakhir (t-1)
-input2_future = input2[-1]  # lag kedua terakhir (t-2)
+input1_future = input1[-1]   # lag terakhir (t-1)
+input2_future = input2[-2]   # lag kedua terakhir (t-2)
 
 for _ in range(n_steps_ahead):
     pred = predict_next_step(input1_future, input2_future)
@@ -1490,6 +1498,14 @@ for _ in range(n_steps_ahead):
 
 forecast_future = np.array(forecast_future)
 
+# Denormalisasi hasil prediksi (jika menggunakan scaler)
+pred_future = scaler_residual.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
+
+# Simpan hasil ke session_state untuk dipakai di tempat lain
+st.session_state['forecast_anfis'] = pred_future
+
+st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
+st.write(pred_future)
 # Denormalisasi hasil prediksi
 pred_future = scaler_residual.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
 
