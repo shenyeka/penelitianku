@@ -1467,12 +1467,11 @@ input1 = st.session_state['input1']
 input2 = st.session_state['input2']
 
 # Inisialisasi parameter ANFIS dari best_params
-c1 = best_params[:2]
-s1 = best_params[2:4]
-c2 = best_params[4:6]
-s2 = best_params[6:8]
-consequents = best_params[8:]
-n_rules = len(c1) * len(c2)
+c1 = st.session_state['c1']
+s1 = st.session_state['s1']
+c2 =st.session_state['c2']
+s2 = st.session_state['s2']
+consequents = st.session_state['consequents']
 
 def predict_next_step(input1_future, input2_future):
     input1_arr = np.array([input1_future])
