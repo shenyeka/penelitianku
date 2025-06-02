@@ -1315,10 +1315,6 @@ elif menu == "PEMODELAN ANFIS ABC":
             forecast_6steps = np.array(forecast_6steps)
             pred_6steps_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_6steps.reshape(-1, 1)).flatten()
             st.session_state['forecast_6steps'] = pred_6steps_denorm
-
-            st.subheader("📈 Hasil Prediksi 6 Langkah ke Depan (Denormalisasi)")
-            st.write(pred_6steps_denorm)
-
             
 
 # ====== ARIMA-ANFIS ABC ======
@@ -1486,3 +1482,20 @@ elif menu == "PREDIKSI":
             st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
 
     # ======= ANFIS ABC ==========
+    if 'forecast_6steps_anfis' in st.session_state:
+        pred_anfis = st.session_state['forecast_6steps_anfis']
+
+        # Buat tanggal prediksi sama dengan ARIMA (agar sejajar)
+        if 'forecast_arima_future' in st.session_state:
+            forecast_dates = st.session_state['forecast_arima_future'].index
+        else:
+            forecast_dates = pd.date_range(start=train.index[-1] + pd.Timedelta(days=1), periods=6, freq='D')
+
+        forecast_anfis_df = pd.DataFrame({
+            'Tanggal': forecast_dates,
+            'Prediksi ANFIS-ABC': pred_anfis
+        }).set_index('Tanggal')
+
+        st.write("Hasil Prediksi ANFIS-ABC 6 langkah ke depan:")
+        st.dataframe(forecast_anfis_df)
+        st.line_chart(forecast_anfis_df['Prediksi ANFIS-ABC'])
