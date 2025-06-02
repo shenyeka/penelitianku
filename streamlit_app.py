@@ -1311,7 +1311,10 @@ elif menu == "PEMODELAN ANFIS ABC":
 # Denormalisasi hasil prediksi 6 langkah
             forecast_6steps = np.array(forecast_6steps)
             pred_6steps_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_6steps.reshape(-1, 1)).flatten()
-            st.session_state['forecast_6steps'] = pred_6steps_denorm
+
+# ✅ Simpan ke dalam session_state dengan nama yang benar
+            st.session_state['forecast_6steps_anfis'] = pred_6steps_denorm
+
             
 
 # ====== ARIMA-ANFIS ABC ======
@@ -1482,21 +1485,26 @@ elif menu == "PREDIKSI":
     # Prediksi 6 langkah ke depan setelah prediksi testing
     st.markdown("### Prediksi 6 Langkah ke Depan")
     
+    # Periksa apakah hasil prediksi sudah tersedia
     if 'forecast_6steps_anfis' in st.session_state:
-        try:
-            pred_anfis = st.session_state['forecast_6steps_anfis']
-            train = st.session_state['train_data']
-            forecast_dates = pd.date_range(start=train.index[-1] + pd.Timedelta(days=1), periods=6, freq='D')
+        pred_anfis = st.session_state['forecast_6steps_anfis']
+        
+        # Tampilkan prediksi
+        st.subheader("Hasil Prediksi (Model ANFIS-ABC)")
+        pred_df = pd.DataFrame({
+            'Langkah Ke-': list(range(1, 7)),
+            'Prediksi Permintaan': pred_anfis
+        })
+        st.dataframe(pred_df)
 
-            forecast_anfis_df = pd.DataFrame({
-                'Tanggal': forecast_dates,
-                'Prediksi ANFIS-ABC': pred_anfis
-            }).set_index('Tanggal')
+        # Plot hasil prediksi
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=pred_df['Langkah Ke-'], y=pred_df['Prediksi Permintaan'],
+                                 mode='lines+markers', name='Prediksi ANFIS-ABC'))
+        fig.update_layout(title='Prediksi Permintaan Darah 6 Langkah ke Depan',
+                          xaxis_title='Langkah ke-', yaxis_title='Jumlah Permintaan')
+        st.plotly_chart(fig)
 
-            st.write("Hasil Prediksi ANFIS-ABC 6 langkah ke depan:")
-            st.dataframe(forecast_anfis_df)
-            st.line_chart(forecast_anfis_df['Prediksi ANFIS-ABC'])
-        except Exception as e:
-            st.error(f"Terjadi error saat menampilkan prediksi ANFIS-ABC: {e}")
     else:
-        st.warning("Prediksi 6 langkah ANFIS-ABC belum tersedia. Silakan jalankan di menu 'ANFIS ABC'.")
+        st.warning("Silakan jalankan model ANFIS-ABC terlebih dahulu pada menu 'PEMODELAN ARIMA-ANFIS'.")
+
