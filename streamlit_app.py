@@ -1463,51 +1463,26 @@ elif menu == "PREDIKSI":
 st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
 # Pastikan semua parameter ada dulu
-required_keys = ['input1', 'input2', 'c1', 's1', 'c2', 's2', 'consequents', 'scaler_residual']
-if all(key in st.session_state for key in required_keys):
-
-    input1 = st.session_state['input1']
-    input2 = st.session_state['input2']
-    c1 = st.session_state['c1']
-    s1 = st.session_state['s1']
-    c2 = st.session_state['c2']
-    s2 = st.session_state['s2']
-    consequents = st.session_state['consequents']
-    scaler_residual = st.session_state['scaler_residual']
-
-    def predict_next_step(input1_future, input2_future):
-        input1_arr = np.array([input1_future])
-        input2_arr = np.array([input2_future])
-        rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-        pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
-        return pred_test_abc
-
-    n_steps_ahead = 6
-    forecast_future = []
-
-    # Inisialisasi lag dengan dua nilai terakhir dari residual (input1 dan input2)
-    input1_future = input1[-1]
-    input2_future = input2[-2]
-
-    for _ in range(n_steps_ahead):
-        pred = predict_next_step(input1_future, input2_future)
-        forecast_future.append(pred)
-
-        # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
-        input2_future = input1_future
-        input1_future = pred
-
-    forecast_future = np.array(forecast_future)
-
-    # Denormalisasi hasil prediksi
-    pred_future = scaler_residual.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
-
-    # Simpan hasil ke session_state untuk dipakai di lain tempat
-    st.session_state['forecast_anfis'] = pred_future
-
-    st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
-    st.write(pred_future)
-
+        st.warning("Data input1 or input2 terlalu pendek untuk melakukan prediksi 6 langkah ke depan.")
+    else:
+        input1_future = input1_full[-1]
+        input2_future = input2_full[-2]
+        for step in range(n_steps_ahead):
+            input1_arr = np.array([input1_future])
+            input2_arr = np.array([input2_future])
+            rules = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+            pred = anfis_predict(rules, consequents, input1_arr, input2_arr)[0]
+            forecast_future.append(pred)
+            # Debug outputs to trace computation
+            st.write(f"Step {step+1} - input1_future: {input1_future}, input2_future: {input2_future}, prediction: {pred}")
+            # Shift lags for next prediction
+            input2_future = input1_future
+            input1_future = pred
+        forecast_future = np.array(forecast_future)
+        pred_denorm = scaler_residual.inverse_transform(forecast_future.reshape(-1,1)).flatten()
+        st.session_state['forecast_anfis_6steps'] = pred_denorm
+        st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
+        st.write(pred_denorm)
 else:
-    missing = [key for key in required_keys if key not in st.session_state]
-    st.warning(f"Data/parameter belum lengkap di session_state, kunci hilang: {missing}")
+    missing_keys = [k for k in required_keys if k not in st.session_state]
+    st.warning(f"Data/parameter belum lengkap di session_state, kunci hilang: {missing_keys}")
