@@ -1463,13 +1463,6 @@ elif menu == "PREDIKSI":
     # ======= ANFIS ABC ==========
 st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
-    input1 = st.session_state['input1']
-    input2 = st.session_state['input2']
-    scaler_residual = st.session_state['scaler_residual']
-
-    st.write("input1:", input1)
-    st.write("input2:", input2)
-
     def predict_next_step(input1_future, input2_future):
         input1_arr = np.array([input1_future])
         input2_arr = np.array([input2_future])
