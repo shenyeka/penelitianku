@@ -1317,7 +1317,7 @@ elif menu == "PEMODELAN ANFIS ABC":
 
             
 
-# ====== ARIMA-ANFIS ABC ======
+# ====== ARIMA-ANFIS ABC ======# ====== ARIMA-ANFIS ABC ======
 elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     st.subheader("📘 PEMODELAN ARIMA-ANFIS DENGAN OPTIMASI ABC")
 
@@ -1379,12 +1379,12 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
     except Exception as e:
         st.error(f"❌ Terjadi kesalahan saat pemrosesan data training: {e}")
 
-# ========================== #
-# 📘 HYBRID PREDIKSI TESTING #
-# ========================== #
+    # ========================== #
+    # 📘 HYBRID PREDIKSI TESTING #
+    # ========================== #
     st.subheader("📘 PEMODELAN ARIMA-ANFIS Data Testing")
 
-# Validasi session_state
+    # Validasi session_state
     if 'pred_arima_test' not in st.session_state:
         st.error("❗ Hasil prediksi ARIMA testing belum tersedia.")
         st.stop()
@@ -1438,10 +1438,38 @@ elif menu == "PEMODELAN ARIMA-ANFIS ABC":
         mape = np.mean(np.abs((aktual - pred_hybrid2) / aktual)) * 100
         st.success(f"📉 MAPE ARIMA-ANFIS (ABC) - Testing: {mape:.2f}%")
 
+        # ======== Interpretasi dan Evaluasi MAPE ========
+        st.markdown("### Interpretasi hasil prediksi")
+
+        st.markdown("""
+        Berdasarkan plot di atas:
+        - **Prediksi ARIMA** (biru) menggambarkan tren dasar berdasarkan pola historis deret waktu.
+        - **Prediksi ANFIS ABC** (oranye) memodelkan sisa atau residual dari ARIMA untuk menangkap pola nonlinier yang tidak dapat ditangkap oleh ARIMA.
+        - **Total Prediksi ARIMA-ANFIS ABC** (hijau) merupakan gabungan dari keduanya dan menjadi hasil akhir dari model hybrid.
+
+        Jika garis **Total Prediksi ARIMA-ANFIS ABC** mendekati garis data aktual, maka model berhasil menangkap pola dengan baik dan menghasilkan prediksi yang akurat.
+        """)
+
+        st.markdown(f"""
+        ### 📉 Evaluasi Akurasi Model (MAPE)
+        - Nilai **MAPE (Mean Absolute Percentage Error)** dari model hybrid ARIMA-ANFIS ABC adalah **{mape:.2f}%**.
+        - Ini menunjukkan bahwa rata-rata kesalahan prediksi dibandingkan dengan nilai aktual berada dalam kisaran tersebut.
+        - Semakin kecil nilai MAPE, semakin baik performa model.
+
+        #### 🔍 Kategori Kemampuan Model Prediksi berdasarkan MAPE:
+        - **MAPE < 10%** : Kemampuan model prediksi **sangat baik**.
+        - **10% ≤ MAPE < 20%** : Kemampuan model prediksi **baik**.
+        - **20% ≤ MAPE < 50%** : Kemampuan model prediksi **layak**.
+        - **MAPE ≥ 50%** : Kemampuan model prediksi **buruk**.
+
+        **Kesimpulan:** Model hybrid ARIMA-ANFIS ABC menunjukkan performa sesuai dengan kategori di atas berdasarkan nilai MAPE.
+        """)
+
         st.session_state['hasil_hybrid_abc2'] = df_hasil_test
 
     except Exception as e:
         st.error(f"❌ Terjadi kesalahan saat pemrosesan data testing: {e}")
+
 
 # ====== prediksi ======
 elif menu == "PREDIKSI":
@@ -1506,32 +1534,4 @@ elif menu == "PREDIKSI":
         # Plot hasil gabungan
         st.line_chart(combined_df[['Prediksi', 'Prediksi ANFIS', 'Total Prediksi']])
 
-    st.markdown("### Interpretasi hasil prediksi")
-
-    st.markdown("""
-    Berdasarkan plot di atas:
-    - **Prediksi ARIMA** (biru) menggambarkan tren dasar berdasarkan pola historis deret waktu.
-    - **Prediksi ANFIS** (oranye) memodelkan sisa atau residual dari ARIMA untuk menangkap pola nonlinier yang tidak dapat ditangkap oleh ARIMA.
-    - **Total Prediksi** (hijau) merupakan gabungan dari keduanya dan menjadi hasil akhir dari model hybrid **ARIMA-ANFIS**.
-
-    Jika garis **Total Prediksi** mendekati garis data aktual (jika ditampilkan), maka model berhasil menangkap pola dengan baik dan menghasilkan prediksi yang akurat.
-    """)
-
-    if 'mape_anfis' in st.session_state:
-        mape_value = st.session_state['mape_anfis']
-        st.markdown(f"""
-        ### 📉 Evaluasi Akurasi Model (MAPE)
-        - Nilai **MAPE (Mean Absolute Percentage Error)** dari model hybrid ARIMA-ANFIS adalah **{mape_value:.2f}%**.
-        - Ini menunjukkan bahwa rata-rata kesalahan prediksi dibandingkan dengan nilai aktual berada dalam kisaran tersebut.
-        - Semakin kecil nilai MAPE, semakin baik performa model.
-
-        #### 🔍 Kategori Kemampuan Model Prediksi berdasarkan MAPE:
-        - **MAPE < 10%** : Kemampuan model prediksi **sangat baik**.
-        - **10% ≤ MAPE < 20%** : Kemampuan model prediksi **baik**.
-        - **20% ≤ MAPE < 50%** : Kemampuan model prediksi **layak**.
-        - **MAPE ≥ 50%** : Kemampuan model prediksi **buruk**.
-
-        **Kesimpulan:** Model hybrid ARIMA-ANFIS menunjukkan performa yang sesuai dengan kategori di atas berdasarkan nilai MAPE.
-        """)
-    else:
-        st.info("Nilai MAPE belum tersedia. Silakan lakukan evaluasi model pada menu 'PEMODELAN ARIMA-ANFIS'.")
+  
