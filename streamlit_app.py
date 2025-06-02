@@ -1463,19 +1463,8 @@ elif menu == "PREDIKSI":
     # ======= ANFIS ABC ==========
 st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
-required_keys = ['input1', 'input2', 'c1', 's1', 'c2', 's2', 'consequents', 'scaler_residual']
-
-st.write("Keys di session_state:", list(st.session_state.keys()))
-
-if all(key in st.session_state for key in required_keys):
-
     input1 = st.session_state['input1']
     input2 = st.session_state['input2']
-    c1 = st.session_state['c1']
-    s1 = st.session_state['s1']
-    c2 = st.session_state['c2']
-    s2 = st.session_state['s2']
-    consequents = st.session_state['consequents']
     scaler_residual = st.session_state['scaler_residual']
 
     st.write("input1:", input1)
