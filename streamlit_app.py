@@ -1463,9 +1463,6 @@ elif menu == "PREDIKSI":
     # ======= ANFIS ABC ==========
     st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
 
-    n_steps_ahead = 6
-    forecast_future = []
-
 if 'input1' in st.session_state and 'input2' in st.session_state:
     input1 = st.session_state['input1']
     input2 = st.session_state['input2']
@@ -1485,6 +1482,9 @@ def predict_next_step(input1_future, input2_future):
     pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
     return pred_test_abc
 
+    n_steps_ahead = 6
+    forecast_anfis = []
+
     # Inisialisasi dengan dua nilai lag terakhir dari data residual training
     input1_future = input1[-1]
     input2_future = input2[-2]
@@ -1498,7 +1498,7 @@ def predict_next_step(input1_future, input2_future):
         input1_future = pred
 
     # Denormalisasi hasil prediksi
-    forecast_future = np.array(forecast_future)
+    future_anfis = np.array(future_anfis)
     pred_future = st.session_state['scaler_residual'].inverse_transform(forecast_future.reshape(-1, 1)).flatten()
     st.session_state['forecast_anfis'] = pred_future
 
