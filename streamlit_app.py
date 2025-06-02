@@ -1470,6 +1470,21 @@ if 'input1' in st.session_state and 'input2' in st.session_state:
     input1 = st.session_state['input1']
     input2 = st.session_state['input2']
 
+# Ambil parameter model dari session_state
+    c1 = st.session_state['c1']
+    s1 = st.session_state['s1']
+    c2 = st.session_state['c2']
+    s2 = st.session_state['s2']
+    consequents = st.session_state['consequents']
+
+# Fungsi untuk prediksi 1 langkah ke depan
+def predict_next_step(input1_future, input2_future):
+    input1_arr = np.array([input1_future])
+    input2_arr = np.array([input2_future])
+    rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
+    pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
+    return pred_test_abc
+
     # Inisialisasi dengan dua nilai lag terakhir dari data residual training
     input1_future = input1[-1]
     input2_future = input2[-2]
