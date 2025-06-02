@@ -1460,37 +1460,27 @@ elif menu == "PREDIKSI":
             st.error(f"Terjadi kesalahan saat melakukan forecast: {e}")
 
     # ======= ANFIS ABC ==========
-st.markdown("Prediksi ANFIS ABC 6 Langkah ke Depan")
+# Prediksi 6 langkah ke depan setelah prediksi testing
+st.markdown("### Prediksi 6 Langkah ke Depan")
 
-    def predict_next_step(input1_future, input2_future):
-        input1_arr = np.array([input1_future])
-        input2_arr = np.array([input2_future])
-        rules3 = compute_firing_strength(input1_arr, input2_arr, c1, s1, c2, s2)
-        pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
-        return pred_test_abc
+# Gunakan dua nilai terakhir dari hasil forecast sebagai input awal
+input1_future_ext = forecast_anfis[-1]
+input2_future_ext = forecast_anfis[-2]
 
-    n_steps_ahead = 6
-    forecast_future = []
+forecast_6steps = []
 
-    # Inisialisasi lag dengan dua nilai terakhir dari residual (input1 dan input2)
-    input1_future = input1[-1]
-    input2_future = input2[-2]
+for _ in range(6):
+    pred = predict_next_step(input1_future_ext, input2_future_ext)
+    forecast_6steps.append(pred)
 
-    for _ in range(n_steps_ahead):
-        pred = predict_next_step(input1_future, input2_future)
-        forecast_future.append(pred)
+    # Perbarui lag untuk langkah berikutnya
+    input2_future_ext = input1_future_ext
+    input1_future_ext = pred
 
-        # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
-        input2_future = input1_future
-        input1_future = pred
+# Denormalisasi hasil prediksi 6 langkah
+forecast_6steps = np.array(forecast_6steps)
+pred_6steps_denorm = st.session_state['scaler_residual'].inverse_transform(forecast_6steps.reshape(-1, 1)).flatten()
+st.session_state['forecast_6steps'] = pred_6steps_denorm
 
-    forecast_future = np.array(forecast_future)
-
-    # Denormalisasi hasil prediksi
-    pred_future = scaler_residual.inverse_transform(forecast_future.reshape(-1, 1)).flatten()
-
-    # Simpan hasil ke session_state untuk dipakai di lain tempat
-    st.session_state['forecast_anfis'] = pred_future
-
-    st.subheader("📈 Hasil Prediksi ANFIS ABC 6 Langkah ke Depan")
-    st.write(pred_future)
+st.subheader("📈 Hasil Prediksi 6 Langkah ke Depan (Denormalisasi)")
+st.write(pred_6steps_denorm)
