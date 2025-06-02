@@ -1466,7 +1466,6 @@ elif menu == "PREDIKSI":
 
                 st.write("Hasil Prediksi ARIMA 6 langkah ke depan:")
                 st.dataframe(forecast_arima_df)
-                st.line_chart(forecast_arima_df['Prediksi'])
 
                 st.session_state['forecast_arima_future'] = forecast_arima_df
         except Exception as e:
@@ -1491,8 +1490,6 @@ elif menu == "PREDIKSI":
     else:
         st.warning("Silakan jalankan model ANFIS-ABC terlebih dahulu pada menu 'PEMODELAN ARIMA-ANFIS'.")
 
-            # Plot hasil gabungan
-        st.line_chart(pred_df['Prediksi'])
 
     # ======= GABUNGKAN DAN JUMLAHKAN HASIL PREDIKSI =======
     if 'forecast_arima_future' in st.session_state and 'forecast_6steps_anfis' in st.session_state:
