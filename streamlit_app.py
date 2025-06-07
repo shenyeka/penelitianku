@@ -536,22 +536,28 @@ elif menu == "DATA PREPROCESSING":
                     st.write("Jumlah Missing Value per Kolom:")
                     st.write(missing)
 
-                    # Tampilkan data sebelum penanganan missing value
-                    st.write("Data sebelum penanganan missing value:")
-                    st.write(data.head(10))  # tampilkan 10 baris pertama
+                    # Tampilkan data sebelum interpolasi
+                    st.write("Data sebelum penanganan missing value (interpolasi):")
+                    st.write(data.head(10))
 
                     if missing.any():
-                        st.warning("Data memiliki missing values, menghapus baris dengan nilai kosong.")
-                        data = data.dropna()
-                
-                        # Tampilkan data setelah penanganan missing value
-                        st.write("Data setelah penanganan missing value:")
-                        st.write(data.head(10))  # tampilkan 10 baris pertama setelah dropna
-                
+                        st.warning("Data memiliki missing values. Melakukan interpolasi untuk mengisi nilai kosong.")
+                        data_interpolated = data.interpolate(method='linear')  # interpolasi linear
+
+                        # Kalau masih ada missing value setelah interpolasi, bisa diisi dengan forward fill/backward fill
+                        data_interpolated = data_interpolated.fillna(method='bfill').fillna(method='ffill')
+
+                        # Tampilkan data setelah interpolasi
+                        st.write("Data setelah penanganan missing value dengan interpolasi:")
+                        st.write(data_interpolated.head(10))
+
+                        # Update data dengan hasil interpolasi
+                        data = data_interpolated
+
                     else:
                         st.info("Data tidak memiliki missing values.")
 
-                    # Tampilkan plot data setelah preprocessing
+                    # Plot data setelah preprocessing
                     st.write("Plot Data Setelah Preprocessing:")
                     fig, ax = plt.subplots()
                     sns.lineplot(data=data, ax=ax)
