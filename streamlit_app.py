@@ -1627,15 +1627,16 @@ elif menu == "PREDIKSI":
         forecast_arima_df = st.session_state['forecast_arima_future']
         pred_anfis = st.session_state['forecast_6steps_anfis']
 
-        # Gabungkan prediksi ARIMA dan ANFIS
+    # Gabungkan prediksi ARIMA dan ANFIS (tanpa tampilkan prediksi ANFIS)
         combined_df = forecast_arima_df.copy()
-        combined_df['Prediksi ANFIS'] = pred_anfis
-        combined_df['Total Prediksi'] = combined_df['Prediksi'] + combined_df['Prediksi ANFIS']
+        combined_df['Prediksi ARIMA-ANFIS'] = combined_df['Prediksi'] + pred_anfis
+
+    # Tambahkan kolom waktu sebagai Bulan ke-1 hingga ke-6
+        combined_df.insert(0, 'Bulan ke-', [f'Bulan ke-{i+1}' for i in range(len(combined_df))])
 
         st.subheader("ARIMA-ANFIS ABC Forecast Future")
-        st.dataframe(combined_df)
+        st.dataframe(combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']].rename(columns={'Prediksi': 'Prediksi ARIMA'}))
 
-        # Plot hasil gabungan
-        st.line_chart(combined_df[['Prediksi', 'Prediksi ANFIS', 'Total Prediksi']])
+    # Plot hasil gabungan
+        st.line_chart(combined_df[['Prediksi', 'Prediksi ARIMA-ANFIS']].rename(columns={'Prediksi': 'Prediksi ARIMA'}))
 
-  
