@@ -1651,13 +1651,17 @@ elif menu == "PREDIKSI":
         plot_df = combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']]
         plot_df = plot_df.rename(columns={'Prediksi': 'Prediksi ARIMA'})
 
+# Ubah ke format long (melt)
         plot_df_melted = plot_df.melt(id_vars='Bulan ke-', var_name='Model', value_name='Nilai')
 
-    # Buat plot interaktif dengan Altair
+# Buat plot dengan warna khusus (merah untuk ARIMA-ANFIS)
+        color_scale = alt.Scale(domain=['Prediksi ARIMA', 'Prediksi ARIMA-ANFIS'],
+                                range=['#1f77b4', 'red'])  # biru dan merah
+
         chart = alt.Chart(plot_df_melted).mark_line(point=True).encode(
             x=alt.X('Bulan ke-:O', title='Bulan'),
             y=alt.Y('Nilai:Q', title='Nilai Prediksi'),
-            color='Model:N',
+            color=alt.Color('Model:N', scale=color_scale, title='Model'),
             tooltip=['Bulan ke-', 'Model', 'Nilai']
         ).properties(
             width=700,
