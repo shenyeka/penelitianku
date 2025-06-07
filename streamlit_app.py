@@ -1592,9 +1592,9 @@ elif menu == "PREDIKSI":
                 st.error("Forecast gagal. Hasil ARIMA kosong.")
             else:
                 forecast_arima_df = pd.DataFrame({
-                    'Langkah ke-': range(1, n_steps_ahead + 1),
+                    'Bulan ke-': range(1, n_steps_ahead + 1),
                     'Prediksi': future_arima
-                }).set_index('Langkah ke-')
+                }).set_index('Bulan ke-')
 
                 st.write("ARIMA Forecast Future:")
                 st.dataframe(forecast_arima_df)
@@ -1616,7 +1616,7 @@ elif menu == "PREDIKSI":
     
         # Tampilkan prediksi ANFIS
         pred_df = pd.DataFrame({
-            'Langkah Ke-': list(range(1, 7)),
+            'Bulan Ke-': list(range(1, 7)),
             'Prediksi ANFIS': pred_anfis
         })
         st.dataframe(pred_df)
