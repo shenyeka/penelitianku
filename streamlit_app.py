@@ -838,9 +838,11 @@ elif menu == "PEMODELAN ARIMA":
             st.write(f"- Statistik Ljung-Box = {lb_stat:.3f}")
             st.write(f"- p-value = {p_ljung:.5f}")
             if p_ljung > alpha:
-                st.write("✅ Tidak terdapat autokorelasi signifikan (residual adalah white noise).")
+                st.write("✅ *P-value > 0.05*, maka gagal tolak H₀: residual tidak memiliki autokorelasi yang signifikan.")
+                st.write("➡ Residual **adalah white noise**, sehingga model ARIMA dapat dikatakan sudah cukup baik dalam menangkap pola data.")
             else:
-                st.write("❌ Terdapat autokorelasi signifikan (residual bukan white noise).")
+                st.write("❌ *P-value ≤ 0.05*, maka tolak H₀: terdapat autokorelasi yang signifikan.")
+                st.write("➡ Residual **bukan white noise**, sehingga masih terdapat pola yang belum ditangkap model ARIMA.")
             st.write("---")
 
             # 2. Uji Normalitas (Kolmogorov-Smirnov)
@@ -849,9 +851,11 @@ elif menu == "PEMODELAN ARIMA":
             st.write(f"- Statistik KS = {ks_stat:.3f}")
             st.write(f"- p-value = {ks_p:.5f}")
             if ks_p > alpha:
-                st.write("✅ Residual terdistribusi normal.")
+                st.write("✅ *P-value > 0.05*, maka gagal tolak H₀: residual mengikuti distribusi normal.")
+                st.write("➡ Residual **terdistribusi normal**, asumsi normalitas residual terpenuhi.")
             else:
-                st.write("❌ Residual tidak mengikuti distribusi normal.")
+                st.write("❌ *P-value ≤ 0.05*, maka tolak H₀: residual tidak mengikuti distribusi normal.")
+                st.write("➡ Residual **tidak normal**, yang dapat memengaruhi validitas inferensi model.")
             st.write("---")
 
             # 3. Uji Heteroskedastisitas (White Test)
@@ -861,9 +865,11 @@ elif menu == "PEMODELAN ARIMA":
             st.write(f"- Statistik White Test = {white_stat:.3f}")
             st.write(f"- p-value = {white_p:.5f}")
             if white_p > alpha:
-                st.write("✅ Tidak ada bukti heteroskedastisitas (residual homogen).")
+                st.write("✅ *P-value > 0.05*, maka gagal tolak H₀: tidak ada heteroskedastisitas.")
+                st.write("➡ Residual **homoskedastis** (varian residual konstan), sehingga model valid untuk digunakan.")
             else:
-                st.write("❌ Terdapat heteroskedastisitas (residual tidak homogen).")
+                st.write("❌ *P-value ≤ 0.05*, maka tolak H₀: terdapat heteroskedastisitas.")
+                st.write("➡ Residual **heteroskedastis** (varian residual tidak konstan), dapat memengaruhi efisiensi estimasi.")
             st.write("---")
 
         if model_arima is not None and st.button("Prediksi dan Evaluasi"):
