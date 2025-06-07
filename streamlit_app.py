@@ -1352,7 +1352,7 @@ elif menu == "PEMODELAN ANFIS ABC":
                 st.write(r)
             st.success("Model ANFIS berhasil dioptimasi menggunakan ABC!")
 
-# ===================== Membentuk Rules & Prediksi =======================
+            # Membentuk rules dan melakukan prediksi
             st.markdown("### Membentuk rules baru dengan parameter hasil optimasi")
             rules_abc = compute_firing_strength(input1, input2, c1, s1, c2, s2)
             st.success("Rules berhasil dibentuk menggunakan parameter hasil optimasi.")
@@ -1364,13 +1364,8 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
 
-# ===================== Grafik Hasil Prediksi 2011 - 2022 =======================
-            dates1 = pd.date_range(start='2011-01', periods=len(predictions_denorm2), freq='M')
-            df_pred1 = pd.DataFrame({'Tanggal': dates1, 'Prediksi_ANFIS_ABC': predictions_denorm2})
-            st.line_chart(df_pred1.set_index('Tanggal'))
-
-# ===================== Prediksi Testing (Forecasting 34 langkah) =======================
-            st.markdown("### Membentuk prediksi testing (forecast)")
+# Prediksi data testing (out-sample) secara rekursif
+            st.markdown("### Membentuk prediksi testing")
 
             def predict_next_step(input1_future, input2_future):
                 input1_arr = np.array([input1_future])
@@ -1379,55 +1374,29 @@ elif menu == "PEMODELAN ANFIS ABC":
                 pred_test_abc = anfis_predict(rules3, consequents, input1_arr, input2_arr)[0]
                 return pred_test_abc
 
+# Jumlah langkah prediksi ke depan
             n_forecast = 34
             forecast_anfis = []
 
-            # Inisialisasi dengan 2 lag terakhir
+# Inisialisasi dengan dua nilai lag terakhir dari data residual training
             input1_future = input1[-1]
-            input2_future = input1[-2]
+            input2_future = input2[-2]
 
             for _ in range(n_forecast):
                 pred = predict_next_step(input1_future, input2_future)
                 forecast_anfis.append(pred)
+
+    # Geser lag: lag33 <- lag32, lag32 <- prediksi baru
                 input2_future = input1_future
                 input1_future = pred
 
-# ===================== Denormalisasi Forecast =======================
+# Denormalisasi hasil prediksi
             forecast_anfis = np.array(forecast_anfis)
             pred_test_abc2 = st.session_state['scaler_residual'].inverse_transform(forecast_anfis.reshape(-1, 1)).flatten()
             st.session_state['forecast_anfis'] = pred_test_abc2
 
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
-
-# ===================== Grafik Forecasting 03/2022 - 12/2024 =======================
-            dates2 = pd.date_range(start='2022-03', periods=len(pred_test_abc2), freq='M')
-            df_pred2 = pd.DataFrame({'Tanggal': dates2, 'Forecast_Test_ANFIS_ABC': pred_test_abc2})
-            st.line_chart(df_pred2.set_index('Tanggal'))
-
-# ===================== Interpretasi Berdasarkan MAPE =======================
-            st.markdown("### 📊 Interpretasi Hasil Prediksi")
-
-            mape_value = st.session_state.get('mape_anfis', None)
-
-            if mape_value is not None:
-                if mape_value < 10:
-                    kategori = "Sangat Baik"
-                elif mape_value < 20:
-                    kategori = "Baik"
-                elif mape_value < 50:
-                    kategori = "Cukup"
-                else:
-                    kategori = "Buruk"
-
-                st.markdown(f"""
-                - **Nilai MAPE**: {mape_value:.2f}%
-                - **Interpretasi**: Akurasi prediksi tergolong **{kategori}**.
-                - Model ANFIS dengan optimasi ABC menunjukkan performa **{kategori.lower()}** dalam memprediksi data residual dan data testing.
-                """)
-            else:
-                st.warning("Nilai MAPE belum dihitung atau belum tersedia.")
-
 
 # Gunakan dua nilai terakhir dari hasil forecast sebagai input awal
             input1_future_ext = forecast_anfis[-1]
