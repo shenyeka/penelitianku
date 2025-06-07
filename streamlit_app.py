@@ -1160,8 +1160,8 @@ elif menu == "PEMODELAN ANFIS ABC":
             st.session_state['predictions_anfis'] = predictions_denorm
             st.session_state['actual_anfis'] = actual_denorm
             # Tampilkan hasil prediksi
-            st.subheader("📈 Hasil Prediksi (Setelah Denormalisasi)")
-            st.write(predictions_denorm)
+            #st.subheader("📈 Hasil Prediksi (Setelah Denormalisasi)")
+            #st.write(predictions_denorm)
 
         if st.button("Optimasi ABC Model ANFIS"):
             import random
