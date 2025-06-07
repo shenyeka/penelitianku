@@ -719,6 +719,54 @@ elif menu == "STASIONERITAS DATA":
     else:
         st.warning("Silahkan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
 
+# =================== DATA SPLITTING ===================
+elif menu == "DATA SPLITTING":
+    from statsmodels.tsa.stattools import adfuller, acf, pacf
+    st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
+
+    # Check if preprocessing data exists in session state
+    if "data" in st.session_state:
+        df = st.session_state["data"]
+        st.write("Menggunakan data hasil preprocessing.")
+        
+        st.write("Preview Data:")
+        st.write(df.head())
+
+        # Pastikan hanya satu kolom target
+        if len(df.columns) == 1:
+            col_name = df.columns[0]
+
+            # Tambahkan slider untuk memilih rasio train dan test
+            split_ratio = st.slider("Pilih rasio pembagian data (Training:Testing)", 0.1, 0.9, 0.8, 0.05)
+            train_size = int(len(df) * split_ratio)
+            test_size = len(df) - train_size
+
+            train_data = df.iloc[:train_size].copy()
+            test_data = df.iloc[train_size:].copy()
+
+            # Simpan untuk proses berikutnya
+            st.session_state["train_data"] = train_data
+            st.session_state["test_data"] = test_data
+            st.session_state["train"] = train_data          # Tambahan untuk sinkronisasi
+            st.session_state["test"] = test_data            # Tambahan untuk sinkronisasi
+
+            # Tampilkan informasi pembagian
+            st.success(f"✅ Data berhasil di-split dengan rasio {split_ratio*100:.0f}% training dan {(1-split_ratio)*100:.0f}% testing.")
+            st.markdown(f"- Jumlah data **training**: `{train_size}` baris")
+            st.markdown(f"- Jumlah data **testing**: `{test_size}` baris")
+
+            # Tampilkan data hasil split
+            st.subheader("Data Training:")
+            st.write(train_data)
+            st.line_chart(train_data)
+
+            st.subheader("Data Testing:")
+            st.write(test_data)
+            st.line_chart(test_data)
+        else:
+            st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
+    else:
+        st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
 #=============PEMODELAN ARIMA===========
