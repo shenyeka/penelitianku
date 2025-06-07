@@ -1363,6 +1363,16 @@ elif menu == "PEMODELAN ANFIS ABC":
 
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# ======== GRAFIK HASIL PREDIKSI ANFIS (2011 - 2022) ============
+# Buat index waktu dari 2011 ke 2022 sesuai panjang data
+dates1 = pd.date_range(start='2011-01', periods=len(predictions_denorm2), freq='M')
+df_pred1 = pd.DataFrame({'Tanggal': dates1, 'Prediksi_ANFIS_ABC': predictions_denorm2})
+
+st.line_chart(df_pred1.set_index('Tanggal'))
 
 # Prediksi data testing (out-sample) secara rekursif
             st.markdown("### Membentuk prediksi testing")
@@ -1397,6 +1407,43 @@ elif menu == "PEMODELAN ANFIS ABC":
 
             st.subheader("📈 Hasil Prediksi Data Testing ANFIS dengan Optimasi ABC")
             st.write(pred_test_abc2)
+
+# ======== GRAFIK HASIL PREDIKSI ANFIS (2011 - 2022) ============
+            # Buat index waktu dari 2011 ke 2022 sesuai panjang data
+            dates1 = pd.date_range(start='2011-01', periods=len(predictions_denorm2), freq='M')
+            df_pred1 = pd.DataFrame({'Tanggal': dates1, 'Prediksi_ANFIS_ABC': predictions_denorm2})
+
+            st.line_chart(df_pred1.set_index('Tanggal'))
+
+# ======== GRAFIK HASIL PREDIKSI DATA TESTING (03/2022 - 12/2024) ============
+            dates2 = pd.date_range(start='2022-03', periods=len(pred_test_abc2), freq='M')
+            df_pred2 = pd.DataFrame({'Tanggal': dates2, 'Forecast_Test_ANFIS_ABC': pred_test_abc2})
+
+            st.line_chart(df_pred2.set_index('Tanggal'))
+
+# ======== INTERPRETASI BERDASARKAN MAPE ============
+# Misal sudah disimpan nilai MAPE sebelumnya
+            mape_value = st.session_state.get('mape_anfis', None)
+
+            st.markdown("### 📊 Interpretasi Hasil Prediksi")
+            if mape_value is not None:
+                if mape_value < 10:
+                    kategori = "Sangat Baik"
+                elif mape_value < 20:
+                    kategori = "Baik"
+                elif mape_value < 50:
+                    kategori = "Cukup"
+                else:
+                    kategori = "Buruk"
+
+                st.markdown(f"""
+                - **Nilai MAPE**: {mape_value:.2f}%
+                - **Interpretasi**: Akurasi prediksi tergolong **{kategori}**.
+                - Model ANFIS dengan optimasi ABC menunjukkan performa **{kategori.lower()}** dalam memprediksi data residual dan data testing.
+                """)
+            else:
+                st.warning("Nilai MAPE belum dihitung atau belum tersedia.")
+
 
 # Gunakan dua nilai terakhir dari hasil forecast sebagai input awal
             input1_future_ext = forecast_anfis[-1]
