@@ -1623,25 +1623,46 @@ elif menu == "PREDIKSI":
 
 
     # ======= GABUNGKAN DAN JUMLAHKAN HASIL PREDIKSI =======
+import streamlit as st
+import pandas as pd
+import altair as alt
 
-    if 'forecast_arima_future' in st.session_state and 'forecast_6steps_anfis' in st.session_state:
-        forecast_arima_df = st.session_state['forecast_arima_future']
-        pred_anfis = st.session_state['forecast_6steps_anfis']
+# ======= GABUNGKAN DAN JUMLAHKAN HASIL PREDIKSI =======
+if 'forecast_arima_future' in st.session_state and 'forecast_6steps_anfis' in st.session_state:
+    forecast_arima_df = st.session_state['forecast_arima_future']
+    pred_anfis = st.session_state['forecast_6steps_anfis']
 
     # Gabungkan prediksi ARIMA dan ANFIS
-        combined_df = forecast_arima_df.copy()
-        combined_df['Prediksi ARIMA-ANFIS'] = combined_df['Prediksi'] + pred_anfis
+    combined_df = forecast_arima_df.copy()
+    combined_df['Prediksi ARIMA-ANFIS'] = combined_df['Prediksi'] + pred_anfis
 
-    # Tambahkan kolom waktu sebagai Bulan ke-1 hingga ke-6
-        combined_df['Bulan ke-'] = [f'Bulan ke-{i+1}' for i in range(len(combined_df))]
+    # Tambahkan label waktu sebagai Bulan ke-1 sampai Bulan ke-6
+    combined_df['Bulan ke-'] = [f'Bulan ke-{i+1}' for i in range(len(combined_df))]
 
-    # Tampilkan tabel
-        st.subheader("ARIMA-ANFIS ABC Forecast Future")
-        st.dataframe(combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']].rename(columns={'Prediksi': 'Prediksi ARIMA'}))
+    # Tampilkan tabel hasil prediksi
+    st.subheader("ARIMA-ANFIS ABC Forecast Future")
+    st.dataframe(
+        combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']]
+        .rename(columns={'Prediksi': 'Prediksi ARIMA'})
+    )
 
-    # Set kolom waktu sebagai index untuk plotting
-        plot_df = combined_df.set_index('Bulan ke-')[['Prediksi', 'Prediksi ARIMA-ANFIS']]
-        plot_df = plot_df.rename(columns={'Prediksi': 'Prediksi ARIMA'})
+    # ======= PLOT INTERAKTIF DENGAN ALTAIR =======
+    # Siapkan data untuk Altair (perlu dalam format long/melt)
+    plot_df = combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']]
+    plot_df = plot_df.rename(columns={'Prediksi': 'Prediksi ARIMA'})
 
-    # Plot dengan label bulan ke-1 dst.
-        st.line_chart(plot_df)
+    plot_df_melted = plot_df.melt(id_vars='Bulan ke-', var_name='Model', value_name='Nilai')
+
+    # Buat chart interaktif Altair
+    chart = alt.Chart(plot_df_melted).mark_line(point=True).encode(
+        x=alt.X('Bulan ke-:O', title='Bulan'),
+        y=alt.Y('Nilai:Q', title='Nilai Prediksi'),
+        color='Model:N',
+        tooltip=['Bulan ke-', 'Model', 'Nilai']
+    ).properties(
+        width=700,
+        height=400,
+        title='Prediksi ARIMA vs ARIMA-ANFIS'
+    ).interactive()  # Aktifkan zoom, pan, hover
+
+    st.altair_chart(chart, use_container_width=True)
