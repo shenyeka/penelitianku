@@ -537,7 +537,7 @@ elif menu == "DATA PREPROCESSING":
                     st.write(missing)
 
                     # Tampilkan data sebelum interpolasi
-                    st.write("Data sebelum penanganan missing value (interpolasi):")
+                    st.write("Data sebelum penanganan missing value:")
                     st.write(data.head(10))
 
                     if missing.any():
