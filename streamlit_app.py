@@ -541,7 +541,7 @@ elif menu == "DATA PREPROCESSING":
                     st.write(data.head(10))  # tampilkan 10 baris pertama
 
                     if missing.any():
-                        st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
+                        st.warning("Data memiliki missing values, menghapus baris dengan nilai kosong.")
                         data = data.dropna()
                 
                         # Tampilkan data setelah penanganan missing value
