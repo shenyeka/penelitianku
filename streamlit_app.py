@@ -948,12 +948,36 @@ elif menu == "PEMODELAN ANFIS ABC":
         # Tombol untuk menampilkan residual ARIMA
         if st.button("Lihat Residual ARIMA"):
             residual = st.session_state['residual_arima']
-            st.line_chart(residual)
-            data_anfis = pd.DataFrame({'residual': residual})
-            st.session_state['data_anfis_raw'] = data_anfis
+    
+            # Simpan sebagai DataFrame
+            residual_df = pd.DataFrame({'Residual': residual})
+            st.session_state['data_anfis_raw'] = residual_df
+
+            # Tampilkan tabel residual terlebih dahulu
+            st.subheader("Data Residual ARIMA")
+            st.dataframe(residual_df)
+
+            # Tampilkan grafik residual
+            st.subheader("Grafik Residual ARIMA")
+            st.line_chart(residual_df)
+
+            # Interpretasi grafik residual
+            st.subheader("Interpretasi Residual ARIMA")
+            st.markdown("""
+            - **Residual** adalah selisih antara nilai aktual dengan hasil prediksi dari model ARIMA.
+            - Residual yang baik **tidak menunjukkan pola tertentu** (acak), dan tersebar **di sekitar nol**.
+            - Bila residual tampak acak, artinya model ARIMA sudah cukup menangkap pola utama data.
+            - Bila masih tampak pola tren, siklus, atau autokorelasi, maka dilakukan agar data residual memiliki **skala yang konsisten**, yaitu **rata-rata 0 dan standar deviasi 1**.
+            - Hal ini penting ketika residual akan digunakan sebagai **input ke model lanjutan seperti ANFIS**, yang sensitif terhadap skala input.
+            - **Alasan perlunya standardisasi:**
+             1. **Residual memiliki rentang nilai yang besar** (bisa sangat tinggi atau rendah), sehingga bisa mendominasi pembelajaran dan menyebabkan model ANFIS tidak konvergen dengan baik.
+             2. Jika residual menunjukkan **variabilitas yang tidak seragam** (heteroskedastisitas), maka standardisasi membantu menstabilkan distribusinya.
+             3. Pada data time series dengan pola musiman atau tren kuat, residual bisa memiliki **outlier atau fluktuasi ekstrem**, yang bisa memengaruhi performa model jika tidak dinormalisasi.
+            - **Dengan standardisasi**, model lanjutan (seperti ANFIS) lebih mudah belajar pola dari residual tanpa bias karena perbedaan skala atau distribusi.
+    """)
 
         # Tombol normalisasi residual
-        if st.button("Lanjutkan ke Normalisasi Residual"):
+        if st.button("Standarisasi Residual"):
             if 'data_anfis_raw' in st.session_state:
                 data_anfis = st.session_state['data_anfis_raw']
                 scaler_residual = MinMaxScaler()
