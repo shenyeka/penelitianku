@@ -948,9 +948,35 @@ elif menu == "PEMODELAN ANFIS ABC":
         # Tombol untuk menampilkan residual ARIMA
         if st.button("Lihat Residual ARIMA"):
             residual = st.session_state['residual_arima']
-            st.line_chart(residual)
+    
+            # Konversi residual ke DataFrame
             data_anfis = pd.DataFrame({'residual': residual})
+    
+            # Simpan ke session state
             st.session_state['data_anfis_raw'] = data_anfis
+
+            # Tampilkan data residual sebagai tabel
+            st.subheader("Data Residual ARIMA")
+            st.dataframe(data_anfis)
+
+            # Tampilkan grafik residual
+            st.subheader("Grafik Residual ARIMA")
+            st.line_chart(data_anfis)
+
+            # Interpretasi grafik residual
+            st.subheader("Interpretasi Residual Prediksi ARIMA")
+            st.markdown("""
+            - **Residual** adalah selisih antara data asli dan hasil prediksi ARIMA.
+            - Residual yang baik terlihat **acak** dan tersebar **di sekitar nol**.
+            - Jika residual masih punya pola (tren, siklus, atau korelasi), perlu dilakukan **standardisasi** agar memiliki **rata-rata 0 dan standar deviasi 1**.
+
+            ### Mengapa residual perlu distandardisasi?
+            1. **Nilainya bisa sangat besar/kecil**, yang dapat mengganggu model lanjutan seperti ANFIS.
+            2. **Variasi residual bisa tidak stabil**, dan standardisasi membantu menstabilkannya.
+            3. **Outlier atau fluktuasi ekstrem** bisa menurunkan performa model jika tidak dinormalisasi.
+
+            > Dengan standardisasi, model seperti ANFIS lebih mudah belajar dari residual karena skala datanya seragam.
+            """)
 
         # Tombol normalisasi residual
         if st.button("Lanjutkan ke Normalisasi Residual"):
