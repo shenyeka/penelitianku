@@ -770,7 +770,6 @@ elif menu == "DATA SPLITTING":
 
 
 #=============PEMODELAN ARIMA===========
-#=============PEMODELAN ARIMA===========
 elif menu == "PEMODELAN ARIMA":
     from statsmodels.tsa.arima.model import ARIMA
     from sklearn.metrics import mean_absolute_percentage_error
@@ -872,71 +871,72 @@ elif menu == "PEMODELAN ARIMA":
                 st.write("➡ Residual **heteroskedastis** (varian residual tidak konstan), dapat memengaruhi efisiensi estimasi.")
             st.write("---")
 
-            if model_arima is not None and st.button("Prediksi dan Evaluasi"):
-                start_test = len(train)
-                pred_train = model_arima.predict(start=0, end=start_test - 1)
-                pred_arima_test = model_arima.forecast(steps=len(test))
+        if model_arima is not None and st.button("Prediksi dan Evaluasi"):
+            start_test = len(train)
+            pred_train = model_arima.predict(start=0, end=start_test - 1)
+            pred_arima_test = model_arima.forecast(steps=len(test))
 
-                potong_12 = st.checkbox("Sesuaikan baris data", value=True)
+            potong_12 = st.checkbox("Sesuaikan baris data", value=True)
 
-                st.subheader("Hasil Prediksi Training")
-                hasil_train = train.copy()
-                if hasattr(hasil_train, 'columns'):
-                    hasil_train.columns = ["Aktual"]
-                else:
-                    hasil_train = hasil_train.to_frame(name="Aktual")
-                hasil_train["Prediksi"] = pred_train
-                if potong_12:
-                    hasil_train = hasil_train.iloc[12:]
-                st.dataframe(hasil_train)
+            st.subheader("Hasil Prediksi Training")
+            hasil_train = train.copy()
+            if hasattr(hasil_train, 'columns'):
+                hasil_train.columns = ["Aktual"]
+            else:
+                hasil_train = hasil_train.to_frame(name="Aktual")
+            hasil_train["Prediksi"] = pred_train
+            if potong_12:
+                hasil_train = hasil_train.iloc[12:]
+            st.dataframe(hasil_train)
 
-                st.subheader("Hasil Prediksi Testing")
-                hasil_test = test.copy()
-                if hasattr(hasil_test, 'columns'):
-                    hasil_test.columns = ["Aktual"]
-                else:
-                    hasil_test = hasil_test.to_frame(name="Aktual")
-                hasil_test["Prediksi"] = pred_arima_test
-                st.dataframe(hasil_test)
+            st.subheader("Hasil Prediksi Testing")
+            hasil_test = test.copy()
+            if hasattr(hasil_test, 'columns'):
+                hasil_test.columns = ["Aktual"]
+            else:
+                hasil_test = hasil_test.to_frame(name="Aktual")
+            hasil_test["Prediksi"] = pred_arima_test
+            st.dataframe(hasil_test)
 
-                st.subheader("Evaluasi Model dengan MAPE")
-                mape_train = mean_absolute_percentage_error(hasil_train["Aktual"], hasil_train["Prediksi"]) * 100
-                mape_test = mean_absolute_percentage_error(hasil_test["Aktual"], hasil_test["Prediksi"]) * 100
-                st.write(f"MAPE Training: {mape_train:.2f}%")
-                st.write(f"MAPE Testing: {mape_test:.2f}%")
+            st.subheader("Evaluasi Model dengan MAPE")
+            mape_train = mean_absolute_percentage_error(hasil_train["Aktual"], hasil_train["Prediksi"]) * 100
+            mape_test = mean_absolute_percentage_error(hasil_test["Aktual"], hasil_test["Prediksi"]) * 100
+            st.write(f"MAPE Training: {mape_train:.2f}%")
+            st.write(f"MAPE Testing: {mape_test:.2f}%")
 
-                st.line_chart(hasil_train, use_container_width=True)
-                st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
+            st.line_chart(hasil_train, use_container_width=True)
+            st.line_chart({"Data Aktual": hasil_test["Aktual"], "Prediksi ARIMA": hasil_test["Prediksi"]})
 
-                st.session_state['residual_arima'] = model_arima.resid
-                st.session_state['pred_train_arima'] = hasil_train
-                st.session_state['pred_arima_test'] = hasil_test
+            st.session_state['residual_arima'] = model_arima.resid
+            st.session_state['pred_train_arima'] = hasil_train
+            st.session_state['pred_arima_test'] = hasil_test
 
-                st.subheader("Interpretasi Visualisasi Prediksi")
-                st.markdown("""
-                **1. Grafik Prediksi Data Training**
-                - Grafik ini membandingkan nilai aktual dan hasil prediksi dari model ARIMA selama periode training.
-                - Jika garis prediksi (Prediksi) mengikuti garis aktual (Aktual) dengan baik, maka model berhasil menangkap pola historis dengan baik.
-                - Jika terlihat penyimpangan besar (jarak jauh antara aktual dan prediksi), maka model mungkin **underfitting** atau kehilangan beberapa pola musiman atau tren.
+            st.subheader("Interpretasi Visualisasi Prediksi")
+            st.markdown("""
+            **1. Grafik Prediksi Data Training**
+            - Grafik ini membandingkan nilai aktual dan hasil prediksi dari model ARIMA selama periode training.
+            - Jika garis prediksi (Prediksi) mengikuti garis aktual (Aktual) dengan baik, maka model berhasil menangkap pola historis dengan baik.
+            - Jika terlihat penyimpangan besar (jarak jauh antara aktual dan prediksi), maka model mungkin **underfitting** atau kehilangan beberapa pola musiman atau tren.
 
-                **2. Grafik Prediksi Data Testing**
-                - Grafik ini menunjukkan seberapa baik model memprediksi data di luar sampel (testing).
-                - Pola antara garis aktual dan prediksi perlu dilihat: apakah prediksi terlalu tinggi/rendah? Apakah mengikuti arah tren?
-                - Jika prediksi jauh dari aktual, berarti model belum generalisasi dengan baik dan bisa mengalami **overfitting** terhadap data training.
+            **2. Grafik Prediksi Data Testing**
+            - Grafik ini menunjukkan seberapa baik model memprediksi data di luar sampel (testing).
+            - Pola antara garis aktual dan prediksi perlu dilihat: apakah prediksi terlalu tinggi/rendah? Apakah mengikuti arah tren?
+            - Jika prediksi jauh dari aktual, berarti model belum generalisasi dengan baik dan bisa mengalami **overfitting** terhadap data training.
 
-                **3. Evaluasi dengan MAPE**
-                - Nilai **MAPE (Mean Absolute Percentage Error)** menggambarkan rata-rata kesalahan prediksi dalam persen.
-                - Umumnya interpretasi MAPE:
-                    - < 10%: Akurasi sangat baik
-                    - 10–20%: Akurasi baik
-                    - 20–50%: Akurasi wajar
-                    - > 50%: Akurasi buruk
-                - Perhatikan perbedaan MAPE training dan testing:
-                    - Jika MAPE testing jauh lebih tinggi, model kemungkinan **overfitting**.
-                    - Jika MAPE training dan testing relatif dekat dan rendah, model cukup **stabil dan akurat**.
-                """)
-         else:
-            st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
+            **3. Evaluasi dengan MAPE**
+            - Nilai **MAPE (Mean Absolute Percentage Error)** menggambarkan rata-rata kesalahan prediksi dalam persen.
+            - Umumnya interpretasi MAPE:
+                - < 10%: Akurasi sangat baik
+                - 10–20%: Akurasi baik
+                - 20–50%: Akurasi wajar
+                - > 50%: Akurasi buruk
+            - Perhatikan perbedaan MAPE training dan testing:
+                - Jika MAPE testing jauh lebih tinggi, model kemungkinan **overfitting**.
+                - Jika MAPE training dan testing relatif dekat dan rendah, model cukup **stabil dan akurat**.
+            """)
+
+    else:
+        st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
 
 #===========MENU ANFIS ABC========
 elif menu == "PEMODELAN ANFIS ABC":
