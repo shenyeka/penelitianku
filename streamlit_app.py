@@ -1363,9 +1363,6 @@ elif menu == "PEMODELAN ANFIS ABC":
 
             st.subheader("📈 Hasil Prediksi ANFIS dengan Optimasi ABC (Denormalisasi)")
             st.write(predictions_denorm2)
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 # ======== GRAFIK HASIL PREDIKSI ANFIS (2011 - 2022) ============
 # Buat index waktu dari 2011 ke 2022 sesuai panjang data
