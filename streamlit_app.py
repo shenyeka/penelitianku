@@ -935,8 +935,8 @@ elif menu == "PEMODELAN ARIMA":
                     - Jika MAPE testing jauh lebih tinggi, model kemungkinan **overfitting**.
                     - Jika MAPE training dan testing relatif dekat dan rendah, model cukup **stabil dan akurat**.
                 """)
-else:
-    st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
+            else:
+                st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
 
 #===========MENU ANFIS ABC========
 elif menu == "PEMODELAN ANFIS ABC":
