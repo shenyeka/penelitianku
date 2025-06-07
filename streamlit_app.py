@@ -596,7 +596,14 @@ elif menu == "STASIONERITAS DATA":
                 for key, val in adf_result[4].items():
                     st.write(f"Critical Value ({key}): {val:.4f}")
 
+                # Interpretasi detail uji ADF awal
+                st.markdown("### 📌 Interpretasi Hasil Uji ADF Awal")
                 if adf_result[1] < 0.05:
+                    st.markdown(f"""
+                    - Nilai **ADF Statistic = {adf_result[0]:.4f}** lebih kecil dari **critical value**.
+                    - Nilai **p-value = {adf_result[1]:.4f} < 0.05** → cukup bukti untuk **menolak H0**.
+                    - **Kesimpulan**: Data _{col}_ **stasioner** (tidak mengandung unit root).
+                    """)
                     st.success("✅ Data sudah stasioner.")
                     st.markdown(
                         "- **P-Value < 0.05** → menolak H0 → **data stasioner**\n"
@@ -613,7 +620,7 @@ elif menu == "STASIONERITAS DATA":
                     plot_pacf(data[col].dropna(), lags=40, ax=ax_pacf)
                     st.pyplot(fig_pacf)
 
-                    # Panduan Pembacaan ACF dan PACF (Improved Version)
+                    # Panduan Pembacaan ACF dan PACF
                     st.markdown("""
                     ### 📊 Panduan Membaca ACF dan PACF untuk ARIMA
 
@@ -656,17 +663,26 @@ elif menu == "STASIONERITAS DATA":
                     for key, val in adf_diff_result[4].items():
                         st.write(f"Critical Value ({key}): {val:.4f}")
 
+                    # Interpretasi detail uji ADF setelah differencing
+                    st.markdown("### 📌 Interpretasi Hasil Uji ADF Setelah Differencing")
                     if adf_diff_result[1] < 0.05:
+                        st.markdown(f"""
+                        - Setelah differencing, nilai **ADF Statistic = {adf_diff_result[0]:.4f}** lebih kecil dari critical value.
+                        - **p-value = {adf_diff_result[1]:.4f} < 0.05**, menunjukkan bahwa data telah menjadi **stasioner**.
+                        - **Kesimpulan**: Data _{col}_ **stasioner setelah differencing ke-1**.
+                        """)
                         st.success("✅ Data sudah stasioner setelah differencing.")
                         st.markdown(
                             "- **P-Value < 0.05** → menolak H0 → **data stasioner** setelah differencing\n"
                             "- ✅ **d = 1** (butuh 1x differencing)."
                         )
                     else:
+                        st.markdown(f"""
+                        - Setelah differencing, nilai **ADF Statistic = {adf_diff_result[0]:.4f}** dan **p-value = {adf_diff_result[1]:.4f} ≥ 0.05**.
+                        - Artinya data masih memiliki unit root → **belum stasioner**.
+                        - **Tindakan**: Pertimbangkan untuk melakukan differencing ke-2 (**d = 2**).
+                        """)
                         st.error("❌ Data masih belum stasioner setelah differencing.")
-                        st.markdown(
-                            "- Pertimbangkan melakukan differencing ke-2 (**d = 2**)."
-                        )
 
                     # ACF dan PACF untuk data differencing
                     st.subheader("Plot ACF dan PACF:")
@@ -678,7 +694,7 @@ elif menu == "STASIONERITAS DATA":
                     plot_pacf(data_diff, lags=40, ax=ax_pacf)
                     st.pyplot(fig_pacf)
 
-                    # Panduan Pembacaan ACF dan PACF (Improved Version)
+                    # Panduan Membaca ACF dan PACF
                     st.markdown("""
                     ### 📊 Panduan Membaca ACF dan PACF untuk ARIMA
 
@@ -701,50 +717,8 @@ elif menu == "STASIONERITAS DATA":
                     """, unsafe_allow_html=True)
 
     else:
-        st.warning("Silakan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
-        
-# =================== DATA SPLITTING ===================
-elif menu == "DATA SPLITTING":
-    from statsmodels.tsa.stattools import adfuller, acf, pacf
-    st.markdown("<div class='header-container'>DATA SPLITTING</div>", unsafe_allow_html=True)
+        st.warning("Silahkan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
 
-    # Check if preprocessing data exists in session state
-    if "data" in st.session_state:
-        df = st.session_state["data"]
-        st.write("Menggunakan data hasil preprocessing.")
-        
-        st.write("Preview Data:")
-        st.write(df.head())
-
-        # Pastikan hanya satu kolom target
-        if len(df.columns) == 1:
-            col_name = df.columns[0]
-
-            # Tambahkan slider untuk memilih rasio train dan test
-            split_ratio = st.slider("Pilih rasio pembagian data (Training:Testing)", 0.1, 0.9, 0.8, 0.05)
-            train_size = int(len(df) * split_ratio)
-            train_data = df.iloc[:train_size].copy()
-            test_data = df.iloc[train_size:].copy()
-
-            # Simpan untuk proses berikutnya
-            st.session_state["train_data"] = train_data
-            st.session_state["test_data"] = test_data
-            st.session_state["train"] = train_data          # Tambahan untuk sinkronisasi
-            st.session_state["test"] = test_data            # Tambahan untuk sinkronisasi
-
-            st.success(f"✅ Data berhasil di-split dengan rasio {split_ratio*100}% training dan {(1-split_ratio)*100}% testing.")
-
-            st.subheader("Data Training:")
-            st.write(train_data)
-            st.line_chart(train_data)
-
-            st.subheader("Data Testing:")
-            st.write(test_data)
-            st.line_chart(test_data)
-        else:
-            st.warning("⚠ Data harus hanya memiliki 1 kolom target untuk proses split time series.")
-    else:
-        st.info("Silakan lakukan preprocessing data terlebih dahulu.")
 
 
 #=============PEMODELAN ARIMA===========
