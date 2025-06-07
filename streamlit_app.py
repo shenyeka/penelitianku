@@ -536,26 +536,30 @@ elif menu == "DATA PREPROCESSING":
                     st.write("Jumlah Missing Value per Kolom:")
                     st.write(missing)
 
-                    # Tampilkan data sebelum interpolasi
-                    st.write("Data sebelum penanganan missing value:")
-                    st.write(data.head(10))
-
                     if missing.any():
                         st.warning("Data memiliki missing values, melakukan interpolasi untuk mengisi nilai kosong.")
-                        data_interpolated = data.interpolate(method='linear')  # interpolasi linear
 
-                        # Kalau masih ada missing value setelah interpolasi, bisa diisi dengan forward fill/backward fill
+                        # Tampilkan data sebelum interpolasi
+                        st.write("Data sebelum penanganan missing value:")
+                        st.write(data.head(10))
+
+                        # Lakukan interpolasi linear
+                        data_interpolated = data.interpolate(method='linear')
+
+                        # Isi sisa missing value dengan backward fill dan forward fill
                         data_interpolated = data_interpolated.fillna(method='bfill').fillna(method='ffill')
 
                         # Tampilkan data setelah interpolasi
                         st.write("Data setelah penanganan missing value dengan interpolasi:")
                         st.write(data_interpolated.head(10))
 
-                        # Update data dengan hasil interpolasi
+                        # Update data
                         data = data_interpolated
-
                     else:
                         st.info("Data tidak memiliki missing values.")
+
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan: {e}")
 
                     # Plot data setelah preprocessing
                     st.write("Plot Data Setelah Preprocessing:")
