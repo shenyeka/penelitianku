@@ -770,6 +770,7 @@ elif menu == "DATA SPLITTING":
 
 
 #=============PEMODELAN ARIMA===========
+#=============PEMODELAN ARIMA===========
 elif menu == "PEMODELAN ARIMA":
     from statsmodels.tsa.arima.model import ARIMA
     from sklearn.metrics import mean_absolute_percentage_error
@@ -801,23 +802,27 @@ elif menu == "PEMODELAN ARIMA":
 
         model_arima = st.session_state.get('model_arima')
         alpha = 0.05
+        t_critical = 1.97  # t-table untuk df besar pada alpha=0.05 (dua sisi)
 
         if model_arima is not None and st.button("Uji Signifikansi Koefisien"):
             st.subheader("Uji Signifikansi Koefisien (uji t)")
+
             params = model_arima.params
             std_err = model_arima.bse
             t_values = params / std_err
-            t_critical = 2  # pendekatan konservatif
+            p_values = model_arima.pvalues
 
             for i in range(len(params)):
-                st.write(f"Koefisien: {params.index[i]}")
-                st.write(f" - Estimasi: {params[i]:.4f}")
-                st.write(f" - Std. Error: {std_err[i]:.4f}")
-                st.write(f" - t-statistik: {t_values[i]:.4f}")
-                if abs(t_values[i]) > t_critical:
-                    st.write(f" - ✅ Signifikan pada alpha={alpha} (|t| > {t_critical})")
+                st.write(f"**Koefisien: {params.index[i]}**")
+                st.write(f"- Estimasi: {params[i]:.4f}")
+                st.write(f"- Std. Error: {std_err[i]:.4f}")
+                st.write(f"- t-statistik: {t_values[i]:.4f}")
+                st.write(f"- p-value: {p_values[i]:.5f}")
+
+                if abs(t_values[i]) > t_critical and p_values[i] < alpha:
+                    st.write(f"✅ Koefisien signifikan secara statistik (|t| > {t_critical} dan p-value < {alpha})")
                 else:
-                    st.write(f" - ❌ Tidak signifikan pada alpha={alpha} (|t| ≤ {t_critical})")
+                    st.write(f"❌ Koefisien tidak signifikan (|t| ≤ {t_critical} atau p-value ≥ {alpha})")
                 st.write("---")
 
         if model_arima is not None and st.button("Uji Asumsi Residual"):
@@ -825,35 +830,40 @@ elif menu == "PEMODELAN ARIMA":
             residuals = model_arima.resid
             predicted = model_arima.fittedvalues
 
+            # 1. Uji White Noise (Ljung-Box)
             st.write("### 1. Uji White Noise (Ljung-Box)")
             ljung_box = acorr_ljungbox(residuals, lags=[10], return_df=True)
+            lb_stat = ljung_box["lb_stat"].iloc[-1]
             p_ljung = ljung_box["lb_pvalue"].iloc[-1]
+            st.write(f"- Statistik Ljung-Box = {lb_stat:.3f}")
             st.write(f"- p-value = {p_ljung:.5f}")
             if p_ljung > alpha:
-                st.write("✅ Residual adalah white noise.")
+                st.write("✅ Tidak terdapat autokorelasi signifikan (residual adalah white noise).")
             else:
-                st.write("❌ Residual bukan white noise (ada autokorelasi).")
+                st.write("❌ Terdapat autokorelasi signifikan (residual bukan white noise).")
             st.write("---")
 
+            # 2. Uji Normalitas (Kolmogorov-Smirnov)
             st.write("### 2. Uji Normalitas (Kolmogorov-Smirnov)")
-            ks_stat, ks_p = stats.kstest(residuals, 'norm', args=(0, np.std(residuals)))
+            ks_stat, ks_p = stats.kstest(residuals, 'norm', args=(np.mean(residuals), np.std(residuals)))
             st.write(f"- Statistik KS = {ks_stat:.3f}")
             st.write(f"- p-value = {ks_p:.5f}")
             if ks_p > alpha:
                 st.write("✅ Residual terdistribusi normal.")
             else:
-                st.write("❌ Residual tidak normal.")
+                st.write("❌ Residual tidak mengikuti distribusi normal.")
             st.write("---")
 
+            # 3. Uji Heteroskedastisitas (White Test)
             st.write("### 3. Uji Heteroskedastisitas (White Test)")
             white_test = het_white(residuals, sm.add_constant(predicted))
             white_stat, white_p = white_test[0], white_test[1]
-            st.write(f"- Statistik = {white_stat:.3f}")
+            st.write(f"- Statistik White Test = {white_stat:.3f}")
             st.write(f"- p-value = {white_p:.5f}")
             if white_p > alpha:
-                st.write("✅ Tidak ada heteroskedastisitas.")
+                st.write("✅ Tidak ada bukti heteroskedastisitas (residual homogen).")
             else:
-                st.write("❌ Ada heteroskedastisitas.")
+                st.write("❌ Terdapat heteroskedastisitas (residual tidak homogen).")
             st.write("---")
 
         if model_arima is not None and st.button("Prediksi dan Evaluasi"):
