@@ -911,12 +911,32 @@ elif menu == "PEMODELAN ARIMA":
             st.session_state['residual_arima'] = model_arima.resid
             st.session_state['pred_train_arima'] = hasil_train
             st.session_state['pred_arima_test'] = hasil_test
+            
+                    st.subheader("Interpretasi Visualisasi Prediksi")
 
-    else:
-        st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
+                    st.markdown("""
+                    **1. Grafik Prediksi Data Training**
+                    - Grafik ini membandingkan nilai aktual dan hasil prediksi dari model ARIMA selama periode training.
+                    - Jika garis prediksi (Prediksi) mengikuti garis aktual (Aktual) dengan baik, maka model berhasil menangkap pola historis dengan baik.
+                    - Jika terlihat penyimpangan besar (jarak jauh antara aktual dan prediksi), maka model mungkin **underfitting** atau kehilangan beberapa pola musiman atau tren.
 
+                    **2. Grafik Prediksi Data Testing**
+                    - Grafik ini menunjukkan seberapa baik model memprediksi data di luar sampel (testing).
+                    - Pola antara garis aktual dan prediksi perlu dilihat: apakah prediksi terlalu tinggi/rendah? Apakah mengikuti arah tren?
+                    - Jika prediksi jauh dari aktual, berarti model belum generalisasi dengan baik dan bisa mengalami **overfitting** terhadap data training.
 
-
+                    **3. Evaluasi dengan MAPE**
+                    - Nilai **MAPE (Mean Absolute Percentage Error)** menggambarkan rata-rata kesalahan prediksi dalam persen.
+                    - Umumnya interpretasi MAPE:
+                        - < 10%: Akurasi sangat baik
+                        - 10–20%: Akurasi baik
+                        - 20–50%: Akurasi wajar
+                        - > 50%: Akurasi buruk
+                    - Perhatikan perbedaan MAPE training dan testing:
+                        - Jika MAPE testing jauh lebih tinggi, model kemungkinan **overfitting**.
+                        - Jika MAPE training dan testing relatif dekat dan rendah, model cukup **stabil dan akurat**.
+            else:
+                st.warning("Silakan lakukan pemisahan data terlebih dahulu di menu 'PEMISAHAN DATA'.")
 
 #===========MENU ANFIS ABC========
 elif menu == "PEMODELAN ANFIS ABC":
