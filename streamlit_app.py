@@ -1630,7 +1630,7 @@ elif menu == "PREDIKSI":
         pred_anfis = st.session_state['forecast_6steps_anfis']
 
     # Gabungkan prediksi ARIMA dan ANFIS
-        combined_df = forecast_arima_df.copy()
+        combined_df = forecast_arima_df.copy() 
         combined_df['Prediksi ANFIS'] = pred_anfis
         combined_df['Prediksi ARIMA-ANFIS'] = combined_df['Prediksi'] + pred_anfis
 
