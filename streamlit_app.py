@@ -716,8 +716,8 @@ elif menu == "STASIONERITAS DATA":
                     2. Nilai di dalam area biru (confidence interval) tidak signifikan
                     """, unsafe_allow_html=True)
 
-        else:
-            st.warning("Silahkan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
+    else:
+      st.warning("Silahkan lakukan preprocessing terlebih dahulu di menu 'DATA PREPROCESSING'.")
 
 # =================== DATA SPLITTING ===================
 elif menu == "DATA SPLITTING":
