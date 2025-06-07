@@ -1605,64 +1605,64 @@ elif menu == "PREDIKSI":
 
     # ======= ANFIS ABC ==========
     # Prediksi 6 langkah ke depan setelah prediksi testing
-    st.markdown("ANFIS Forecast Future:")
-    
-    # Periksa apakah hasil prediksi sudah tersedia
+    import altair as alt
+
+    # ======= ANFIS ABC ==========
+    st.markdown("### ANFIS Forecast Future:")
+
+    # Tampilkan hasil prediksi ANFIS
     if 'forecast_6steps_anfis' in st.session_state:
         pred_anfis = st.session_state['forecast_6steps_anfis']
-        
-        # Tampilkan prediksi
+    
+        # Tampilkan prediksi ANFIS
         pred_df = pd.DataFrame({
             'Langkah Ke-': list(range(1, 7)),
-            'Prediksi Permintaan': pred_anfis
+            'Prediksi ANFIS': pred_anfis
         })
         st.dataframe(pred_df)
 
     else:
         st.warning("Silakan jalankan model ANFIS-ABC terlebih dahulu pada menu 'PEMODELAN ARIMA-ANFIS'.")
 
-
-    # ======= GABUNGKAN DAN JUMLAHKAN HASIL PREDIKSI =======
-import streamlit as st
-import pandas as pd
-import altair as alt
-
-# ======= GABUNGKAN DAN JUMLAHKAN HASIL PREDIKSI =======
-if 'forecast_arima_future' in st.session_state and 'forecast_6steps_anfis' in st.session_state:
-    forecast_arima_df = st.session_state['forecast_arima_future']
-    pred_anfis = st.session_state['forecast_6steps_anfis']
+# ======= GABUNGKAN DAN TAMPILKAN PREDIKSI =======
+    if 'forecast_arima_future' in st.session_state and 'forecast_6steps_anfis' in st.session_state:
+        forecast_arima_df = st.session_state['forecast_arima_future']
+        pred_anfis = st.session_state['forecast_6steps_anfis']
 
     # Gabungkan prediksi ARIMA dan ANFIS
-    combined_df = forecast_arima_df.copy()
-    combined_df['Prediksi ARIMA-ANFIS'] = combined_df['Prediksi'] + pred_anfis
+        combined_df = forecast_arima_df.copy()
+        combined_df['Prediksi ANFIS'] = pred_anfis
+        combined_df['Prediksi ARIMA-ANFIS'] = combined_df['Prediksi'] + pred_anfis
 
-    # Tambahkan label waktu sebagai Bulan ke-1 sampai Bulan ke-6
-    combined_df['Bulan ke-'] = [f'Bulan ke-{i+1}' for i in range(len(combined_df))]
+    # Tambahkan label bulan
+        combined_df['Bulan ke-'] = [f'Bulan ke-{i+1}' for i in range(len(combined_df))]
 
-    # Tampilkan tabel hasil prediksi
-    st.subheader("ARIMA-ANFIS ABC Forecast Future")
-    st.dataframe(
-        combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']]
-        .rename(columns={'Prediksi': 'Prediksi ARIMA'})
-    )
+    # Tampilkan tabel lengkap
+        st.subheader("ARIMA-ANFIS ABC Forecast Future")
+        st.dataframe(
+            combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ANFIS', 'Prediksi ARIMA-ANFIS']]
+            .rename(columns={
+                'Prediksi': 'Prediksi ARIMA'
+            })
+        )
 
-    # ======= PLOT INTERAKTIF DENGAN ALTAIR =======
-    # Siapkan data untuk Altair (perlu dalam format long/melt)
-    plot_df = combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']]
-    plot_df = plot_df.rename(columns={'Prediksi': 'Prediksi ARIMA'})
+    # ======= PLOT INTERAKTIF =======
+    # Siapkan data untuk plot
+        plot_df = combined_df[['Bulan ke-', 'Prediksi', 'Prediksi ARIMA-ANFIS']]
+        plot_df = plot_df.rename(columns={'Prediksi': 'Prediksi ARIMA'})
 
-    plot_df_melted = plot_df.melt(id_vars='Bulan ke-', var_name='Model', value_name='Nilai')
+        plot_df_melted = plot_df.melt(id_vars='Bulan ke-', var_name='Model', value_name='Nilai')
 
-    # Buat chart interaktif Altair
-    chart = alt.Chart(plot_df_melted).mark_line(point=True).encode(
-        x=alt.X('Bulan ke-:O', title='Bulan'),
-        y=alt.Y('Nilai:Q', title='Nilai Prediksi'),
-        color='Model:N',
-        tooltip=['Bulan ke-', 'Model', 'Nilai']
-    ).properties(
-        width=700,
-        height=400,
-        title='Prediksi ARIMA vs ARIMA-ANFIS'
-    ).interactive()  # Aktifkan zoom, pan, hover
+    # Buat plot interaktif dengan Altair
+        chart = alt.Chart(plot_df_melted).mark_line(point=True).encode(
+            x=alt.X('Bulan ke-:O', title='Bulan'),
+            y=alt.Y('Nilai:Q', title='Nilai Prediksi'),
+            color='Model:N',
+            tooltip=['Bulan ke-', 'Model', 'Nilai']
+        ).properties(
+            width=700,
+            height=400,
+            title='Prediksi ARIMA vs ARIMA-ANFIS'
+        ).interactive()
 
-    st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, use_container_width=True)
