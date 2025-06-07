@@ -974,7 +974,7 @@ elif menu == "PEMODELAN ANFIS ABC":
             3. **Outlier atau fluktuasi ekstrem** bisa menurunkan performa model jika tidak dinormalisasi.
 
             > Dengan standardisasi, model seperti ANFIS lebih mudah belajar dari residual karena skala datanya seragam.
-        """)
+    """)
 
         # Tombol normalisasi residual
         if st.button("Standarisasi Residual"):
