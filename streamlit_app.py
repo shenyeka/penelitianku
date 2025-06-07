@@ -976,17 +976,22 @@ elif menu == "PEMODELAN ANFIS ABC":
             > Dengan standardisasi, model seperti ANFIS lebih mudah belajar dari residual karena skala datanya seragam.
     """)
 
-        # Tombol normalisasi residual
+        # Tombol standarisasi residual
         if st.button("Standarisasi Residual"):
             if 'data_anfis_raw' in st.session_state:
                 data_anfis = st.session_state['data_anfis_raw']
-                scaler_residual = MinMaxScaler()
-                data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
-                st.session_state['data_anfis'] = data_anfis
-                st.session_state['scaler_residual'] = scaler_residual
-                st.success("Residual berhasil dinormalisasi.")
-                st.write(data_anfis.head())
-                st.info("Silakan tentukan input ANFIS dari PACF.")
+        
+                # Cek apakah kolom 'residual' tersedia
+                if 'residual' in data_anfis.columns:
+                    scaler_residual = MinMaxScaler()
+                    data_anfis['residual'] = scaler_residual.fit_transform(data_anfis[['residual']])
+                    st.session_state['data_anfis'] = data_anfis
+                    st.session_state['scaler_residual'] = scaler_residual
+                    st.success("Residual berhasil distandardisasi.")
+                    st.write(data_anfis.head())
+                    st.info("Silakan tentukan input ANFIS dari PACF.")
+                else:
+                    st.error("Kolom 'residual' tidak ditemukan. Pastikan Anda telah menjalankan prediksi ARIMA dan melihat hasil residual.")
             else:
                 st.warning("Residual belum tersedia. Klik 'Lihat Residual ARIMA' terlebih dahulu.")
 
