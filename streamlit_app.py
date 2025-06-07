@@ -541,7 +541,7 @@ elif menu == "DATA PREPROCESSING":
                     st.write(data.head(10))
 
                     if missing.any():
-                        st.warning("Data memiliki missing values. Melakukan interpolasi untuk mengisi nilai kosong.")
+                        st.warning("Data memiliki missing values, melakukan interpolasi untuk mengisi nilai kosong.")
                         data_interpolated = data.interpolate(method='linear')  # interpolasi linear
 
                         # Kalau masih ada missing value setelah interpolasi, bisa diisi dengan forward fill/backward fill
@@ -567,7 +567,7 @@ elif menu == "DATA PREPROCESSING":
                     # Simpan data yang sudah diproses ke session_state
                     st.session_state["data"] = data
 
-                    st.success("Preprocessing selesai. Silakan lanjut ke menu 'STASIONERITAS DATA'.")
+                    st.success("Preprocessing selesai, silahkan lanjut ke menu 'STASIONERITAS DATA'.")
 
                 except Exception as e:
                     st.error(f"Terjadi kesalahan saat preprocessing: {e}")
