@@ -529,13 +529,18 @@ elif menu == "DATA PREPROCESSING":
                     data[time_col] = pd.to_datetime(data[time_col])
                     data.set_index(time_col, inplace=True)
 
-                    # Tangani missing values
                     missing = data.isnull().sum()
+
+                    # Tampilkan jumlah missing value per kolom
+                    st.write("Jumlah Missing Value per Kolom:")
+                    st.write(missing)
+
                     if missing.any():
                         st.warning("Data memiliki missing values. Menghapus baris dengan nilai kosong.")
                         data.dropna(inplace=True)
                     else:
                         st.info("Data tidak memiliki missing values.")
+
 
                     # Tampilkan plot data
                     st.write("Plot Data Setelah Preprocessing:")
